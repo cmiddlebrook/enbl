@@ -9,6 +9,11 @@ class SellerSite extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'price_guest_post',
+        'price_link_insertion'
+    ];
+
     public function seller()
     {
         return $this->belongsTo(Seller::class);

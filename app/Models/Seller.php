@@ -9,6 +9,13 @@ class Seller extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'name',
+        'email',
+        'email2',
+        'notes'
+    ];
+
     public function linksForSale()
     {
         // we use hasMany here which is a 1 to many relationship because what we want to return is the 

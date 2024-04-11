@@ -17,8 +17,8 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Seller::class);
             $table->foreignIdFor(LinkSite::class);
-            $table->float('price_guest_post');
-            $table->float('price_link_insertion');
+            $table->decimal('price_guest_post');
+            $table->decimal('price_link_insertion');
             $table->timestamps();
         });
     }

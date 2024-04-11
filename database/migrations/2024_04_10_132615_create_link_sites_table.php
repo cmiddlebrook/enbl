@@ -21,11 +21,11 @@ return new class extends Migration
             $table->string('niches'); // string of id's from the niches table
             $table->unsignedTinyInteger('semrush_AS');
             $table->unsignedBigInteger('semrush_traffic');
-            $table->float('semrush_perc_english_traffic'); 
+            $table->decimal('semrush_perc_english_traffic'); 
             $table->unsignedBigInteger('semrush_organic_kw');
             $table->unsignedTinyInteger('moz_da');
             $table->unsignedTinyInteger('moz_pa');
-            $table->float('moz_perc_quality_bl');
+            $table->decimal('moz_perc_quality_bl');
             $table->unsignedTinyInteger('moz_spam_score');
             $table->unsignedTinyInteger('domain_age');
             $table->unsignedTinyInteger('majestic_trust_flow');
