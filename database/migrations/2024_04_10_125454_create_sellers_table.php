@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('email2')->nullable();
             $table->date('last_order')->nullable();
+            $table->unsignedTinyInteger('rating');
             $table->text('notes')->nullable();
             $table->timestamps();
         });

@@ -15,8 +15,9 @@ class SellerFactory extends Factory
         return [
             'name' => $this->faker->name,
             'email' => $this->faker->unique()->safeEmail,
-            'email2' => $this->faker->boolean(10) ? $this->faker->unique()->safeEmail : null,
-            'notes'=> $this->faker->boolean(20) ? $this->faker->paragraph() : null
+            'email2' => $this->faker->boolean(15) ? $this->faker->unique()->safeEmail : null,
+            'rating' => $this->faker->numberBetween(1,3),
+            'notes'=> $this->faker->boolean(30) ? $this->faker->paragraph() : null
         ];
     }
 }

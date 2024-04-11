@@ -12,6 +12,9 @@ class LinkSite extends Model
     protected $fillable = [
         'domain',
         'ip_address',
+        'last_checked',
+        'is_withdrawn',
+        'withdrawn_reason',
         'niches',
         'semrush_AS',
         'semrush_traffic',
