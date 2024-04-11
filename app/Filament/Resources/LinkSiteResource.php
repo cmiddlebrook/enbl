@@ -36,24 +36,8 @@ class LinkSiteResource extends Resource
                             ->maxValue(100)
                             ->rules(['integer', 'between:0,100']),
                         Forms\Components\DatePicker::make('last_checked'),
-                    ])->columns(2)
-                ]),
+                    ])->columns(2),
 
-                Forms\Components\Group::make()->schema([
-                    // TODO: Can't withdraw a site if there are any open orders for it
-                    Forms\Components\Section::make('Remove site')->schema([
-                        Forms\Components\Toggle::make('is_withdrawn')->label('Withdrawn'),
-                        Forms\Components\Select::make('withdrawn_reason')
-                            ->requiredIf('is_withdrawn', 'true')
-                            ->options([
-                                'spam' => 'High Spam Score',
-                                'dupe_ip' => 'Duplicate IP Address',
-                                'non_en' => 'Not English' // TODO: Set these up as an enum?
-                            ])
-                    ])->columns(2)
-                ]),
-
-                Forms\Components\Group::make()->schema([
                     Forms\Components\Section::make('SEMRush')->schema([
                         Forms\Components\TextInput::make('semrush_AS')
                             ->label('Authority Score')
@@ -90,10 +74,8 @@ class LinkSiteResource extends Resource
                             ->minValue(0)
                             ->rules(['integer', 'min:0']),
 
-                    ])->columns(4)
-                ]),
+                    ])->columns(4),
 
-                Forms\Components\Group::make()->schema([
                     Forms\Components\Section::make('Moz')->schema([
                         Forms\Components\TextInput::make('moz_da')
                             ->label('Domain Authority')
@@ -131,10 +113,8 @@ class LinkSiteResource extends Resource
                             ->maxValue(100)
                             ->rules(['integer', 'between:0,100']),
 
-                    ])->columns(4)
-                ]),
+                    ])->columns(4),
 
-                Forms\Components\Group::make()->schema([
                     Forms\Components\Section::make('Majestic')->schema([
 
                         Forms\Components\TextInput::make('majestic_trust_flow')
@@ -155,23 +135,23 @@ class LinkSiteResource extends Resource
                             ->maxValue(100)
                             ->rules(['integer', 'between:0,100']),
 
-                    ])->columns(4)
+                    ])->columns(4),
                 ]),
 
                 Forms\Components\Group::make()->schema([
-                    Forms\Components\Section::make('Ahrefs')->schema([
-
-                        Forms\Components\TextInput::make('ahrefs_domain_rank')
-                            ->label('Domain Rank')
-                            ->numeric()
-                            ->integer()
-                            ->default(0)
-                            ->minValue(0)
-                            ->maxValue(100)
-                            ->rules(['integer', 'between:0,100']),
-
-                    ])->columns(4)
+                    // TODO: Can't withdraw a site if there are any open orders for it
+                    Forms\Components\Section::make('Remove site')->schema([
+                        Forms\Components\Toggle::make('is_withdrawn')->label('Withdrawn'),
+                        Forms\Components\Select::make('withdrawn_reason')
+                            ->requiredIf('is_withdrawn', 'true')
+                            ->options([
+                                'spam' => 'High Spam Score',
+                                'dupe_ip' => 'Duplicate IP Address',
+                                'non_en' => 'Not English' // TODO: Set these up as an enum?
+                            ])
+                    ])->columns(2)
                 ]),
+
 
             ]);
     }
