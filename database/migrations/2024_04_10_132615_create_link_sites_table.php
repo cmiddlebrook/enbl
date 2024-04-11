@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('domain')->unique();
             $table->string('ip_address')->nullable();
             $table->date('last_checked')->nullable();
-            $table->boolean('is_deleted')->default(false);
-            $table->string('deleted_reason')->nullable();
+            $table->boolean('is_withdrawn')->default(false);
+            $table->string('withdrawn_reason')->nullable();
             $table->string('niches'); // string of id's from the niches table
             $table->unsignedTinyInteger('semrush_AS');
             $table->unsignedBigInteger('semrush_traffic');

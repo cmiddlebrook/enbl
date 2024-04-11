@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('seller_sites', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Seller::class);
+            $table->foreignIdFor(Seller::class)->cascadeOnDelete();
             $table->foreignIdFor(LinkSite::class);
             $table->decimal('price_guest_post');
             $table->decimal('price_link_insertion');
