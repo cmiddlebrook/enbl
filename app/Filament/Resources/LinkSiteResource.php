@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Enums\WithdrawalReasonEnum;
 
 class LinkSiteResource extends Resource
 {
@@ -143,12 +144,10 @@ class LinkSiteResource extends Resource
                     Forms\Components\Section::make('Remove site')->schema([
                         Forms\Components\Toggle::make('is_withdrawn')->label('Withdrawn'),
                         Forms\Components\Select::make('withdrawn_reason')
+                        //TODO: Figure out if there's a way to disable this field unless is_withdrawn is true
+                            ->prohibitedUnless('is_withdrawn', 'true') 
                             ->requiredIf('is_withdrawn', 'true')
-                            ->options([
-                                'spam' => 'High Spam Score',
-                                'dupe_ip' => 'Duplicate IP Address',
-                                'non_en' => 'Not English' // TODO: Set these up as an enum?
-                            ])
+                            ->options(WithdrawalReasonEnum::class)
                     ])->columns(2)
                 ]),
 

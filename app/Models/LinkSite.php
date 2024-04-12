@@ -4,10 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use phpDocumentor\Reflection\Types\Boolean;
+use App\Enums\WithdrawalReasonEnum;
 
 class LinkSite extends Model
 {
     use HasFactory;
+
+    protected $casts = [
+        'is_withdrawn' => 'boolean',
+        'withdrawn_reason' => WithdrawalReasonEnum::class
+    ];
 
     protected $fillable = [
         'domain',

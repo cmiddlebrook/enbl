@@ -9,6 +9,10 @@ class CustomerSite extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'is_approved' => 'boolean'
+    ];
+
     protected $fillable = [
         'website_name',
         'domain'
