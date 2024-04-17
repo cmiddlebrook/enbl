@@ -144,8 +144,8 @@ class LinkSiteResource extends Resource
                     Forms\Components\Section::make('Remove site')->schema([
                         Forms\Components\Toggle::make('is_withdrawn')->label('Withdrawn'),
                         Forms\Components\Select::make('withdrawn_reason')
-                        //TODO: Figure out if there's a way to disable this field unless is_withdrawn is true
-                            ->prohibitedUnless('is_withdrawn', 'true') 
+                            //TODO: Figure out if there's a way to disable this field unless is_withdrawn is true                            
+                            ->prohibitedUnless('is_withdrawn', 'true')
                             ->requiredIf('is_withdrawn', 'true')
                             ->options(WithdrawalReasonEnum::class)
                     ])->columns(2)

@@ -27,8 +27,12 @@ class SellerResource extends Resource
                 Forms\Components\Group::make()->schema([
                     Forms\Components\Section::make()->schema([
                         Forms\Components\TextInput::make('name')->required(),
-                        Forms\Components\TextInput::make('email')->email()->required()->unique(),
-                        Forms\Components\TextInput::make('email2')->email()->different('email'),
+                        Forms\Components\TextInput::make('email')->email()
+                            ->required()
+                            ->unique(),
+                        Forms\Components\TextInput::make('email2')->email()
+                            ->different('email')
+                            ->label('Secondary Email'),
                         Forms\Components\MarkdownEditor::make('notes')
                     ])
                 ])
@@ -41,7 +45,7 @@ class SellerResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name'),
                 Tables\Columns\TextColumn::make('email'),
-                Tables\Columns\TextColumn::make('email2'),
+                Tables\Columns\TextColumn::make('email2')->label('Secondary Email'),
             ])
             ->filters([
                 //
