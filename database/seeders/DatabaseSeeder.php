@@ -16,6 +16,5 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         Seller::factory()->count(20)->create();
-        LinkSite::factory()->count(200)->create();
     }
 }
