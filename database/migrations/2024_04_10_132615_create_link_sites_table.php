@@ -18,19 +18,19 @@ return new class extends Migration
             $table->date('last_checked')->nullable();
             $table->boolean('is_withdrawn')->default(false);
             $table->string('withdrawn_reason')->nullable();
-            $table->string('niches'); // string of id's from the niches table
-            $table->unsignedTinyInteger('semrush_AS');
-            $table->unsignedBigInteger('semrush_traffic');
-            $table->unsignedTinyInteger('semrush_perc_english_traffic'); 
-            $table->unsignedBigInteger('semrush_organic_kw');
-            $table->unsignedTinyInteger('moz_da');
-            $table->unsignedTinyInteger('moz_pa');
-            $table->unsignedTinyInteger('moz_perc_quality_bl');
-            $table->unsignedTinyInteger('moz_spam_score');
-            $table->unsignedTinyInteger('domain_age');
-            $table->unsignedTinyInteger('majestic_trust_flow');
-            $table->unsignedTinyInteger('majestic_citation_flow');
-            $table->unsignedTinyInteger('ahrefs_domain_rank');
+            $table->string('niches')->nullable(); // string of id's from the niches table
+            $table->unsignedTinyInteger('semrush_AS')->nullable();
+            $table->unsignedBigInteger('semrush_traffic')->nullable();
+            $table->unsignedTinyInteger('semrush_perc_english_traffic')->nullable(); 
+            $table->unsignedBigInteger('semrush_organic_kw')->nullable();
+            $table->unsignedTinyInteger('moz_da')->nullable();
+            $table->unsignedTinyInteger('moz_pa')->nullable();
+            $table->unsignedTinyInteger('moz_perc_quality_bl')->nullable();
+            $table->unsignedTinyInteger('moz_spam_score')->nullable();
+            $table->unsignedTinyInteger('domain_age')->nullable();
+            $table->unsignedTinyInteger('majestic_trust_flow')->nullable();
+            $table->unsignedTinyInteger('majestic_citation_flow')->nullable();
+            $table->unsignedTinyInteger('ahrefs_domain_rank')->nullable();
             $table->timestamps();
         });
     }

@@ -19,9 +19,33 @@ class CSVImporter
             {
                 $rowData = array_combine($header, $row);
 
-                // validate here
+                // convert any empty strings to null values
+                foreach ($rowData as $key => $value) 
+                {
+                    if ($value === '') 
+                    {
+                        $rowData[$key] = null;
+                        $rowData['domain'] = preg_replace('/^(http:\/\/|https:\/\/)?(www\.)?/', '', $rowData['domain']);
+                    }
+                }
+
                 $validator = Validator::make($rowData, [
-                    'domain' => 'required',
+                    'domain' => [
+                        'required',
+                        'regex:/^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$/',
+                        'unique:link_sites,domain'
+                    ],
+                    'ip_address' => 'nullable|ipv4',
+                    'semrush_AS' => 'nullable|numeric|between:0,100',
+                    'semrush_perc_english_traffic' => 'nullable|numeric|between:0,100',
+                    'moz_da' => 'nullable|numeric|between:0,100',
+                    'moz_pa' => 'nullable|numeric|between:0,100',
+                    'moz_perc_quality_bl' => 'nullable|numeric|between:0,100',
+                    'moz_spam_score' => 'nullable|numeric|between:0,100',
+                    'domain_age' => 'nullable|numeric|between:0,100',
+                    'majestic_trust_flow' => 'nullable|numeric|between:0,100',
+                    'majestic_citation_flow' => 'nullable|numeric|between:0,100',
+                    'ahrefs_domain_rank' => 'nullable|numeric|between:0,100',
                 ]);
 
                 if ($validator->passes())
