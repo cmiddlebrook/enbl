@@ -4,25 +4,33 @@ namespace App\Helpers;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Filament\Notifications\Notification;
 use Filament\Notifications\Actions\Action;
 use App\Models\LinkSite;
 use Exception;
-use Pest\Support\Backtrace;
 
 class CSVImporter
 {
     public function import($file)
     {
+        $numImported = 0;
+        $numErrors = 0;
+
         if ($file instanceof UploadedFile)
         {
-            $handle = fopen($file->getRealPath(), 'r');
-            $header = fgetcsv($handle);
+            $inputFile = fopen($file->getRealPath(), 'r');
 
-            $rowsImported = 0;
-            $errorRows = array();
-            $numErrors = 0;
-            while (($row = fgetcsv($handle)) !== false)
+            // setup a file to hold any errors
+            $errorFilename = 'csv_error_rows_' . time() . '_' . Str::random(4) . '.csv';
+            $errorOutputPath = public_path($errorFilename);
+            $errorOutputFile = fopen($errorOutputPath, 'w');
+            $header = fgetcsv($inputFile);
+            $errorHeader = array_merge($header, ['errors']);
+            fputcsv($errorOutputFile, $errorHeader);
+            
+            while (($row = fgetcsv($inputFile)) !== false)
             {
                 $rowData = array_combine($header, $row);
                 $cleanedData = $this->cleanupDomains($rowData);
@@ -31,23 +39,15 @@ class CSVImporter
                 if ($validator->passes())
                 {
                     LinkSite::create($cleanedData);
-                    $rowsImported++;
+                    $numImported++;
                 }
                 else
                 {
-                    // store the original data row before any cleanup was done
-                    $errorRows[] = ['row' => $rowData, 'errors' => $validator->errors()->all()];
-                    $numErrors++;                    
+                    $errorMessages = implode('; ', $validator->errors()->all());
+                    $errorRow = array_merge($row, [$errorMessages]);
+                    fputcsv($errorOutputFile, $errorRow);
+                    $numErrors++;
                 }
-            }
-
-            if ($numErrors > 0)
-            {
-                $this->notifyFail($errorRows);
-            }
-            else
-            {
-                $this->notifySuccess($rowsImported);
             }
         }
         else
@@ -55,7 +55,37 @@ class CSVImporter
             throw new Exception('Invalid file');
         }
 
-        $this->cleanupFiles($handle, $file);
+        $downloadUrl = url($errorFilename);
+        $this->notifyResults($numImported, $numErrors, $downloadUrl);
+
+        fclose($inputFile);
+        fclose($errorOutputFile);
+        $file->delete();
+    }
+
+    private function notifyResults($numImported, $numErrors, $downloadUrl)
+    {
+        $bodyText = "{$numImported} rows imported, with {$numErrors} errors"; 
+
+        $notification = Notification::make()
+            ->body($bodyText)
+            ->icon('fas-file-csv')
+            ->persistent();
+
+            if ($numErrors > 0)
+            {
+                $notification->title('INFO: import success, but with errors:');
+                $notification->actions([Action::make('download_error_file')->button()->url($downloadUrl)]);
+                $notification->color('info');
+                $notification->info();
+            }
+            else 
+            {
+                $notification->title('Import Success!');
+                $notification->color('success');
+                $notification->success();
+            }
+            $notification->send();
     }
 
     private function cleanupDomains(array $rowData)
@@ -97,59 +127,5 @@ class CSVImporter
         ]);
 
         return $validator;
-    }
-
-    private function notifySuccess($rowsImported)
-    {
-        Notification::make()
-            ->title('Successful import')
-            ->body("$rowsImported rows imported")
-            ->icon('fas-file-csv')
-            ->color('success')
-            ->success()
-            ->send();
-    }
-
-    private function notifyFail($errorRows)
-    { 
-        $errorString = "";
-        foreach($errorRows as $errorRow)
-        {
-            $errorString .= $this->prettifyDataRow($errorRow['row']);
-            $errorString .= "Row contained the following errors: " . implode('/', $errorRow['errors']);
-        }
-
-        Notification::make()
-            ->title('Validation failed upon import')
-            ->body("There was an error in the following data: {$errorString}")
-            ->icon('fas-file-csv')
-            ->color('danger')
-            ->danger()
-            ->persistent()
-            ->actions([
-                Action::make('ok')
-                    ->button(),
-                Action::make('undo')
-                    ->color('gray'),
-            ])
-            ->send();
-    }
-
-    private function prettifyDataRow($dataRow)
-    {
-        $dataList = '<ul>';
-        foreach ($dataRow as $key => $value)
-        {
-            $dataList .= "<li><strong>{$key}:</strong> {$value}</li>";
-        }
-        $dataList .= '</ul>';
-
-        return $dataList;
-    }
-
-    private function cleanupFiles($handle, $file)
-    {
-        fclose($handle);
-        $file->delete();
     }
 }

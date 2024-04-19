@@ -10,6 +10,7 @@ use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\FileUpload;
 use App\Helpers\CSVImporter;
+use App\Livewire\ImportErrors;
 
 class FileManager extends Page implements HasForms
 {
@@ -17,12 +18,11 @@ class FileManager extends Page implements HasForms
     protected static ?string $navigationIcon = 'fas-file-csv';
     protected static string $view = 'filament.pages.file-manager';
 
-    public ?array $file = []; // keep this public, the file can't be read without it
+    public ?array $file = []; // hold the uploaded csv file
 
     protected function getFormSchema(): array
     {
-        return [
-
+        $schema = [
             Grid::make(2)->schema([
                 Group::make()->schema([
                     Section::make()->schema([
@@ -39,7 +39,8 @@ class FileManager extends Page implements HasForms
                 ])->columnSpan(1)
             ])->statePath('file')
         ];
-    }
 
+        return $schema;
+    }
 
 }
