@@ -16,12 +16,12 @@ return new class extends Migration
             $table->string('domain')->unique();
             $table->string('ip_address')->nullable();
             $table->date('last_checked')->nullable();
-            $table->boolean('is_withdrawn')->default(false);
+            $table->boolean('is_withdrawn')->nullable()->default(false);
             $table->string('withdrawn_reason')->nullable();
             $table->string('niches')->nullable(); // string of id's from the niches table
             $table->unsignedTinyInteger('semrush_AS')->nullable();
             $table->unsignedBigInteger('semrush_traffic')->nullable();
-            $table->unsignedTinyInteger('semrush_perc_english_traffic')->nullable(); 
+            $table->unsignedTinyInteger('semrush_perc_english_traffic')->nullable();
             $table->unsignedBigInteger('semrush_organic_kw')->nullable();
             $table->unsignedTinyInteger('moz_da')->nullable();
             $table->unsignedTinyInteger('moz_pa')->nullable();

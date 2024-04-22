@@ -4,7 +4,7 @@ namespace App\Helpers;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use Filament\Notifications\Notification;
 use Filament\Notifications\Actions\Action;
@@ -29,16 +29,25 @@ class CSVImporter
             $header = fgetcsv($inputFile);
             $errorHeader = array_merge($header, ['errors']);
             fputcsv($errorOutputFile, $errorHeader);
-            
+
             while (($row = fgetcsv($inputFile)) !== false)
             {
                 $rowData = array_combine($header, $row);
                 $cleanedData = $this->cleanupDomains($rowData);
-                $validator = $this->makeValidator($cleanedData);
+                $existingSite = LinkSite::where('domain', $cleanedData['domain'])->first();
+                $validator = $this->makeValidator($cleanedData, $existingSite);
 
                 if ($validator->passes())
                 {
-                    LinkSite::create($cleanedData);
+
+                    if ($existingSite)
+                    {
+                        $existingSite->update($cleanedData);
+                    }
+                    else
+                    {
+                        LinkSite::create($cleanedData);
+                    }
                     $numImported++;
                 }
                 else
@@ -65,27 +74,27 @@ class CSVImporter
 
     private function notifyResults($numImported, $numErrors, $downloadUrl)
     {
-        $bodyText = "{$numImported} rows imported, with {$numErrors} errors"; 
+        $bodyText = "{$numImported} rows imported, with {$numErrors} errors";
 
         $notification = Notification::make()
             ->body($bodyText)
             ->icon('fas-file-csv')
             ->persistent();
 
-            if ($numErrors > 0)
-            {
-                $notification->title('INFO: import success, but with errors:');
-                $notification->actions([Action::make('download_error_file')->button()->url($downloadUrl)]);
-                $notification->color('info');
-                $notification->info();
-            }
-            else 
-            {
-                $notification->title('Import Success!');
-                $notification->color('success');
-                $notification->success();
-            }
-            $notification->send();
+        if ($numErrors > 0)
+        {
+            $notification->title('INFO: import success, but with errors:');
+            $notification->actions([Action::make('download_error_file')->button()->url($downloadUrl)]);
+            $notification->color('info');
+            $notification->info();
+        }
+        else
+        {
+            $notification->title('Import Success!');
+            $notification->color('success');
+            $notification->success();
+        }
+        $notification->send();
     }
 
     private function cleanupDomains(array $rowData)
@@ -98,20 +107,23 @@ class CSVImporter
                 $rowData[$key] = null;
 
                 // strip out unwanted domain prefixes
-                $rowData['domain'] = preg_replace('/^(http:\/\/|https:\/\/)?(www\.)?/', '', $rowData['domain']);
+                $rowData['domain'] = trim(preg_replace('/^(http:\/\/|https:\/\/)?(www\.)?/', '', $rowData['domain']));
             }
         }
 
         return $rowData;
     }
 
-    private function makeValidator(array $data)
+    private function makeValidator($data, $existingSite)
     {
+
         $validator = Validator::make($data, [
             'domain' => [
                 'required',
                 'regex:/^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$/',
-                'unique:link_sites,domain'
+                $existingSite ?
+                    Rule::unique('link_sites', 'domain')->ignore($existingSite->id) :
+                    'unique:link_sites,domain',
             ],
             'ip_address' => 'nullable|ipv4',
             'semrush_AS' => 'nullable|numeric|between:0,100',
