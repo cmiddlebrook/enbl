@@ -10,9 +10,12 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Enums\WithdrawalReasonEnum;
+use App\Helpers\NumberFormatter;
 
 class LinkSiteResource extends Resource
 {
@@ -144,7 +147,7 @@ class LinkSiteResource extends Resource
                     Forms\Components\Section::make('Remove site')->schema([
                         Forms\Components\Toggle::make('is_withdrawn')->label('Withdrawn'),
                         Forms\Components\Select::make('withdrawn_reason')
-                            //TODO: Figure out if there's a way to disable this field unless is_withdrawn is true                            
+                            //TODO: Figure out if there's a way to disable this field unless is_withdrawn is true
                             ->prohibitedUnless('is_withdrawn', 'true')
                             ->requiredIf('is_withdrawn', 'true')
                             ->options(WithdrawalReasonEnum::class)
@@ -159,21 +162,36 @@ class LinkSiteResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('domain')->sortable(),
-                Tables\Columns\TextColumn::make('ip_address'),
-                Tables\Columns\TextColumn::make('semrush_AS')->label('SR AS')->sortable(),
-                Tables\Columns\TextColumn::make('semrush_traffic')->label('Traffic')->sortable(),
-                Tables\Columns\TextColumn::make('semrush_perc_english_traffic')->label('ENT %'),
-                Tables\Columns\TextColumn::make('semrush_organic_kw')->label('KW')->sortable(),
-                Tables\Columns\TextColumn::make('moz_da')->label('DA')->sortable(),
-                Tables\Columns\TextColumn::make('moz_pa')->label('PA'),
-                Tables\Columns\TextColumn::make('moz_perc_quality_bl')->label('PQL %'),
-                Tables\Columns\TextColumn::make('moz_spam_score')->label('SS'),
-                Tables\Columns\TextColumn::make('domain_age')->label('Age'),
-                Tables\Columns\TextColumn::make('majestic_trust_flow')->label('TF')->sortable(),
-                Tables\Columns\TextColumn::make('majestic_citation_flow')->label('CF'),
-                Tables\Columns\TextColumn::make('ahrefs_domain_rank')->label('DR')->sortable(),
-                Tables\Columns\ToggleColumn::make('is_withdrawn')->label('W/D')->disabled(),
+                TextColumn::make('domain')->sortable()->size(TextColumn\TextColumnSize::ExtraSmall),
+                TextColumn::make('ip_address')->size(TextColumn\TextColumnSize::ExtraSmall),
+                TextColumn::make('semrush_AS')->label('SR AS')->sortable()->size(TextColumn\TextColumnSize::ExtraSmall),
+                TextColumn::make('semrush_traffic')
+                    ->numeric()
+                    ->label('Traffic')
+                    ->sortable()
+                    ->size(TextColumn\TextColumnSize::ExtraSmall)
+                    ->formatStateUsing(function ($state)
+                    {
+                        return NumberFormatter::format($state);
+                    }),
+                TextColumn::make('semrush_perc_english_traffic')->label('ENT %')->size(TextColumn\TextColumnSize::ExtraSmall),
+                TextColumn::make('semrush_organic_kw')->label('KW')
+                    ->numeric()
+                    ->sortable()
+                    ->size(TextColumn\TextColumnSize::ExtraSmall)
+                    ->formatStateUsing(function ($state)
+                    {
+                        return NumberFormatter::format($state);
+                    }),
+                TextColumn::make('moz_da')->label('DA')->size(TextColumn\TextColumnSize::ExtraSmall),
+                TextColumn::make('moz_pa')->label('PA')->size(TextColumn\TextColumnSize::ExtraSmall),
+                TextColumn::make('moz_perc_quality_bl')->label('PQL %')->size(TextColumn\TextColumnSize::ExtraSmall),
+                TextColumn::make('moz_spam_score')->label('SS')->size(TextColumn\TextColumnSize::ExtraSmall),
+                TextColumn::make('domain_age')->label('Age')->size(TextColumn\TextColumnSize::ExtraSmall),
+                TextColumn::make('majestic_trust_flow')->label('TF')->sortable()->size(TextColumn\TextColumnSize::ExtraSmall),
+                TextColumn::make('majestic_citation_flow')->label('CF')->size(TextColumn\TextColumnSize::ExtraSmall),
+                TextColumn::make('ahrefs_domain_rank')->label('DR')->sortable()->size(TextColumn\TextColumnSize::ExtraSmall),
+                ToggleColumn::make('is_withdrawn')->label('W/D')->disabled(),
             ])
             ->filters([
                 //
