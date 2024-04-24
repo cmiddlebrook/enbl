@@ -23,7 +23,7 @@ class CSVImporter
             $inputFile = fopen($file->getRealPath(), 'r');
 
             // setup a file to hold any errors
-            $errorFilename = 'csv_error_rows_' . time() . '_' . Str::random(4) . '.csv';
+            $errorFilename = 'downloads/csv_error_rows_' . time() . '_' . Str::random(4) . '.csv';
             $errorOutputPath = public_path($errorFilename);
             $errorOutputFile = fopen($errorOutputPath, 'w');
             $header = fgetcsv($inputFile);
