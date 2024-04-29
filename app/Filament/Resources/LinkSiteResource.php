@@ -52,7 +52,6 @@ class LinkSiteResource extends Resource
                             ->maxValue(100)
                             ->rules(['integer', 'between:0,100']),
 
-                        // TODO: Format the big numbers better. Lary had ideas about this - I need a callback
                         Forms\Components\TextInput::make('semrush_traffic')
                             ->label('Traffic')
                             ->numeric()

@@ -9,6 +9,8 @@ use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\FileUpload;
+use Filament\Notifications\Notification;
+use Filament\Notifications\Actions\Action;
 use App\Helpers\CSVImporter;
 use App\Livewire\ImportErrors;
 
@@ -34,6 +36,7 @@ class FileManager extends Page implements HasForms
                             {
                                 $csvImporter = new CSVImporter();
                                 $csvImporter->import($state);
+                                $this->notifyResults($csvImporter);
                             })
                     ])
                 ])->columnSpan(1)
@@ -41,6 +44,33 @@ class FileManager extends Page implements HasForms
         ];
 
         return $schema;
+    }
+
+    private function notifyResults(CSVImporter $csvImporter)
+    {
+        $numErrors = $csvImporter->getNumErrors();
+        $bodyText = "{$csvImporter->getNumImported()} rows imported, with {$numErrors} errors";
+
+        $notification = Notification::make()
+            ->body($bodyText)
+            ->icon('fas-file-csv')
+            ->persistent();
+
+        if ($numErrors > 0)
+        {
+            $downloadUrl = url($csvImporter->getErrorFilename());
+            $notification->title('INFO: import success, but with errors:');
+            $notification->actions([Action::make('download_error_file')->button()->url($downloadUrl)]);
+            $notification->color('info');
+            $notification->info();
+        }
+        else
+        {
+            $notification->title('Import Success!');
+            $notification->color('success');
+            $notification->success();
+        }
+        $notification->send();
     }
 
 }

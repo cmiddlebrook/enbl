@@ -44,7 +44,7 @@ class LinkSite extends Model
 
     public function niches()
     {
-        //TODO: grab the niches field, explode it to get a list of ids and then look them up in the Niches table
+        //TODO: implement once the niches functionality is implemented
         return;
     }
 }

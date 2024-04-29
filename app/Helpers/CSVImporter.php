@@ -13,26 +13,23 @@ use Exception;
 
 class CSVImporter
 {
+    private $numImported = 0;
+    private $numErrors = 0;
+    private $inputFile = null;
+    private $errorFile = null;
+    private $errorFilename = '';
+    private $headerRow = null;
+
     public function import($file)
     {
-        $numImported = 0;
-        $numErrors = 0;
-
         if ($file instanceof UploadedFile)
         {
-            $inputFile = fopen($file->getRealPath(), 'r');
+            $this->inputFile = fopen($file->getRealPath(), 'r');
+            $this->initialiseFiles();
 
-            // setup a file to hold any errors
-            $errorFilename = 'downloads/csv_error_rows_' . time() . '_' . Str::random(4) . '.csv';
-            $errorOutputPath = public_path($errorFilename);
-            $errorOutputFile = fopen($errorOutputPath, 'w');
-            $header = fgetcsv($inputFile);
-            $errorHeader = array_merge($header, ['errors']);
-            fputcsv($errorOutputFile, $errorHeader);
-
-            while (($row = fgetcsv($inputFile)) !== false)
+            while (($row = fgetcsv($this->inputFile)) !== false)
             {
-                $rowData = array_combine($header, $row);
+                $rowData = array_combine($this->headerRow, $row);
                 $cleanedData = $this->cleanupDomains($rowData);
                 $existingSite = LinkSite::where('domain', $cleanedData['domain'])->first();
                 $validator = $this->makeValidator($cleanedData, $existingSite);
@@ -48,14 +45,14 @@ class CSVImporter
                     {
                         LinkSite::create($cleanedData);
                     }
-                    $numImported++;
+                    $this->numImported++;
                 }
                 else
                 {
                     $errorMessages = implode('; ', $validator->errors()->all());
                     $errorRow = array_merge($row, [$errorMessages]);
-                    fputcsv($errorOutputFile, $errorRow);
-                    $numErrors++;
+                    fputcsv($this->errorFile, $errorRow);
+                    $this->numErrors++;
                 }
             }
         }
@@ -64,37 +61,19 @@ class CSVImporter
             throw new Exception('Invalid file');
         }
 
-        $downloadUrl = url($errorFilename);
-        $this->notifyResults($numImported, $numErrors, $downloadUrl);
-
-        fclose($inputFile);
-        fclose($errorOutputFile);
+        fclose($this->inputFile);
+        fclose($this->errorFile);
         $file->delete();
     }
 
-    private function notifyResults($numImported, $numErrors, $downloadUrl)
+    private function initialiseFiles()
     {
-        $bodyText = "{$numImported} rows imported, with {$numErrors} errors";
+        $this->errorFilename = 'downloads/csv_error_rows_' . time() . '_' . Str::random(4) . '.csv';
+        $this->errorFile = fopen(public_path($this->errorFilename), 'w');
 
-        $notification = Notification::make()
-            ->body($bodyText)
-            ->icon('fas-file-csv')
-            ->persistent();
-
-        if ($numErrors > 0)
-        {
-            $notification->title('INFO: import success, but with errors:');
-            $notification->actions([Action::make('download_error_file')->button()->url($downloadUrl)]);
-            $notification->color('info');
-            $notification->info();
-        }
-        else
-        {
-            $notification->title('Import Success!');
-            $notification->color('success');
-            $notification->success();
-        }
-        $notification->send();
+        $this->headerRow = fgetcsv($this->inputFile);
+        $errorHeader = array_merge($this->headerRow, ['errors']);
+        fputcsv($this->errorFile, $errorHeader);
     }
 
     private function cleanupDomains(array $rowData)
@@ -140,4 +119,20 @@ class CSVImporter
 
         return $validator;
     }
+
+    public function getNumImported()
+    {
+        return $this->numImported;
+    }
+
+    public function getNumErrors()
+    {
+        return $this->numErrors;
+    }
+
+    public function getErrorFilename()
+    {
+        return $this->errorFilename;
+    }
+
 }
