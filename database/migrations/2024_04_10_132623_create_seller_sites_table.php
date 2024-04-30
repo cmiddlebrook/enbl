@@ -17,8 +17,8 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Seller::class)->cascadeOnDelete();
             $table->foreignIdFor(LinkSite::class);
-            $table->decimal('price_guest_post');
-            $table->decimal('price_link_insertion');
+            $table->unsignedTinyInteger('price_guest_post');
+            $table->unsignedTinyInteger('price_link_insertion');
             $table->timestamps();
         });
     }
