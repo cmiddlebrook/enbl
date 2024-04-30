@@ -24,106 +24,12 @@ class CSVImporter
 
     public function importLinkSites($file)
     {
-        if ($file instanceof UploadedFile)
-        {
-            $this->inputFile = fopen($file->getRealPath(), 'r');
-            $this->initialiseFiles();
-
-            while (($row = fgetcsv($this->inputFile)) !== false)
-            {
-                $rowData = array_combine($this->headerRow, $row);
-                $cleanedData = $this->cleanupDomains($rowData);
-                $existingSite = LinkSite::where('domain', $cleanedData['domain'])->first();
-                $validator = $this->makeLinkSiteValidator($cleanedData, $existingSite);
-
-                if ($validator->passes())
-                {
-
-                    if ($existingSite)
-                    {
-                        $existingSite->update($cleanedData);
-                    }
-                    else
-                    {
-                        LinkSite::create($cleanedData);
-                    }
-                    $this->numImported++;
-                }
-                else
-                {
-                    $errorMessages = implode('; ', $validator->errors()->all());
-                    $errorRow = array_merge($row, [$errorMessages]);
-                    fputcsv($this->errorFile, $errorRow);
-                    $this->numErrors++;
-                }
-            }
-        }
-        else
-        {
-            throw new Exception('Invalid file');
-        }
-
-        fclose($this->inputFile);
-        fclose($this->errorFile);
-        $file->delete();
+        $this->importCSVFile($file, 'makeLinkSiteValidator', 'processLinkSiteData');
     }
 
     public function importSellerSites($file)
     {
-        if ($file instanceof UploadedFile)
-        {
-            $this->inputFile = fopen($file->getRealPath(), 'r');
-            $this->initialiseFiles();
-
-            while (($row = fgetcsv($this->inputFile)) !== false)
-            {
-                $rowData = array_combine($this->headerRow, $row);
-                $cleanedData = $this->cleanupDomains($rowData);
-                $linkSite = LinkSite::where('domain', $cleanedData['domain'])->first();
-                $seller = Seller::where('email', $cleanedData['email'])->first();
-                $validator = $this->makeSellerSiteValidator($cleanedData);
-
-                if ($validator->passes())
-                {
-                    if (!$seller)
-                    {
-                        $seller = Seller::create(['email' => $cleanedData['email']]);
-                    }
-
-                    if (!$linkSite)
-                    {
-                        $linkSite = LinkSite::create(['domain' => $cleanedData['domain']]);
-                    }
-
-                    SellerSite::updateOrCreate(
-                        [
-                            'seller_id' => $seller->id,
-                            'link_site_id' => $linkSite->id
-                        ],
-                        [
-                            'price_guest_post' => $cleanedData['price_guest_post'],
-                            'price_link_insertion' => $cleanedData['price_link_insertion']
-                        ]
-                    );
-                    $this->numImported++;
-                }
-                else
-                {
-                    $errorMessages = implode('; ', $validator->errors()->all());
-                    $errorRow = array_merge($row, [$errorMessages]);
-                    fputcsv($this->errorFile, $errorRow);
-                    $this->numErrors++;
-                }
-            }
-        }
-        else
-        {
-            throw new Exception('Invalid file');
-        }
-
-        fclose($this->inputFile);
-        fclose($this->errorFile);
-        $file->delete();
+        $this->importCSVFile($file, 'makeSellerSiteValidator', 'processSellerSiteData');
     }
 
     private function initialiseFiles()
@@ -136,6 +42,84 @@ class CSVImporter
         fputcsv($this->errorFile, $errorHeader);
     }
 
+    private function importCSVFile($file, $validatorFunction, $dataProcessingFunction)
+    {
+        if ($file instanceof UploadedFile)
+        {
+            $this->inputFile = fopen($file->getRealPath(), 'r');
+            $this->initialiseFiles();
+
+            while (($row = fgetcsv($this->inputFile)) !== false)
+            {
+                $rowData = array_combine($this->headerRow, $row);
+                $cleanedData = $this->cleanupDomains($rowData);                
+                
+                $validator = $this->$validatorFunction($cleanedData);
+
+                if ($validator->passes())
+                {
+                    $this->$dataProcessingFunction($cleanedData);
+                    $this->numImported++;
+                }
+                else
+                {
+                    $errorMessages = implode('; ', $validator->errors()->all());
+                    $errorRow = array_merge($row, [$errorMessages]);
+                    fputcsv($this->errorFile, $errorRow);
+                    $this->numErrors++;
+                }
+            }
+        }
+        else
+        {
+            throw new Exception('Invalid file');
+        }
+
+        fclose($this->inputFile);
+        fclose($this->errorFile);
+        $file->delete();
+    }
+
+    private function processLinkSiteData($cleanedData)
+    {
+        $existingSite = LinkSite::where('domain', $cleanedData['domain'])->first();
+        if ($existingSite)
+        {
+            $existingSite->update($cleanedData);
+        }
+        else
+        {
+            LinkSite::create($cleanedData);
+        }
+    }
+
+    private function processSellerSiteData($cleanedData)
+    {
+        $seller = Seller::where('email', $cleanedData['email'])->first();
+        $linkSite = LinkSite::where('domain', $cleanedData['domain'])->first();
+    
+        if (!$seller)
+        {
+            $seller = Seller::create(['email' => $cleanedData['email']]);
+        }
+
+        if (!$linkSite)
+        {
+            $linkSite = LinkSite::create(['domain' => $cleanedData['domain']]);
+        }
+
+        SellerSite::updateOrCreate(
+            [
+                'seller_id' => $seller->id,
+                'link_site_id' => $linkSite->id
+            ],
+            [
+                'price_guest_post' => $cleanedData['price_guest_post'],
+                'price_link_insertion' => $cleanedData['price_link_insertion']
+            ]
+        );
+    }
+    
     private function cleanupDomains(array $rowData)
     {
         foreach ($rowData as $key => $value)
@@ -153,8 +137,9 @@ class CSVImporter
         return $rowData;
     }
 
-    private function makeLinkSiteValidator($data, $existingSite)
+    private function makeLinkSiteValidator($data)
     {
+        $existingSite = LinkSite::where('domain', $data['domain'])->first();
         $validator = Validator::make($data, [
             'domain' => [
                 'required',

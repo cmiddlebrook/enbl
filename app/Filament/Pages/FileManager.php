@@ -31,6 +31,7 @@ class FileManager extends Page implements HasForms
                     Section::make()->schema([
                         FileUpload::make('csv_file')
                             ->label('Link Sites CSV Data')
+                            ->hintIcon('fas-link')
                             ->acceptedFileTypes(['text/csv', 'application/vnd.ms-excel'])
                             ->reactive()
                             ->afterStateUpdated(function ($state)
@@ -38,7 +39,7 @@ class FileManager extends Page implements HasForms
                                 $csvImporter = new CSVImporter();
                                 $csvImporter->importLinkSites($state);
                                 $this->notifyResults($csvImporter);
-                            })
+                            }),                            
                     ])
                 ])->columnSpan(1)
             ])->statePath('linksite_file'),
@@ -48,6 +49,7 @@ class FileManager extends Page implements HasForms
                     Section::make()->schema([
                         FileUpload::make('csv_file')
                             ->label('Seller Sites CSV Data')
+                            ->hintIcon('fas-user-secret')
                             ->acceptedFileTypes(['text/csv', 'application/vnd.ms-excel'])
                             ->reactive()
                             ->afterStateUpdated(function ($state)
