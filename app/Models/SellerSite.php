@@ -10,6 +10,8 @@ class SellerSite extends Model
     use HasFactory;
 
     protected $fillable = [
+        'seller_id',
+        'link_site_id',
         'price_guest_post',
         'price_link_insertion'
     ];

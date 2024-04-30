@@ -20,7 +20,8 @@ class FileManager extends Page implements HasForms
     protected static ?string $navigationIcon = 'fas-file-csv';
     protected static string $view = 'filament.pages.file-manager';
 
-    public ?array $file = []; // hold the uploaded csv file
+    public ?array $linksite_file = []; 
+    public ?array $seller_file = []; 
 
     protected function getFormSchema(): array
     {
@@ -35,12 +36,29 @@ class FileManager extends Page implements HasForms
                             ->afterStateUpdated(function ($state)
                             {
                                 $csvImporter = new CSVImporter();
-                                $csvImporter->import($state);
+                                $csvImporter->importLinkSites($state);
                                 $this->notifyResults($csvImporter);
                             })
                     ])
                 ])->columnSpan(1)
-            ])->statePath('file')
+            ])->statePath('linksite_file'),
+
+            Grid::make(2)->schema([
+                Group::make()->schema([
+                    Section::make()->schema([
+                        FileUpload::make('csv_file')
+                            ->label('Seller Sites CSV Data')
+                            ->acceptedFileTypes(['text/csv', 'application/vnd.ms-excel'])
+                            ->reactive()
+                            ->afterStateUpdated(function ($state)
+                            {
+                                $csvImporter = new CSVImporter();
+                                $csvImporter->importSellerSites($state);
+                                $this->notifyResults($csvImporter);
+                            })
+                    ])
+                ])->columnSpan(1)
+            ])->statePath('seller_file')
         ];
 
         return $schema;

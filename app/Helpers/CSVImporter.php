@@ -9,6 +9,8 @@ use Illuminate\Support\Str;
 use Filament\Notifications\Notification;
 use Filament\Notifications\Actions\Action;
 use App\Models\LinkSite;
+use App\Models\Seller;
+use App\Models\SellerSite;
 use Exception;
 
 class CSVImporter
@@ -20,7 +22,7 @@ class CSVImporter
     private $errorFilename = '';
     private $headerRow = null;
 
-    public function import($file)
+    public function importLinkSites($file)
     {
         if ($file instanceof UploadedFile)
         {
@@ -32,7 +34,7 @@ class CSVImporter
                 $rowData = array_combine($this->headerRow, $row);
                 $cleanedData = $this->cleanupDomains($rowData);
                 $existingSite = LinkSite::where('domain', $cleanedData['domain'])->first();
-                $validator = $this->makeValidator($cleanedData, $existingSite);
+                $validator = $this->makeLinkSiteValidator($cleanedData, $existingSite);
 
                 if ($validator->passes())
                 {
@@ -45,6 +47,64 @@ class CSVImporter
                     {
                         LinkSite::create($cleanedData);
                     }
+                    $this->numImported++;
+                }
+                else
+                {
+                    $errorMessages = implode('; ', $validator->errors()->all());
+                    $errorRow = array_merge($row, [$errorMessages]);
+                    fputcsv($this->errorFile, $errorRow);
+                    $this->numErrors++;
+                }
+            }
+        }
+        else
+        {
+            throw new Exception('Invalid file');
+        }
+
+        fclose($this->inputFile);
+        fclose($this->errorFile);
+        $file->delete();
+    }
+
+    public function importSellerSites($file)
+    {
+        if ($file instanceof UploadedFile)
+        {
+            $this->inputFile = fopen($file->getRealPath(), 'r');
+            $this->initialiseFiles();
+
+            while (($row = fgetcsv($this->inputFile)) !== false)
+            {
+                $rowData = array_combine($this->headerRow, $row);
+                $cleanedData = $this->cleanupDomains($rowData);
+                $linkSite = LinkSite::where('domain', $cleanedData['domain'])->first();
+                $seller = Seller::where('email', $cleanedData['email'])->first();
+                $validator = $this->makeSellerSiteValidator($cleanedData);
+
+                if ($validator->passes())
+                {
+                    if (!$seller)
+                    {
+                        $seller = Seller::create(['email' => $cleanedData['email']]);
+                    }
+
+                    if (!$linkSite)
+                    {
+                        $linkSite = LinkSite::create(['domain' => $cleanedData['domain']]);
+                    }
+
+                    SellerSite::updateOrCreate(
+                        [
+                            'seller_id' => $seller->id,
+                            'link_site_id' => $linkSite->id
+                        ],
+                        [
+                            'price_guest_post' => $cleanedData['price_guest_post'],
+                            'price_link_insertion' => $cleanedData['price_link_insertion']
+                        ]
+                    );
                     $this->numImported++;
                 }
                 else
@@ -93,9 +153,8 @@ class CSVImporter
         return $rowData;
     }
 
-    private function makeValidator($data, $existingSite)
+    private function makeLinkSiteValidator($data, $existingSite)
     {
-
         $validator = Validator::make($data, [
             'domain' => [
                 'required',
@@ -120,6 +179,22 @@ class CSVImporter
         return $validator;
     }
 
+    private function makeSellerSiteValidator($data)
+    {
+        $validator = Validator::make($data, [
+            'domain' => [
+                'required',
+                'regex:/^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$/',
+            ],
+            'email' => 'required|email',
+            'email2' => 'nullable|email',
+            'price_guest_post' => 'required|numeric',
+            'price_link_insertion' => 'nullable|numeric'
+        ]);
+
+        return $validator;
+    }
+
     public function getNumImported()
     {
         return $this->numImported;
@@ -134,5 +209,4 @@ class CSVImporter
     {
         return $this->errorFilename;
     }
-
 }
