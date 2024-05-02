@@ -7,6 +7,7 @@ use App\Filament\Resources\LinkSiteResource\RelationManagers;
 use App\Models\LinkSite;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -144,9 +145,9 @@ class LinkSiteResource extends Resource
                 Forms\Components\Group::make()->schema([
                     // TODO: Can't withdraw a site if there are any open orders for it
                     Forms\Components\Section::make('Remove site')->schema([
-                        Forms\Components\Toggle::make('is_withdrawn')->label('Withdrawn'),
+                        Forms\Components\Toggle::make('is_withdrawn')->label('Withdrawn')->reactive(),
                         Forms\Components\Select::make('withdrawn_reason')
-                            //TODO: Figure out if there's a way to disable this field unless is_withdrawn is true
+                            ->visible(fn (Get $get): bool => $get('is_withdrawn'))
                             ->prohibitedUnless('is_withdrawn', 'true')
                             ->requiredIf('is_withdrawn', 'true')
                             ->options(WithdrawalReasonEnum::class)
