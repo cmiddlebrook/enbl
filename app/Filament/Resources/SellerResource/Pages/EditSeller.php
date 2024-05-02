@@ -16,4 +16,9 @@ class EditSeller extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    protected function afterSave(): void
+    {
+        redirect('/admin/sellers');
+    }
 }

@@ -30,15 +30,11 @@ class LinkSiteResource extends Resource
             ->schema([
                 Forms\Components\Group::make()->schema([
                     Forms\Components\Section::make('Website')->schema([
-                        Forms\Components\TextInput::make('domain')->required(),
+                        Forms\Components\TextInput::make('domain')->required()->unique(ignoreRecord:true),
                         Forms\Components\TextInput::make('ip_address')->ipv4(),
                         Forms\Components\TextInput::make('domain_age')
                             ->label('Domain Age')
-                            ->numeric()
-                            ->integer()
                             ->default(0)
-                            ->minValue(0)
-                            ->maxValue(100)
                             ->rules(['integer', 'between:0,100']),
                         Forms\Components\DatePicker::make('last_checked'),
                     ])->columns(2),
@@ -46,36 +42,22 @@ class LinkSiteResource extends Resource
                     Forms\Components\Section::make('SEMRush')->schema([
                         Forms\Components\TextInput::make('semrush_AS')
                             ->label('Authority Score')
-                            ->numeric()
-                            ->integer()
                             ->default(0)
-                            ->minValue(0)
-                            ->maxValue(100)
                             ->rules(['integer', 'between:0,100']),
 
                         Forms\Components\TextInput::make('semrush_traffic')
                             ->label('Traffic')
-                            ->numeric()
-                            ->integer()
                             ->default(0)
-                            ->minValue(0)
                             ->rules(['integer', 'min:0']),
 
                         Forms\Components\TextInput::make('semrush_perc_english_traffic')
                             ->label('% English Traffic')
-                            ->numeric()
-                            ->integer()
                             ->default(0)
-                            ->minValue(0)
-                            ->maxValue(100)
                             ->rules(['integer', 'between:0,100']),
 
                         Forms\Components\TextInput::make('semrush_organic_kw')
                             ->label('Keywords')
-                            ->numeric()
-                            ->integer()
                             ->default(0)
-                            ->minValue(0)
                             ->rules(['integer', 'min:0']),
 
                     ])->columns(4),
@@ -83,38 +65,22 @@ class LinkSiteResource extends Resource
                     Forms\Components\Section::make('Moz')->schema([
                         Forms\Components\TextInput::make('moz_da')
                             ->label('Domain Authority')
-                            ->numeric()
-                            ->integer()
                             ->default(0)
-                            ->minValue(0)
-                            ->maxValue(100)
                             ->rules(['integer', 'between:0,100']),
 
                         Forms\Components\TextInput::make('moz_pa')
                             ->label('Page Authority')
-                            ->numeric()
-                            ->integer()
                             ->default(0)
-                            ->minValue(0)
-                            ->maxValue(100)
                             ->rules(['integer', 'between:0,100']),
 
                         Forms\Components\TextInput::make('moz_perc_quality_bl')
                             ->label('% Quality Links')
-                            ->numeric()
-                            ->integer()
                             ->default(0)
-                            ->minValue(0)
-                            ->maxValue(100)
                             ->rules(['integer', 'between:0,100']),
 
                         Forms\Components\TextInput::make('moz_spam_score')
                             ->label('Spam Score')
-                            ->numeric()
-                            ->integer()
                             ->default(0)
-                            ->minValue(0)
-                            ->maxValue(100)
                             ->rules(['integer', 'between:0,100']),
 
                     ])->columns(4),
@@ -123,20 +89,12 @@ class LinkSiteResource extends Resource
 
                         Forms\Components\TextInput::make('majestic_trust_flow')
                             ->label('Trust Flow')
-                            ->numeric()
-                            ->integer()
                             ->default(0)
-                            ->minValue(0)
-                            ->maxValue(100)
                             ->rules(['integer', 'between:0,100']),
 
                         Forms\Components\TextInput::make('majestic_citation_flow')
                             ->label('Citation Flow')
-                            ->numeric()
-                            ->integer()
                             ->default(0)
-                            ->minValue(0)
-                            ->maxValue(100)
                             ->rules(['integer', 'between:0,100']),
 
                     ])->columns(4),
@@ -162,42 +120,40 @@ class LinkSiteResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('domain')->sortable()->size(TextColumn\TextColumnSize::ExtraSmall),
-                TextColumn::make('ip_address')->size(TextColumn\TextColumnSize::ExtraSmall),
-                TextColumn::make('semrush_AS')->label('SR AS')->sortable()->size(TextColumn\TextColumnSize::ExtraSmall),
+                TextColumn::make('domain')->sortable()->searchable(),
+                TextColumn::make('ip_address')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('semrush_AS')->label('SR AS')->sortable(),
                 TextColumn::make('semrush_traffic')
                     ->numeric()
                     ->label('Traffic')
                     ->sortable()
-                    ->size(TextColumn\TextColumnSize::ExtraSmall)
                     ->formatStateUsing(function ($state)
                     {
                         return NumberFormatter::format($state);
                     }),
-                TextColumn::make('semrush_perc_english_traffic')->label('ENT %')->size(TextColumn\TextColumnSize::ExtraSmall),
+                TextColumn::make('semrush_perc_english_traffic')->label('ENT %'),
                 TextColumn::make('semrush_organic_kw')->label('KW')
                     ->numeric()
                     ->sortable()
-                    ->size(TextColumn\TextColumnSize::ExtraSmall)
                     ->formatStateUsing(function ($state)
                     {
                         return NumberFormatter::format($state);
                     }),
-                TextColumn::make('moz_da')->label('DA')->size(TextColumn\TextColumnSize::ExtraSmall),
-                TextColumn::make('moz_pa')->label('PA')->size(TextColumn\TextColumnSize::ExtraSmall),
-                TextColumn::make('moz_perc_quality_bl')->label('PQL %')->size(TextColumn\TextColumnSize::ExtraSmall),
-                TextColumn::make('moz_spam_score')->label('SS')->size(TextColumn\TextColumnSize::ExtraSmall),
-                TextColumn::make('domain_age')->label('Age')->size(TextColumn\TextColumnSize::ExtraSmall),
-                TextColumn::make('majestic_trust_flow')->label('TF')->sortable()->size(TextColumn\TextColumnSize::ExtraSmall),
-                TextColumn::make('majestic_citation_flow')->label('CF')->size(TextColumn\TextColumnSize::ExtraSmall),
-                TextColumn::make('ahrefs_domain_rank')->label('DR')->sortable()->size(TextColumn\TextColumnSize::ExtraSmall),
+                TextColumn::make('moz_da')->label('DA'),
+                TextColumn::make('moz_pa')->label('PA'),
+                TextColumn::make('moz_perc_quality_bl')->label('PQL %')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('moz_spam_score')->label('SS')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('domain_age')->label('Age')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('majestic_trust_flow')->label('TF')->sortable(),
+                TextColumn::make('majestic_citation_flow')->label('CF'),
+                TextColumn::make('ahrefs_domain_rank')->label('DR')->sortable(),
                 ToggleColumn::make('is_withdrawn')->label('W/D')->disabled(),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -221,4 +177,5 @@ class LinkSiteResource extends Resource
             'edit' => Pages\EditLinkSite::route('/{record}/edit'),
         ];
     }
+
 }

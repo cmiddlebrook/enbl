@@ -26,10 +26,8 @@ class SellerResource extends Resource
             ->schema([
                 Forms\Components\Group::make()->schema([
                     Forms\Components\Section::make()->schema([
-                        Forms\Components\TextInput::make('name')->required(),
-                        Forms\Components\TextInput::make('email')->email()
-                            ->required()
-                            ->unique(),
+                        Forms\Components\TextInput::make('name'),
+                        Forms\Components\TextInput::make('email')->email()->required()->unique(ignoreRecord:true),
                         Forms\Components\TextInput::make('email2')->email()
                             ->different('email')
                             ->label('Secondary Email'),
