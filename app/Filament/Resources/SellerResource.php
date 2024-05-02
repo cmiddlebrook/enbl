@@ -5,9 +5,10 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\SellerResource\Pages;
 use App\Filament\Resources\SellerResource\RelationManagers;
 use App\Models\Seller;
+use Filament\Resources\Resource;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -26,9 +27,9 @@ class SellerResource extends Resource
             ->schema([
                 Forms\Components\Group::make()->schema([
                     Forms\Components\Section::make()->schema([
-                        Forms\Components\TextInput::make('name'),
-                        Forms\Components\TextInput::make('email')->email()->required()->unique(ignoreRecord:true),
-                        Forms\Components\TextInput::make('email2')->email()
+                        TextInput::make('name'),
+                        TextInput::make('email')->email()->required()->unique(ignoreRecord:true),
+                        TextInput::make('email2')->email()
                             ->different('email')
                             ->label('Secondary Email'),
                         Forms\Components\MarkdownEditor::make('notes')
@@ -41,9 +42,9 @@ class SellerResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
-                Tables\Columns\TextColumn::make('email'),
-                Tables\Columns\TextColumn::make('email2')->label('Secondary Email'),
+                TextColumn::make('name'),
+                TextColumn::make('email'),
+                TextColumn::make('email2')->label('Secondary Email'),
             ])
             ->filters([
                 //

@@ -8,6 +8,7 @@ use App\Models\LinkSite;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -30,9 +31,9 @@ class LinkSiteResource extends Resource
             ->schema([
                 Forms\Components\Group::make()->schema([
                     Forms\Components\Section::make('Website')->schema([
-                        Forms\Components\TextInput::make('domain')->required()->unique(ignoreRecord:true),
-                        Forms\Components\TextInput::make('ip_address')->ipv4(),
-                        Forms\Components\TextInput::make('domain_age')
+                        TextInput::make('domain')->required()->unique(ignoreRecord:true),
+                        TextInput::make('ip_address')->ipv4(),
+                        TextInput::make('domain_age')
                             ->label('Domain Age')
                             ->default(0)
                             ->rules(['integer', 'between:0,100']),
@@ -40,22 +41,22 @@ class LinkSiteResource extends Resource
                     ])->columns(2),
 
                     Forms\Components\Section::make('SEMRush')->schema([
-                        Forms\Components\TextInput::make('semrush_AS')
+                        TextInput::make('semrush_AS')
                             ->label('Authority Score')
                             ->default(0)
                             ->rules(['integer', 'between:0,100']),
 
-                        Forms\Components\TextInput::make('semrush_traffic')
+                        TextInput::make('semrush_traffic')
                             ->label('Traffic')
                             ->default(0)
                             ->rules(['integer', 'min:0']),
 
-                        Forms\Components\TextInput::make('semrush_perc_english_traffic')
+                        TextInput::make('semrush_perc_english_traffic')
                             ->label('% English Traffic')
                             ->default(0)
                             ->rules(['integer', 'between:0,100']),
 
-                        Forms\Components\TextInput::make('semrush_organic_kw')
+                        TextInput::make('semrush_organic_kw')
                             ->label('Keywords')
                             ->default(0)
                             ->rules(['integer', 'min:0']),
@@ -63,22 +64,22 @@ class LinkSiteResource extends Resource
                     ])->columns(4),
 
                     Forms\Components\Section::make('Moz')->schema([
-                        Forms\Components\TextInput::make('moz_da')
+                        TextInput::make('moz_da')
                             ->label('Domain Authority')
                             ->default(0)
                             ->rules(['integer', 'between:0,100']),
 
-                        Forms\Components\TextInput::make('moz_pa')
+                        TextInput::make('moz_pa')
                             ->label('Page Authority')
                             ->default(0)
                             ->rules(['integer', 'between:0,100']),
 
-                        Forms\Components\TextInput::make('moz_perc_quality_bl')
+                        TextInput::make('moz_perc_quality_bl')
                             ->label('% Quality Links')
                             ->default(0)
                             ->rules(['integer', 'between:0,100']),
 
-                        Forms\Components\TextInput::make('moz_spam_score')
+                        TextInput::make('moz_spam_score')
                             ->label('Spam Score')
                             ->default(0)
                             ->rules(['integer', 'between:0,100']),
@@ -87,12 +88,12 @@ class LinkSiteResource extends Resource
 
                     Forms\Components\Section::make('Majestic')->schema([
 
-                        Forms\Components\TextInput::make('majestic_trust_flow')
+                        TextInput::make('majestic_trust_flow')
                             ->label('Trust Flow')
                             ->default(0)
                             ->rules(['integer', 'between:0,100']),
 
-                        Forms\Components\TextInput::make('majestic_citation_flow')
+                        TextInput::make('majestic_citation_flow')
                             ->label('Citation Flow')
                             ->default(0)
                             ->rules(['integer', 'between:0,100']),
@@ -153,8 +154,13 @@ class LinkSiteResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make()
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make()
+                ])                
             ])
+
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
