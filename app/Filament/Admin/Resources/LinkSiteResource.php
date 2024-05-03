@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Admin\Resources;
 
-use App\Filament\Resources\LinkSiteResource\Pages;
-use App\Filament\Resources\LinkSiteResource\RelationManagers;
+use App\Filament\Admin\Resources\LinkSiteResource\Pages;
+use App\Filament\Admin\Resources\LinkSiteResource\RelationManagers;
 use App\Models\LinkSite;
 use Filament\Forms;
 use Filament\Forms\Form;

@@ -25,6 +25,10 @@ class DashboardPanelProvider extends PanelProvider
         return $panel
             ->id('dashboard')
             ->path('dashboard')
+            ->login()
+            ->registration()
+            ->profile()
+            ->topNavigation()
             ->sidebarCollapsibleOnDesktop()
             ->colors([
                 'primary' => config('colours.blue1'),
@@ -32,12 +36,12 @@ class DashboardPanelProvider extends PanelProvider
             ->font('Poppins')
             ->favicon('images/favicon.png')
             // ->brandLogo(asset('images/link.png')) // doesn't look great!
-            ->discoverResources(in: app_path('Filament/Dashboard/Resources'), for: 'App\\Filament\\Dashboard\\Resources')
-            ->discoverPages(in: app_path('Filament/Dashboard/Pages'), for: 'App\\Filament\\Dashboard\\Pages')
+            ->discoverResources(in: app_path('Filament/Customer/Resources'), for: 'App\\Filament\\Dashboard\\Resources')
+            ->discoverPages(in: app_path('Filament/Customer/Pages'), for: 'App\\Filament\\Dashboard\\Pages')
             ->pages([
                 Pages\Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Dashboard/Widgets'), for: 'App\\Filament\\Dashboard\\Widgets')
+            ->discoverWidgets(in: app_path('Filament/Customer/Widgets'), for: 'App\\Filament\\Dashboard\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,

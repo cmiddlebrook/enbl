@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Admin\Resources;
 
-use App\Filament\Resources\SellerResource\Pages;
-use App\Filament\Resources\SellerResource\RelationManagers;
+use App\Filament\Admin\Resources\SellerResource\Pages;
+use App\Filament\Admin\Resources\SellerResource\RelationManagers;
 use App\Models\Seller;
 use Filament\Resources\Resource;
 use Filament\Forms;
@@ -50,7 +50,11 @@ class SellerResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make()
+                ])  
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

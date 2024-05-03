@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\LinkSiteResource\Pages;
+namespace App\Filament\Admin\Resources\LinkSiteResource\Pages;
 
-use App\Filament\Resources\LinkSiteResource;
+use App\Filament\Admin\Resources\LinkSiteResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
