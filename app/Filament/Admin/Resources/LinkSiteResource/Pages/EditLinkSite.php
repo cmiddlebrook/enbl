@@ -19,6 +19,7 @@ class EditLinkSite extends EditRecord
 
     protected function afterSave(): void
     {
+        // TODO: Check if this has been fixed in Filament (last checked 03/05/2024)
         // I tried to use successRedirectUrl() on the EditAction on the resource form, but for some reason
         // it simply is not called, and neither are ANY of the lifecycle hooks! Dunno if that is a Filament 
         // bug or not, but this workaround works. 02/05/2024
