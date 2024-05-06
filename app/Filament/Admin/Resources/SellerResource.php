@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\SellerResource\Pages;
 use App\Filament\Admin\Resources\SellerResource\RelationManagers;
+use App\Filament\Admin\Resources\SellerResource\RelationManagers\LinkSitesRelationManager;
 use App\Models\Seller;
 use Filament\Resources\Resource;
 use Filament\Forms;
@@ -20,6 +21,17 @@ class SellerResource extends Resource
     protected static ?string $model = Seller::class;
     protected static ?string $navigationGroup = 'Links';
     protected static ?string $navigationIcon = 'fas-user-secret';
+
+    
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return static::getModel()::count() < 10 ? 'danger' : 'primary';
+    }
 
     public static function form(Form $form): Form
     {
@@ -66,7 +78,7 @@ class SellerResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            LinkSitesRelationManager::class
         ];
     }
 

@@ -39,7 +39,9 @@ class LinkSite extends Model
 
     public function sellers()
     {
-        return $this->hasMany(SellerSite::class);
+        return $this->belongsToMany(Seller::class, 'seller_sites')
+            ->withPivot('price_guest_post', 'price_link_insertion')
+            ->orderByPivot('price_guest_post');
     }
 
     public function niches()

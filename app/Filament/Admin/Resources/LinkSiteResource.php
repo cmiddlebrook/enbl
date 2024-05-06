@@ -17,6 +17,7 @@ use Filament\Tables\Columns\ToggleColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Enums\WithdrawalReasonEnum;
+use App\Filament\Admin\Resources\LinkSiteResource\RelationManagers\SellersRelationManager;
 use App\Helpers\NumberFormatter;
 
 class LinkSiteResource extends Resource
@@ -24,6 +25,11 @@ class LinkSiteResource extends Resource
     protected static ?string $model = LinkSite::class;
     protected static ?string $navigationGroup = 'Links';
     protected static ?string $navigationIcon = 'fas-link';
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('semrush_AS', '>=', 20)->count();
+    }
 
     public static function form(Form $form): Form
     {
@@ -63,6 +69,19 @@ class LinkSiteResource extends Resource
 
                     ])->columns(4),
 
+                    // TODO: Can't withdraw a site if there are any open orders for it
+                    Forms\Components\Section::make('Remove site')->schema([
+                        Forms\Components\Toggle::make('is_withdrawn')->label('Withdrawn')->reactive(),
+                        Forms\Components\Select::make('withdrawn_reason')
+                            ->visible(fn (Get $get): bool => $get('is_withdrawn'))
+                            ->prohibitedUnless('is_withdrawn', 'true')
+                            ->requiredIf('is_withdrawn', 'true')
+                            ->options(WithdrawalReasonEnum::class)
+                    ])->columns(2),
+                ]),
+
+                Forms\Components\Group::make()->schema([
+
                     Forms\Components\Section::make('Moz')->schema([
                         TextInput::make('moz_da')
                             ->label('Domain Authority')
@@ -99,18 +118,6 @@ class LinkSiteResource extends Resource
                             ->rules(['integer', 'between:0,100']),
 
                     ])->columns(4),
-                ]),
-
-                Forms\Components\Group::make()->schema([
-                    // TODO: Can't withdraw a site if there are any open orders for it
-                    Forms\Components\Section::make('Remove site')->schema([
-                        Forms\Components\Toggle::make('is_withdrawn')->label('Withdrawn')->reactive(),
-                        Forms\Components\Select::make('withdrawn_reason')
-                            ->visible(fn (Get $get): bool => $get('is_withdrawn'))
-                            ->prohibitedUnless('is_withdrawn', 'true')
-                            ->requiredIf('is_withdrawn', 'true')
-                            ->options(WithdrawalReasonEnum::class)
-                    ])->columns(2)
                 ]),
 
 
@@ -171,7 +178,7 @@ class LinkSiteResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            SellersRelationManager::class
         ];
     }
 

@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -28,7 +29,6 @@ class DashboardPanelProvider extends PanelProvider
             ->login()
             ->registration()
             ->profile()
-            ->topNavigation()
             ->sidebarCollapsibleOnDesktop()
             ->colors([
                 'primary' => config('colours.blue1'),
@@ -59,6 +59,13 @@ class DashboardPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+            ])
+            ->userMenuItems([ // customise the top right menu for the current user
+                'logout' => MenuItem::make()->label('Logout'),
+                MenuItem::make()
+                ->label('Settings')
+                ->icon('heroicon-o-cog-6-tooth')
+                ->url('/settings') //TODO: Settings menu (just a placeholder!)
             ]);
     }
 }
