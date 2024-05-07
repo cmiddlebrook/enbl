@@ -44,35 +44,44 @@ class CSVImporter
 
     private function importCSVFile($file, $validatorFunction, $dataProcessingFunction)
     {
-        if ($file instanceof UploadedFile)
+        try
         {
-            $this->inputFile = fopen($file->getRealPath(), 'r');
-            $this->initialiseFiles();
 
-            while (($row = fgetcsv($this->inputFile)) !== false)
+            if ($file instanceof UploadedFile)
             {
-                $rowData = array_combine($this->headerRow, $row);
-                $cleanedData = $this->cleanupDomains($rowData);                
-                
-                $validator = $this->$validatorFunction($cleanedData);
+                $this->inputFile = fopen($file->getRealPath(), 'r');
+                $this->initialiseFiles();
 
-                if ($validator->passes())
+                while (($row = fgetcsv($this->inputFile)) !== false)
                 {
-                    $this->$dataProcessingFunction($cleanedData);
-                    $this->numImported++;
-                }
-                else
-                {
-                    $errorMessages = implode('; ', $validator->errors()->all());
-                    $errorRow = array_merge($row, [$errorMessages]);
-                    fputcsv($this->errorFile, $errorRow);
-                    $this->numErrors++;
+                    $rowData = array_combine($this->headerRow, $row);
+                    $cleanedData = $this->cleanupDomains($rowData);
+
+                    $validator = $this->$validatorFunction($cleanedData);
+
+                    if ($validator->passes())
+                    {
+                        $this->$dataProcessingFunction($cleanedData);
+                        $this->numImported++;
+                    }
+                    else
+                    {
+                        $errorMessages = implode('; ', $validator->errors()->all());
+                        $errorRow = array_merge($row, [$errorMessages]);
+                        fputcsv($this->errorFile, $errorRow);
+                        $this->numErrors++;
+                    }
                 }
             }
+            else
+            {
+                throw new Exception('Invalid file');
+            }
         }
-        else
+        catch (Exception $e)
         {
-            throw new Exception('Invalid file');
+            // TODO: Do something better than DD here!
+            dd($e->getMessage());
         }
 
         fclose($this->inputFile);
@@ -97,10 +106,11 @@ class CSVImporter
     {
         $seller = Seller::where('email', $cleanedData['email'])->first();
         $linkSite = LinkSite::where('domain', $cleanedData['domain'])->first();
-    
+
         if (!$seller)
         {
-            $seller = Seller::create(['email' => $cleanedData['email']]);
+            // $seller = Seller::create(['email' => $cleanedData['email']]);
+            $seller = Seller::create($cleanedData);
         }
 
         if (!$linkSite)
@@ -119,7 +129,7 @@ class CSVImporter
             ]
         );
     }
-    
+
     private function cleanupDomains(array $rowData)
     {
         foreach ($rowData as $key => $value)
@@ -128,26 +138,31 @@ class CSVImporter
             {
                 // convert any empty strings to null values
                 $rowData[$key] = null;
-
-                // strip out unwanted domain prefixes
-                $rowData['domain'] = trim(preg_replace('/^(http:\/\/|https:\/\/)?(www\.)?/', '', $rowData['domain']));
             }
+
+            // strip out unwanted domain prefixes
+            $rowData['domain'] = trim(preg_replace('/^(http:\/\/|https:\/\/)?(www\.)?|\/$/', '', $rowData['domain']));
         }
 
         return $rowData;
     }
 
-    private function makeLinkSiteValidator($data)
+    private function getDomainValidationRule($data)
     {
         $existingSite = LinkSite::where('domain', $data['domain'])->first();
+        return [
+            'required',
+            'regex:/^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$/',
+            $existingSite ?
+                Rule::unique('link_sites', 'domain')->ignore($existingSite->id) :
+                'unique:link_sites,domain',
+        ];
+    }
+
+    private function makeLinkSiteValidator($data)
+    {
         $validator = Validator::make($data, [
-            'domain' => [
-                'required',
-                'regex:/^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$/',
-                $existingSite ?
-                    Rule::unique('link_sites', 'domain')->ignore($existingSite->id) :
-                    'unique:link_sites,domain',
-            ],
+            'domain' => $this->getDomainValidationRule($data),
             'ip_address' => 'nullable|ipv4',
             'semrush_AS' => 'nullable|numeric|between:0,100',
             'semrush_perc_english_traffic' => 'nullable|numeric|between:0,100',
@@ -167,10 +182,7 @@ class CSVImporter
     private function makeSellerSiteValidator($data)
     {
         $validator = Validator::make($data, [
-            'domain' => [
-                'required',
-                'regex:/^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$/',
-            ],
+            'domain' => $this->getDomainValidationRule($data),
             'email' => 'required|email',
             'email2' => 'nullable|email',
             'price_guest_post' => 'required|numeric',

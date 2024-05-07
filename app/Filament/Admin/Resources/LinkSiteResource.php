@@ -37,7 +37,7 @@ class LinkSiteResource extends Resource
             ->schema([
                 Forms\Components\Group::make()->schema([
                     Forms\Components\Section::make('Website')->schema([
-                        TextInput::make('domain')->required()->unique(ignoreRecord:true),
+                        TextInput::make('domain')->required()->unique(ignoreRecord: true),
                         TextInput::make('ip_address')->ipv4(),
                         TextInput::make('domain_age')
                             ->label('Domain Age')
@@ -129,6 +129,9 @@ class LinkSiteResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('domain')->sortable()->searchable(),
+                TextColumn::make('sellers_count')
+                    ->label('Sellers')
+                    ->getStateUsing(fn ($record) => $record->sellers->count()),
                 TextColumn::make('ip_address')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('semrush_AS')->label('SR AS')->sortable(),
                 TextColumn::make('semrush_traffic')
@@ -157,15 +160,17 @@ class LinkSiteResource extends Resource
                 TextColumn::make('ahrefs_domain_rank')->label('DR')->sortable(),
                 ToggleColumn::make('is_withdrawn')->label('W/D')->disabled(),
             ])
+
             ->filters([
                 //
             ])
+
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\DeleteAction::make()
-                ])                
+                ])
             ])
 
             ->bulkActions([
@@ -173,6 +178,7 @@ class LinkSiteResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+            
     }
 
     public static function getRelations(): array
@@ -190,5 +196,4 @@ class LinkSiteResource extends Resource
             'edit' => Pages\EditLinkSite::route('/{record}/edit'),
         ];
     }
-
 }
