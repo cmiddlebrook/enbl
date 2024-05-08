@@ -129,9 +129,7 @@ class LinkSiteResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('domain')->sortable()->searchable(),
-                TextColumn::make('sellers_count')
-                    ->label('Sellers')
-                    ->getStateUsing(fn ($record) => $record->sellers->count()),
+                TextColumn::make('number_sellers')->label('Sellers')->sortable(),                    
                 TextColumn::make('ip_address')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('semrush_AS')->label('SR AS')->sortable(),
                 TextColumn::make('semrush_traffic')

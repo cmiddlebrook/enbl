@@ -18,6 +18,7 @@ return new class extends Migration
             $table->date('last_checked')->nullable();
             $table->boolean('is_withdrawn')->nullable();
             $table->string('withdrawn_reason')->nullable();
+            $table->unsignedInteger('number_sellers')->default(0);
             $table->string('niches')->nullable(); // string of id's from the niches table
             $table->unsignedTinyInteger('semrush_AS')->nullable();
             $table->unsignedBigInteger('semrush_traffic')->nullable();

@@ -6,8 +6,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
-use Filament\Notifications\Notification;
-use Filament\Notifications\Actions\Action;
 use App\Models\LinkSite;
 use App\Models\Seller;
 use App\Models\SellerSite;
@@ -109,7 +107,6 @@ class CSVImporter
 
         if (!$seller)
         {
-            // $seller = Seller::create(['email' => $cleanedData['email']]);
             $seller = Seller::create($cleanedData);
         }
 
@@ -118,6 +115,7 @@ class CSVImporter
             $linkSite = LinkSite::create(['domain' => $cleanedData['domain']]);
         }
 
+        Seller::where('id', $seller->id)->update(['last_import' => today()]);
         SellerSite::updateOrCreate(
             [
                 'seller_id' => $seller->id,
@@ -125,7 +123,7 @@ class CSVImporter
             ],
             [
                 'price_guest_post' => $cleanedData['price_guest_post'],
-                'price_link_insertion' => $cleanedData['price_link_insertion']
+                'price_link_insertion' => $cleanedData['price_link_insertion'],
             ]
         );
     }
