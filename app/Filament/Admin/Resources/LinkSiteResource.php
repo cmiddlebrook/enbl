@@ -158,7 +158,7 @@ class LinkSiteResource extends Resource
                 TextColumn::make('majestic_citation_flow')->label('CF'),
                 TextColumn::make('ahrefs_domain_rank')->label('DR')->sortable(),
                 ToggleColumn::make('is_withdrawn')->label('W/D')->disabled(),
-            ])
+            ])->defaultSort('number_sellers', 'desc')
 
             ->filters([
                 //
