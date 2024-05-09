@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Enums\WithdrawalReasonEnum;
 use App\Filament\Admin\Resources\LinkSiteResource\RelationManagers\SellersRelationManager;
 use App\Helpers\NumberFormatter;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
 class LinkSiteResource extends Resource
 {
@@ -173,7 +174,7 @@ class LinkSiteResource extends Resource
 
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    
                 ]),
             ]);
             
