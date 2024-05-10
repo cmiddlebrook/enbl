@@ -139,7 +139,7 @@ class CSVImporter
             }
 
             // strip out unwanted domain prefixes
-            $rowData['domain'] = trim(preg_replace('/^(http:\/\/|https:\/\/)?(www\.)?|\/$/', '', $rowData['domain']));
+            $rowData['domain'] = trim(strtolower(preg_replace('/^(http:\/\/|https:\/\/)?(www\.)?|\/$/', '', $rowData['domain'])));
         }
 
         return $rowData;
