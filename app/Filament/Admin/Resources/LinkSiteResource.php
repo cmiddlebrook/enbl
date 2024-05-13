@@ -134,8 +134,8 @@ class LinkSiteResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('domain')->sortable()->searchable(),
-                TextColumn::make('number_sellers')->label('Sellers')->sortable(),
-                TextColumn::make('niches_count')->counts('niches')->sortable(),
+                TextColumn::make('sellers_count')->counts('sellers')->Label('Sellers')->sortable(),
+                TextColumn::make('niches_count')->counts('niches')->Label('Niches')->sortable(),
                 TextColumn::make('ip_address')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('semrush_AS')->label('SR AS')->sortable(),
                 TextColumn::make('semrush_traffic')
@@ -163,7 +163,7 @@ class LinkSiteResource extends Resource
                 TextColumn::make('majestic_citation_flow')->label('CF'),
                 TextColumn::make('ahrefs_domain_rank')->label('DR')->sortable(),
                 ToggleColumn::make('is_withdrawn')->label('W/D')->disabled(),
-            ])->defaultSort('number_sellers', 'desc')
+            ])->defaultSort('sellers_count', 'desc')
 
             ->filters([
                 //

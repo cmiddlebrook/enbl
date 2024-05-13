@@ -12,8 +12,6 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Notifications\Actions\Action;
 use App\Helpers\CSVImporter;
-use App\Helpers\InventoryManager;
-// use App\Livewire\ImportErrors;
 
 class FileManager extends Page implements HasForms
 {
@@ -57,7 +55,6 @@ class FileManager extends Page implements HasForms
                             {
                                 $csvImporter = new CSVImporter();
                                 $csvImporter->importSellerSites($state);
-                                InventoryManager::updateSellerCounts();
                                 $this->notifyResults($csvImporter);
                             })
                     ])

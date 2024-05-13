@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('link_site_niches', function (Blueprint $table) {
             $table->id();            
-            $table->foreignIdFor(LinkSite::class);
-            $table->foreignIdFor(Niche::class)->cascadeOnDelete();
+            $table->foreignIdFor(LinkSite::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Niche::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

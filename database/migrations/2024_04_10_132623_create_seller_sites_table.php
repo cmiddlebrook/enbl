@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('seller_sites', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Seller::class)->cascadeOnDelete();
-            $table->foreignIdFor(LinkSite::class);
+            $table->foreignIdFor(Seller::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(LinkSite::class)->constrained()->cascadeOnDelete();
             $table->unsignedSmallInteger('price_guest_post');
             $table->unsignedSmallInteger('price_link_insertion')->nullable();
             $table->timestamps();
