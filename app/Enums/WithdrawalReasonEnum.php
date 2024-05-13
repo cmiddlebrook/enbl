@@ -8,6 +8,7 @@ enum WithdrawalReasonEnum: string implements HasLabel
     case HIGH_SPAM_SCORE = 'spam';
     case NOT_ENGLISH = 'language';
     case PENALTY = 'penalty';
+    case NOFOLLOW = 'nofollow';
 
     public function getLabel(): ?string
     {
@@ -15,6 +16,7 @@ enum WithdrawalReasonEnum: string implements HasLabel
             self::HIGH_SPAM_SCORE => 'High Spam Score',
             self::NOT_ENGLISH => 'Not English',
             self::PENALTY => 'Penalty',
+            self::NOFOLLOW => 'No Follow Links',
         };
     }
 }
