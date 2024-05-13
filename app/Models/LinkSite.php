@@ -46,7 +46,11 @@ class LinkSite extends Model
 
     public function niches()
     {
-        //TODO: implement once the niches functionality is implemented
-        return;
+        return $this->belongsToMany(Niche::class, 'link_site_niches');
+    }
+
+    public function getNumberNiches()
+    {
+        return $this->niches->count();
     }
 }

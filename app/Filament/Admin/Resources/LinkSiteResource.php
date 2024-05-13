@@ -26,6 +26,7 @@ class LinkSiteResource extends Resource
     protected static ?string $model = LinkSite::class;
     protected static ?string $navigationGroup = 'Links';
     protected static ?string $navigationIcon = 'fas-link';
+    protected static ?int $navigationSort = 0;
 
     public static function getNavigationBadge(): ?string
     {
@@ -119,9 +120,12 @@ class LinkSiteResource extends Resource
                             ->rules(['integer', 'between:0,100']),
 
                     ])->columns(4),
+
                 ]),
 
-
+                Forms\Components\Section::make('Niches')->schema([
+                    Forms\Components\CheckboxList::make('niches')->relationship('niches', 'name')->columns(3)
+                ])->columns(1)->collapsible()->collapsed()
             ]);
     }
 
@@ -130,7 +134,8 @@ class LinkSiteResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('domain')->sortable()->searchable(),
-                TextColumn::make('number_sellers')->label('Sellers')->sortable(),                    
+                TextColumn::make('number_sellers')->label('Sellers')->sortable(),
+                TextColumn::make('niches_count')->counts('niches')->sortable(),
                 TextColumn::make('ip_address')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('semrush_AS')->label('SR AS')->sortable(),
                 TextColumn::make('semrush_traffic')
@@ -173,11 +178,9 @@ class LinkSiteResource extends Resource
             ])
 
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    
-                ]),
+                Tables\Actions\BulkActionGroup::make([]),
             ]);
-            
+
     }
 
     public static function getRelations(): array

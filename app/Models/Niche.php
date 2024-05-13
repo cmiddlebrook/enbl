@@ -12,4 +12,9 @@ class Niche extends Model
     protected $fillable = [
         'name'
     ];
+
+    public function linkSites()
+    {
+        return $this->belongsToMany(LinkSite::class, 'link_site_niches');
+    }
 }
