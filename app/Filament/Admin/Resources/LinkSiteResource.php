@@ -137,6 +137,7 @@ class LinkSiteResource extends Resource
                 TextColumn::make('sellers_count')->counts('sellers')->Label('Sellers')->sortable(),
                 TextColumn::make('niches_count')->counts('niches')->Label('Niches')->sortable(),
                 TextColumn::make('ip_address')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('country_code')->Label('CO')->sortable(),
                 TextColumn::make('semrush_AS')->label('SR AS')->sortable(),
                 TextColumn::make('semrush_traffic')
                     ->numeric()
