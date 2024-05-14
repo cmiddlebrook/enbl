@@ -40,15 +40,17 @@ class CheckMetrics extends Command
         $this->info('Starting to check domain metrics...');
 
         $domain = 'jusebeauty.co.uk';
-       
+
         $response = Http::withHeaders([
             'X-RapidAPI-Host' => 'domain-metrics-check.p.rapidapi.com',
             'X-RapidAPI-Key' => 'e795fa7e7dmshec72b0683f03249p1e6cc3jsn5eb61b037996',
-        ])->get("https://domain-metrics-check.p.rapidapi.com/domain-metrics/jusebeauty.co.uk/");            
+        ])->get("https://domain-metrics-check.p.rapidapi.com/domain-metrics/{$domain}/");
 
         if ($response->successful())
         {
-            \Symfony\Component\VarDumper\VarDumper::dump($response->getBody());
+            $body = $response->getBody();
+            $data = json_decode($body, true);
+            \Symfony\Component\VarDumper\VarDumper::dump($data);
         }
         else
         {
