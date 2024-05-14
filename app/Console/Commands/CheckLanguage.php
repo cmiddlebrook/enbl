@@ -22,22 +22,19 @@ class CheckLanguage extends Command
     }
 
     public function handle()
-    {
-        $this->info('Starting to check language...');
-        
-        $sites = $this->getSitesToCheck();
+    {        
+        $sites = $this->getSitesToCheck(5);
         foreach ($sites as $linkSite)
         {
             $domain = $linkSite->domain;
+            $this->info("Checking language of {$domain}...");
             $data = $this->makeAPICall($domain);
+            if (!$data) continue;
 
-            $linkSite->country_code = $data['country_code'] ?? null;
-            $linkSite->page_lang = $data['page_lang'] ?? null;
+            $linkSite->country_code = $data['country'] ?? null;
 
-            echo "{$domain} updated! Country Code: $linkSite->country_code, Page Language: $linkSite->page_lang \n";
-            // \Symfony\Component\VarDumper\VarDumper::dump($data);
+            echo "{$domain} updated! Country Code: $linkSite->country_code \n";
             $linkSite->save();
-    
         }
     }
 
@@ -53,16 +50,25 @@ class CheckLanguage extends Command
 
     private function makeAPICall($domain)
     {
-        $response = $this->client->request('GET', "https://domain-rank-language-country-iab-category.p.rapidapi.com/domain.php?domain={$domain}", [
-            'headers' => [
-                'X-RapidAPI-Host' => 'domain-rank-language-country-iab-category.p.rapidapi.com',
-                'X-RapidAPI-Key' => 'e795fa7e7dmshec72b0683f03249p1e6cc3jsn5eb61b037996',
-            ],
-        ]);
+        try
+        {
+            $response = $this->client->request('GET', "https://domain-validation1.p.rapidapi.com/getDomainCountry?domain={$domain}", [
+                'headers' => [
+                    'X-RapidAPI-Host' => 'domain-validation1.p.rapidapi.com',
+                    'X-RapidAPI-Key' => 'e795fa7e7dmshec72b0683f03249p1e6cc3jsn5eb61b037996',
+                ],
+            ]);
 
-        $body = $response->getBody();
-        $data = json_decode($body, true);
+            $body = $response->getBody();
+            $data = json_decode($body, true);
+            // \Symfony\Component\VarDumper\VarDumper::dump($response);
 
-        return $data;
+            return $data;
+        }
+        catch (\GuzzleHttp\Exception\ClientException $e)
+        {
+            echo $e->getMessage();
+            return false;
+        }
     }
 }

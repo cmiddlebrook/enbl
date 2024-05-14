@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('ip_address')->nullable();
             $table->date('last_checked')->nullable();
             $table->string('country_code')->nullable();
-            $table->string('page_lang')->nullable();
             $table->boolean('is_withdrawn')->nullable();
             $table->string('withdrawn_reason')->nullable();
             $table->unsignedTinyInteger('semrush_AS')->nullable();
