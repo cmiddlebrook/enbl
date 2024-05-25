@@ -55,8 +55,8 @@ class SellerResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name'),
-                TextColumn::make('email'),
+                TextColumn::make('name')->searchable(),
+                TextColumn::make('email')->searchable(),
                 TextColumn::make('email2')->label('Secondary Email'),
             ])
             ->filters([

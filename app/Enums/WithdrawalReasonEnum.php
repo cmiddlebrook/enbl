@@ -5,18 +5,22 @@ use Filament\Support\Contracts\HasLabel;
 
 enum WithdrawalReasonEnum: string implements HasLabel
 {
-    case HIGH_SPAM_SCORE = 'spam';
     case NOT_ENGLISH = 'language';
-    case PENALTY = 'penalty';
     case NOFOLLOW = 'nofollow';
+    case DEADSITE = 'deadsite';
+    case DIFFICULT = 'difficult';
+    case PENALTY = 'penalty';
+    case HIGH_SPAM_SCORE = 'spam';
 
     public function getLabel(): ?string
     {
         return match ($this) {
-            self::HIGH_SPAM_SCORE => 'High Spam Score',
             self::NOT_ENGLISH => 'Not English',
+            self::NOFOLLOW => 'No Follow or Poor Link',
+            self::DEADSITE => 'Dead Website',
+            self::DIFFICULT => 'Difficult Posting Rules',
             self::PENALTY => 'Penalty',
-            self::NOFOLLOW => 'No Follow Links',
+            self::HIGH_SPAM_SCORE => 'Spam Content or Score',
         };
     }
 }

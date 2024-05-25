@@ -6,6 +6,7 @@ require 'vendor/autoload.php';
 
 use App\Models\LinkSite;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 
 class CheckLanguage extends Command
@@ -22,8 +23,8 @@ class CheckLanguage extends Command
     }
 
     public function handle()
-    {        
-        $sites = $this->getSitesToCheck(5);
+    {
+        $sites = $this->getSitesToCheck(100);
         foreach ($sites as $linkSite)
         {
             $domain = $linkSite->domain;
@@ -36,17 +37,29 @@ class CheckLanguage extends Command
             echo "{$domain} updated! Country Code: $linkSite->country_code \n";
             $linkSite->save();
         }
+
+        $this->withdrawNonEnglishSites();
     }
 
     private function getSitesToCheck($num = 100)
     {
-        $sites = LinkSite::whereNull('country_code')
-            ->orWhere('country_code', '')
+        $sites = LinkSite::where(function ($query)
+        {
+            $query->whereNull('country_code')
+                ->orWhere('country_code', '');
+        })
+            ->where(function ($query)
+            {
+                $query->whereNull('is_withdrawn')
+                    ->orWhere('is_withdrawn', '!=', 1);
+            })
             ->limit($num)
             ->get();
 
+
         return $sites;
     }
+
 
     private function makeAPICall($domain)
     {
@@ -70,5 +83,18 @@ class CheckLanguage extends Command
             echo $e->getMessage();
             return false;
         }
+    }
+
+    private function withdrawNonEnglishSites()
+    {
+        $this->info('Withdrawing any new Non English sites...');
+        
+        DB::table('link_sites')
+            ->whereNotNull('country_code')
+            ->whereNotIn('country_code', ['US', 'CA', 'GB', 'AU', 'NZ'])
+            ->update([
+                'is_withdrawn' => 1,
+                'withdrawn_reason' => 'language'
+            ]);
     }
 }
