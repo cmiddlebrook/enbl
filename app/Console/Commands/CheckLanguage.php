@@ -24,7 +24,7 @@ class CheckLanguage extends Command
 
     public function handle()
     {
-        $sites = $this->getSitesToCheck(100);
+        $sites = $this->getSitesToCheck();
         foreach ($sites as $linkSite)
         {
             $domain = $linkSite->domain;
