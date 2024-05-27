@@ -12,7 +12,6 @@ class Seller extends Model
     protected $fillable = [
         'name',
         'email',
-        'email2',
         'notes'
     ];
 

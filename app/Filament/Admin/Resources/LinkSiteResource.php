@@ -30,7 +30,13 @@ class LinkSiteResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('semrush_AS', '>=', 20)->count();
+        return static::getModel()::where('semrush_AS', '>=', 20)
+            ->where(function ($query)
+            {
+                $query->where('is_withdrawn', '!=', 1)
+                    ->orWhereNull('is_withdrawn');
+            })
+            ->count();
     }
 
     public static function form(Form $form): Form
@@ -50,7 +56,7 @@ class LinkSiteResource extends Resource
 
                     Forms\Components\Section::make('SEMRush')->schema([
                         TextInput::make('semrush_AS')
-                            ->label('Authority Score')
+                            ->label('Authority')
                             ->default(0)
                             ->rules(['integer', 'between:0,100']),
 
@@ -60,7 +66,7 @@ class LinkSiteResource extends Resource
                             ->rules(['integer', 'min:0']),
 
                         TextInput::make('semrush_perc_english_traffic')
-                            ->label('% English Traffic')
+                            ->label('% English')
                             ->default(0)
                             ->rules(['integer', 'between:0,100']),
 
@@ -86,40 +92,64 @@ class LinkSiteResource extends Resource
 
                     Forms\Components\Section::make('Moz')->schema([
                         TextInput::make('moz_da')
-                            ->label('Domain Authority')
+                            ->label('DA')
                             ->default(0)
                             ->rules(['integer', 'between:0,100']),
 
                         TextInput::make('moz_pa')
-                            ->label('Page Authority')
+                            ->label('PA')
                             ->default(0)
                             ->rules(['integer', 'between:0,100']),
 
-                        TextInput::make('moz_perc_quality_bl')
-                            ->label('% Quality Links')
-                            ->default(0)
-                            ->rules(['integer', 'between:0,100']),
+                        TextInput::make('moz_rank')
+                            ->label('Rank')
+                            ->default(0.0)
+                            ->rules(['numeric', 'between:0,10']),
 
-                        TextInput::make('moz_spam_score')
-                            ->label('Spam Score')
+                        TextInput::make('moz_links')
+                            ->label('Links')
                             ->default(0)
-                            ->rules(['integer', 'between:0,100']),
+                            ->rules(['integer', 'min:0']),
 
                     ])->columns(4),
 
                     Forms\Components\Section::make('Majestic')->schema([
 
                         TextInput::make('majestic_trust_flow')
-                            ->label('Trust Flow')
+                            ->label('TF')
                             ->default(0)
                             ->rules(['integer', 'between:0,100']),
 
                         TextInput::make('majestic_citation_flow')
-                            ->label('Citation Flow')
+                            ->label('CF')
                             ->default(0)
                             ->rules(['integer', 'between:0,100']),
 
-                    ])->columns(4),
+                        TextInput::make('majestic_ref_domains')
+                            ->label('RD')
+                            ->default(0)
+                            ->rules(['integer', 'min:0']),
+
+                        TextInput::make('majestic_ref_edu')
+                            ->label('.edu')
+                            ->default(0)
+                            ->rules(['integer', 'min:0']),
+
+                        TextInput::make('majestic_ref_gov')
+                            ->label('.gov')
+                            ->default(0)
+                            ->rules(['integer', 'min:0']),
+
+                    ])->columns(5),
+
+                    Forms\Components\Section::make('Other Metrics')->schema([
+
+                        TextInput::make('facebook_shares')
+                            ->label('FB Shares')
+                            ->default(0)
+                            ->rules(['integer', 'min:0']),
+
+                    ])->columns(3),
 
                 ]),
 
@@ -155,13 +185,38 @@ class LinkSiteResource extends Resource
                     {
                         return NumberFormatter::format($state);
                     }),
-                TextColumn::make('moz_da')->label('DA'),
-                TextColumn::make('moz_pa')->label('PA'),
-                TextColumn::make('moz_perc_quality_bl')->label('PQL %')->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('moz_spam_score')->label('SS')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('moz_da')->label('DA')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('moz_pa')->label('PA')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('moz_rank')->label('MR'),
+                TextColumn::make('moz_links')
+                    ->label('Links')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->numeric()
+                    ->formatStateUsing(function ($state)
+                    {
+                        return NumberFormatter::format($state);
+                    }),
                 TextColumn::make('domain_age')->label('Age')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('majestic_trust_flow')->label('TF')->sortable(),
                 TextColumn::make('majestic_citation_flow')->label('CF'),
+                TextColumn::make('majestic_ref_domains')
+                    ->label('RD')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->numeric()
+                    ->formatStateUsing(function ($state)
+                    {
+                        return NumberFormatter::format($state);
+                    }),
+                TextColumn::make('majestic_ref_edu')->label('Maj .edu')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('majestic_ref_gov')->label('Maj .gov')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('facebook_shares')
+                    ->label('FB')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->numeric()
+                    ->formatStateUsing(function ($state)
+                    {
+                        return NumberFormatter::format($state);
+                    }),
                 TextColumn::make('ahrefs_domain_rank')->label('DR')->sortable(),
                 ToggleColumn::make('is_withdrawn')->label('W/D')->disabled(),
             ])->defaultSort('sellers_count', 'desc')
@@ -181,7 +236,6 @@ class LinkSiteResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([]),
             ]);
-
     }
 
     public static function getRelations(): array

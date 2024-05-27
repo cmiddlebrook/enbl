@@ -25,11 +25,15 @@ return new class extends Migration
             $table->unsignedBigInteger('semrush_organic_kw')->nullable();
             $table->unsignedTinyInteger('moz_da')->nullable();
             $table->unsignedTinyInteger('moz_pa')->nullable();
-            $table->unsignedTinyInteger('moz_perc_quality_bl')->nullable();
-            $table->unsignedTinyInteger('moz_spam_score')->nullable();
+            $table->decimal('moz_rank', 3, 1)->nullable();
+            $table->unsignedBigInteger('moz_links')->nullable();
             $table->unsignedTinyInteger('domain_age')->nullable();
             $table->unsignedTinyInteger('majestic_trust_flow')->nullable();
             $table->unsignedTinyInteger('majestic_citation_flow')->nullable();
+            $table->unsignedBigInteger('majestic_ref_domains')->nullable();
+            $table->unsignedBigInteger('majestic_ref_edu')->nullable();
+            $table->unsignedBigInteger('majestic_ref_gov')->nullable();
+            $table->unsignedBigInteger('facebook_shares')->nullable();
             $table->unsignedTinyInteger('ahrefs_domain_rank')->nullable();
             $table->timestamps();
         });

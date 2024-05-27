@@ -39,7 +39,7 @@ class CheckMetrics extends Command
 
         $this->info('Starting to check domain metrics...');
 
-        $domain = 'jusebeauty.co.uk';
+        $domain = 'filmdaily.co';
 
         $response = Http::withHeaders([
             'X-RapidAPI-Host' => 'domain-metrics-check.p.rapidapi.com',

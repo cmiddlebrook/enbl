@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('name')->nullable();
             $table->string('email')->unique();
-            $table->string('email2')->nullable();
             $table->date('last_import')->nullable();
             $table->date('last_order')->nullable();
             $table->unsignedTinyInteger('rating')->nullable();

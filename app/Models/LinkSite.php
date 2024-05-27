@@ -29,11 +29,15 @@ class LinkSite extends Model
         'semrush_organic_kw',
         'moz_da',
         'moz_pa',
-        'moz_perc_quality_bl',
-        'moz_spam_score',
+        'moz_rank',
+        'moz_links',
         'domain_age',
         'majestic_trust_flow',
         'majestic_citation_flow',
+        'majestic_ref_domains',
+        'majestic_ref_edu',
+        'majestic_ref_gov',
+        'facebook_shares',
         'ahrefs_domain_rank'
     ];
 

@@ -42,9 +42,6 @@ class SellerResource extends Resource
                     Forms\Components\Section::make()->schema([
                         TextInput::make('name'),
                         TextInput::make('email')->email()->required()->unique(ignoreRecord:true),
-                        TextInput::make('email2')->email()
-                            ->different('email')
-                            ->label('Secondary Email'),
                         Forms\Components\MarkdownEditor::make('notes')
                     ])
                 ])
@@ -57,7 +54,6 @@ class SellerResource extends Resource
             ->columns([
                 TextColumn::make('name')->searchable(),
                 TextColumn::make('email')->searchable(),
-                TextColumn::make('email2')->label('Secondary Email'),
             ])
             ->filters([
                 //

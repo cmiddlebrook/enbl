@@ -30,12 +30,14 @@ class CheckLanguage extends Command
             $domain = $linkSite->domain;
             $this->info("Checking language of {$domain}...");
             $data = $this->makeAPICall($domain);
+            sleep(3);
             if (!$data) continue;
 
             $linkSite->country_code = $data['country'] ?? null;
 
             echo "{$domain} updated! Country Code: $linkSite->country_code \n";
             $linkSite->save();
+
         }
 
         $this->withdrawNonEnglishSites();
