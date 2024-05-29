@@ -35,27 +35,34 @@ class CheckSubdomains extends Command
 
         $result = $this->publicSuffixList->resolve($domain);
         // \Symfony\Component\VarDumper\VarDumper::dump($result);
-        echo $result->domain()->toString(). "\n";           //display 'www.pref.okinawa.jp';
-        echo $result->subDomain()->toString(). "\n";        //display 'www';
-        echo $result->secondLevelDomain()->toString(). "\n"; //display 'pref';
-        echo $result->registrableDomain()->toString(). "\n"; //display 'pref.okinawa.jp';
-        echo $result->suffix()->toString(). "\n";            //display 'okinawa.jp';
 
 
-        // $sites = $this->getSitesToCheck();
-        // foreach ($sites as $linkSite)
-        // {
-        //     $domain = $linkSite->domain;
-        //     $this->info("Checking root of {$domain}...");
+        $count = 0;
+        $sites = $this->getSitesToCheck(30000);
+        foreach ($sites as $linkSite)
+        {
+            $domain = $linkSite->domain;
+            $this->info("Checking root of {$domain}...");
 
-        //     // check what the root is and compare
+            // check what the root is and compare
+            $result = $this->publicSuffixList->resolve($domain);
+            $regDomain = $result->registrableDomain()->toString();
 
-        //     echo "{$domain} updated! Country Code: $linkSite->country_code \n";
-        //     $linkSite->save();
+            if ($regDomain !== $domain)
+            {
+                $this->info("{$domain} does not match {$regDomain}");
+                DB::table('link_sites')
+                ->where('domain', '=', $domain)
+                ->update([
+                    'is_withdrawn' => 1,
+                    'withdrawn_reason' => 'subdomain'
+                ]);
+            }
 
-        // }
+            ++$count;
+        }
 
-
+        $this->info("{$count} domains checked");
     }
 
     private function getSitesToCheck($num = 100)
