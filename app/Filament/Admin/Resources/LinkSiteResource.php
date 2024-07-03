@@ -165,9 +165,9 @@ class LinkSiteResource extends Resource
             ->columns([
                 TextColumn::make('domain')->sortable()->searchable(),
                 TextColumn::make('sellers_count')->counts('sellers')->Label('Sellers')->sortable(),
-                TextColumn::make('niches_count')->counts('niches')->Label('Niches')->sortable(),
+                TextColumn::make('niches_count')->counts('niches')->Label('Niches')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('ip_address')->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('country_code')->Label('CO')->sortable(),
+                TextColumn::make('country_code')->Label('CO')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('semrush_AS')->label('SR AS')->sortable(),
                 TextColumn::make('semrush_traffic')
                     ->numeric()
@@ -236,6 +236,14 @@ class LinkSiteResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([]),
             ]);
+    }
+
+    public static function query(): \Illuminate\Database\Eloquent\Builder
+    {
+        return LinkSite::query()
+            ->orderBy('is_withdrawn', 'asc')
+            ->orderBy('semrush_AS', 'desc')
+            ->orderBy('majestic_trust_flow', 'desc');
     }
 
     public static function getRelations(): array

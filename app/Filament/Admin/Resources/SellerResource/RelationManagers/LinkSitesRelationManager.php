@@ -7,6 +7,7 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -27,12 +28,18 @@ class LinkSitesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->recordUrl(
+                fn (Model $record): string => route('filament.admin.resources.link-sites.edit', ['record' => $record]),
+            )
             ->recordTitleAttribute('domain')
             ->columns([
                 Tables\Columns\TextColumn::make('domain'),
                 Tables\Columns\TextColumn::make('pivot.price_guest_post')->label('GP Price'),
                 Tables\Columns\TextColumn::make('pivot.price_link_insertion')->label('LI Price'),
-            ])->defaultSort('domain')
+                Tables\Columns\TextColumn::make('semrush_AS')->label('SR AS')->sortable(),
+                Tables\Columns\TextColumn::make('majestic_trust_flow')->label('TF')->sortable(),
+                Tables\Columns\TextColumn::make('moz_da')->label('DA'),
+            ])->defaultSort('price_guest_post', 'asc')
             ->filters([
                 //
             ]);
