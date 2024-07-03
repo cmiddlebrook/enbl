@@ -31,18 +31,12 @@ class CheckSubdomains extends Command
 
     public function handle()
     {
-        $domain = 'www.PreF.OkiNawA.jP';
-
-        $result = $this->publicSuffixList->resolve($domain);
-        // \Symfony\Component\VarDumper\VarDumper::dump($result);
-
-
         $count = 0;
-        $sites = $this->getSitesToCheck(30000);
+        $sites = $this->getSitesToCheck();
         foreach ($sites as $linkSite)
         {
             $domain = $linkSite->domain;
-            $this->info("Checking root of {$domain}...");
+            // $this->info("Checking root of {$domain}...");
 
             // check what the root is and compare
             $result = $this->publicSuffixList->resolve($domain);
@@ -65,7 +59,7 @@ class CheckSubdomains extends Command
         $this->info("{$count} domains checked");
     }
 
-    private function getSitesToCheck($num = 100)
+    private function getSitesToCheck()
     {
         $sites = LinkSite::where(function ($query)
         {
@@ -73,7 +67,6 @@ class CheckSubdomains extends Command
                 ->orWhere('is_withdrawn', '!=', 1);
         })
             ->orderBy('semrush_AS', 'desc')
-            ->limit($num)
             ->get();
 
         return $sites;

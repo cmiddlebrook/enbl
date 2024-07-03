@@ -24,13 +24,13 @@ class CheckLanguage extends Command
 
     public function handle()
     {
-        $sites = $this->getSitesToCheck();
+        $sites = $this->getSitesToCheck(); 
         foreach ($sites as $linkSite)
         {
             $domain = $linkSite->domain;
             $this->info("Checking language of {$domain}...");
             $data = $this->makeAPICall($domain);
-            sleep(3);
+            sleep(0.05);
             if (!$data) continue;
 
             $linkSite->country_code = $data['country'] ?? null;
@@ -43,7 +43,7 @@ class CheckLanguage extends Command
         $this->withdrawNonEnglishSites();
     }
 
-    private function getSitesToCheck($num = 100)
+    private function getSitesToCheck($num = 330)
     {
         $sites = LinkSite::where(function ($query)
         {

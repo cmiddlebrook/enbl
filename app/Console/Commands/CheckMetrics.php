@@ -58,7 +58,7 @@ class CheckMetrics extends Command
             $this->info("Checking Moz & Majestic metrics of {$domain}...");
             $data = $this->makeAPICall($domain);
             // \Symfony\Component\VarDumper\VarDumper::dump($data);
-            sleep(3);
+            sleep(0.1);
             if (!$data) continue;
 
             $linkSite->moz_da = $data['mozDA'] ?? null;
@@ -84,8 +84,8 @@ class CheckMetrics extends Command
             $query->whereNull('is_withdrawn')
                   ->orWhere('is_withdrawn', '!=', 1);
         })
-        ->where('last_checked', '<', Carbon::now()->subWeek())
-        ->where('semrush_AS', '>=', 10)
+        ->where('last_checked', '<', Carbon::now()->subMonth())
+        ->where('semrush_AS', '>', 7)
         ->orderBy('semrush_AS', 'desc')
         ->limit($num)
         ->get();

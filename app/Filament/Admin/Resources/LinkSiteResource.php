@@ -30,7 +30,7 @@ class LinkSiteResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('semrush_AS', '>=', 20)
+        return static::getModel()::where('semrush_AS', '>', 0)
             ->where(function ($query)
             {
                 $query->where('is_withdrawn', '!=', 1)
