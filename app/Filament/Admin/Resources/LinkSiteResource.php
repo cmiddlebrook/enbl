@@ -31,11 +31,7 @@ class LinkSiteResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::where('semrush_AS', '>', 0)
-            ->where(function ($query)
-            {
-                $query->where('is_withdrawn', '!=', 1)
-                    ->orWhereNull('is_withdrawn');
-            })
+            ->where('is_withdrawn', 0)
             ->count();
     }
 
@@ -219,8 +215,14 @@ class LinkSiteResource extends Resource
                     }),
                 TextColumn::make('ahrefs_domain_rank')->label('DR')->sortable(),
                 ToggleColumn::make('is_withdrawn')->label('W/D')->disabled(),
-            ])->defaultSort('sellers_count', 'desc')
+            ])//->defaultSort('sellers_count', 'desc')
 
+            ->defaultSort(fn ($query) => $query
+                ->orderBy('is_withdrawn', 'asc')
+                ->orderBy('sellers_count', 'desc')
+                ->orderBy('semrush_AS', 'desc')
+                ->orderBy('majestic_trust_flow', 'desc'))
+            
             ->filters([
                 //
             ])
@@ -241,7 +243,7 @@ class LinkSiteResource extends Resource
     public static function query(): \Illuminate\Database\Eloquent\Builder
     {
         return LinkSite::query()
-            ->orderBy('is_withdrawn', '')
+            ->orderBy('is_withdrawn', 'asc')
             ->orderBy('semrush_AS', 'desc')
             ->orderBy('majestic_trust_flow', 'desc');
     }

@@ -50,14 +50,9 @@ class CheckLanguage extends Command
             $query->whereNull('country_code')
                 ->orWhere('country_code', '');
         })
-            ->where(function ($query)
-            {
-                $query->whereNull('is_withdrawn')
-                    ->orWhere('is_withdrawn', '!=', 1);
-            })
-            ->limit($num)
-            ->get();
-
+        ->where('is_withdrawn', 0)
+        ->limit($num)
+        ->get();
 
         return $sites;
     }

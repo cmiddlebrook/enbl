@@ -61,11 +61,7 @@ class CheckSubdomains extends Command
 
     private function getSitesToCheck()
     {
-        $sites = LinkSite::where(function ($query)
-        {
-            $query->whereNull('is_withdrawn')
-                ->orWhere('is_withdrawn', '!=', 1);
-        })
+        $sites = LinkSite::where('is_withdrawn', 0)
             ->orderBy('semrush_AS', 'desc')
             ->get();
 

@@ -17,8 +17,6 @@ class LinkSite extends Model
     protected $casts = [
         'is_withdrawn' => 'boolean',
         'withdrawn_reason' => WithdrawalReasonEnum::class,
-        'lowest_price' => 'integer',
-        'avg_low_prices' => 'integer',
     ];
 
     protected $fillable = [
