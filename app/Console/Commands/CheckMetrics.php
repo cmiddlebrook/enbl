@@ -85,7 +85,7 @@ class CheckMetrics extends Command
                   ->orWhere('is_withdrawn', '!=', 1);
         })
         ->where('last_checked', '<', Carbon::now()->subMonth())
-        ->where('semrush_AS', '>', 7)
+        ->where('semrush_AS', '>=', 5)
         ->orderBy('semrush_AS', 'desc')
         ->limit($num)
         ->get();

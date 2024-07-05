@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use phpDocumentor\Reflection\Types\Boolean;
 use App\Enums\WithdrawalReasonEnum;
+
 
 class LinkSite extends Model
 {
@@ -46,6 +48,33 @@ class LinkSite extends Model
         return $this->belongsToMany(Seller::class, 'seller_sites')
             ->withPivot('price_guest_post', 'price_link_insertion')
             ->orderByPivot('price_guest_post');
+    }
+
+    public function lowestPrice(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->sellers()->min('price_guest_post')
+        );
+    }
+
+    public function avgLowPrices(): Attribute
+    {
+        return Attribute::make(
+            get: function () 
+            {
+                $prices = $this->sellers()
+                    ->orderBy('price_guest_post', 'asc')
+                    ->limit(3)
+                    ->pluck('price_guest_post');
+
+                if ($prices->count() < 3) 
+                {
+                    return $this->lowestPrice();
+                }
+
+                return $prices->avg();
+            }
+        );
     }
 
     public function niches()
