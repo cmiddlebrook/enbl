@@ -164,9 +164,9 @@ class LinkSiteResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('domain')->sortable()->searchable(),
-                TextColumn::make('sellers_count')->counts('sellers')->Label('Sellers'),
+                TextColumn::make('sellers_count')->counts('sellers')->Label('Sellers')->sortable(),
                 TextColumn::make('avg_low_prices')->Label('Avg $')
-                ->numeric()                    
+                    ->numeric()              
                     ->formatStateUsing(function ($state)
                     {
                         return NumberFormatter::format($state);
@@ -241,7 +241,7 @@ class LinkSiteResource extends Resource
     public static function query(): \Illuminate\Database\Eloquent\Builder
     {
         return LinkSite::query()
-            ->orderBy('is_withdrawn', 'asc')
+            ->orderBy('is_withdrawn', '')
             ->orderBy('semrush_AS', 'desc')
             ->orderBy('majestic_trust_flow', 'desc');
     }

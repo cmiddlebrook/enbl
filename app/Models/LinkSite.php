@@ -16,7 +16,9 @@ class LinkSite extends Model
 
     protected $casts = [
         'is_withdrawn' => 'boolean',
-        'withdrawn_reason' => WithdrawalReasonEnum::class
+        'withdrawn_reason' => WithdrawalReasonEnum::class,
+        'lowest_price' => 'integer',
+        'avg_low_prices' => 'integer',
     ];
 
     protected $fillable = [
@@ -68,10 +70,9 @@ class LinkSite extends Model
                     ->limit(3)
                     ->pluck('price_guest_post');
 
-                if ($prices->count() < 3) 
-                {
-                    return $this->lowestPrice();
-                }
+                $count = $prices->count();
+                if ($count == 0) return 0;
+                if ($count < 3) return $prices->min();
 
                 return $prices->avg();
             }

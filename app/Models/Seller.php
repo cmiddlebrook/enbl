@@ -11,6 +11,10 @@ class Seller extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'average_price' => 'integer',
+    ];
+
     protected $fillable = [
         'name',
         'email',
