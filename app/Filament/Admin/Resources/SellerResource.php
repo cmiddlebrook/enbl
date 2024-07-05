@@ -15,6 +15,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Helpers\NumberFormatter;
 
 class SellerResource extends Resource
 {
@@ -54,7 +55,23 @@ class SellerResource extends Resource
             ->columns([
                 TextColumn::make('name')->searchable(),
                 TextColumn::make('email')->searchable(),
+                TextColumn::make('linksites_count')->counts('linksites')->Label('Nr Sites')->sortable(),
+                TextColumn::make('average_price')->Label('Avg $')
+                    ->numeric()                    
+                    ->formatStateUsing(function ($state)
+                    {
+                        return NumberFormatter::format($state);
+                    })
+                    ->sortable(query: function (Builder $query, string $direction): Builder 
+                    {
+                        return $query
+                            ->withCount('linkSites')
+                            ->withAveragePrice()
+                            ->orderBy('average_price', $direction);
+                    }),
             ])
+            ->defaultSort('average_price', 'asc')
+  
             ->filters([
                 //
             ])
@@ -86,5 +103,11 @@ class SellerResource extends Resource
             'create' => Pages\CreateSeller::route('/create'),
             'edit' => Pages\EditSeller::route('/{record}/edit'),
         ];
+    }
+
+    protected static function getTableQuery(): Builder
+    {
+        return parent::getTableQuery()
+            ->withCount('linkSites');
     }
 }
