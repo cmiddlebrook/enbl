@@ -81,9 +81,14 @@ class CheckMetrics extends Command
     private function getSitesToCheck($num = 100)
     {
         $sites = LinkSite::where('is_withdrawn', 0)
-            ->where('last_checked', '<', Carbon::now()->subMonth())
+            ->where(function ($query)
+            {
+                $query->where('last_checked', '<', Carbon::now()->subMonth())
+                    ->orWhereNull('last_checked');
+            })
             ->where('semrush_AS', '>=', 5)
             ->orderBy('semrush_AS', 'desc')
+            ->orderBy('majestic_trust_flow', 'desc')
             ->limit($num)
             ->get();
 

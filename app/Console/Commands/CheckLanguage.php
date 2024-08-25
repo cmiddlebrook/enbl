@@ -51,6 +51,8 @@ class CheckLanguage extends Command
                 ->orWhere('country_code', '');
         })
         ->where('is_withdrawn', 0)
+        ->orderBy('semrush_AS', 'desc')
+        ->orderBy('majestic_trust_flow', 'desc')
         ->limit($num)
         ->get();
 

@@ -22,7 +22,7 @@ enum WithdrawalReasonEnum: string implements HasLabel
             self::DIFFICULT => 'Difficult Posting Rules',
             self::SUBDOMAIN => 'Not a Root Domain',
             self::PENALTY => 'Penalty',
-            self::HIGH_SPAM_SCORE => 'Spam Content or Score',
+            self::HIGH_SPAM_SCORE => 'Spam',
         };
     }
 }
