@@ -43,7 +43,7 @@ class CheckLanguage extends Command
         $this->withdrawNonEnglishSites();
     }
 
-    private function getSitesToCheck($num = 300)
+    private function getSitesToCheck($num = 250)
     {
         $sites = LinkSite::where(function ($query)
         {

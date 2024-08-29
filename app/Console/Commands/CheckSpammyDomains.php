@@ -43,7 +43,9 @@ class CheckSpammyDomains extends Command
             'crypto',
             'bitcoin',
             'coinbase',
-            'forex'
+            'forex',
+            'insurance',
+            'my.id'
         );
     }
 

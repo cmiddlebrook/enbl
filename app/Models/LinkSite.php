@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 use phpDocumentor\Reflection\Types\Boolean;
 use App\Enums\WithdrawalReasonEnum;
@@ -13,6 +15,8 @@ use App\Enums\WithdrawalReasonEnum;
 class LinkSite extends Model
 {
     use HasFactory;
+
+    protected $primaryKey = 'id';
 
     protected $casts = [
         'is_withdrawn' => 'boolean',
@@ -54,32 +58,23 @@ class LinkSite extends Model
     public function lowestPrice(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->sellers()->min('price_guest_post')
+            get: fn() => $this->sellers()->min('price_guest_post')
         );
     }
 
-    public function avgLowPrices(): Attribute
+    public function scopeWithAvgLowPrices(Builder $query): Builder
     {
-        return Attribute::make(
-            get: function () 
-            {
-                $prices = $this->sellers()
-                    ->orderBy('price_guest_post', 'asc')
-                    ->limit(3)
-                    ->pluck('price_guest_post');
-
-                $count = $prices->count();
-                if ($count == 0) return 0;
-                if ($count < 3) return $prices->min();
-
-                return $prices->avg();
-            }
-        );
+        $subquery = DB::table('seller_sites')
+            ->selectRaw('link_site_id, AVG(price_guest_post) as avg_low_price')
+            ->groupBy('link_site_id');
+        return $query->leftJoinSub($subquery, 'avg_prices', function ($join)
+        {
+            $join->on('link_sites.id', '=', 'avg_prices.link_site_id');
+        })->addSelect('link_sites.*', 'avg_prices.avg_low_price');
     }
 
     public function niches()
     {
         return $this->belongsToMany(Niche::class, 'link_site_niches');
     }
-
 }

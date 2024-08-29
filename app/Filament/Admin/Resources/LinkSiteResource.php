@@ -16,6 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Log;
 use App\Enums\WithdrawalReasonEnum;
 use App\Filament\Admin\Resources\LinkSiteResource\RelationManagers\SellersRelationManager;
 use App\Helpers\NumberFormatter;
@@ -161,7 +162,7 @@ class LinkSiteResource extends Resource
             ->columns([
                 TextColumn::make('domain')->sortable()->searchable(),
                 TextColumn::make('sellers_count')->counts('sellers')->Label('Sellers')->sortable(),
-                TextColumn::make('avg_low_prices')->Label('Avg $')
+                TextColumn::make('avg_low_price')->Label('Avg $')->sortable()
                     ->numeric()              
                     ->formatStateUsing(function ($state)
                     {
@@ -215,16 +216,29 @@ class LinkSiteResource extends Resource
                     }),
                 TextColumn::make('ahrefs_domain_rank')->label('DR')->sortable(),
                 ToggleColumn::make('is_withdrawn')->label('W/D')->disabled(),
-            ])//->defaultSort('sellers_count', 'desc')
+            ])
 
             ->defaultSort(fn ($query) => $query
                 ->orderBy('is_withdrawn', 'asc')
                 ->orderBy('sellers_count', 'desc')
                 ->orderBy('semrush_AS', 'desc')
                 ->orderBy('majestic_trust_flow', 'desc'))
-            
+                                
+    
             ->filters([
-                //
+                Tables\Filters\Filter::make('Band 1')->query(
+                    function ($query) { return $query
+                        ->where('is_withdrawn', 0)
+                        ->has('sellers', '>=', 3)
+                        ->where('avg_low_price', '<=', 30)
+
+                        ->where('semrush_AS', '>=', 5)
+                        ->where('moz_da', '>=', 10)
+                        ->where('moz_pa', '>=', 10)
+                        ->where('majestic_trust_flow', '>=', 5)
+                        ;
+                    }
+                )
             ])
 
             ->actions([
@@ -240,12 +254,10 @@ class LinkSiteResource extends Resource
             ]);
     }
 
-    public static function query(): \Illuminate\Database\Eloquent\Builder
+    public static function getEloquentQuery(): Builder
     {
-        return LinkSite::query()
-            ->orderBy('is_withdrawn', 'asc')
-            ->orderBy('semrush_AS', 'desc')
-            ->orderBy('majestic_trust_flow', 'desc');
+        return parent::getEloquentQuery()
+            ->withAvgLowPrices();
     }
 
     public static function getRelations(): array

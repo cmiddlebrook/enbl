@@ -58,7 +58,7 @@ class CheckMetrics extends Command
             $this->info("Checking Moz & Majestic metrics of {$domain}...");
             $data = $this->makeAPICall($domain);
             // \Symfony\Component\VarDumper\VarDumper::dump($data);
-            sleep(0.1);
+            sleep(0.05);
             if (!$data) continue;
 
             $linkSite->moz_da = $data['mozDA'] ?? null;
