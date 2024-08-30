@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('domain')->unique();
             $table->string('ip_address')->nullable();
+            $table->date('domain_creation_date')->nullable();
             $table->date('last_checked')->nullable();
             $table->string('country_code')->nullable();
             $table->boolean('is_withdrawn')->default(0);
@@ -27,7 +28,6 @@ return new class extends Migration
             $table->unsignedTinyInteger('moz_pa')->nullable();
             $table->decimal('moz_rank', 3, 1)->nullable();
             $table->unsignedBigInteger('moz_links')->nullable();
-            $table->unsignedTinyInteger('domain_age')->nullable();
             $table->unsignedTinyInteger('majestic_trust_flow')->nullable();
             $table->unsignedTinyInteger('majestic_citation_flow')->nullable();
             $table->unsignedBigInteger('majestic_ref_domains')->nullable();

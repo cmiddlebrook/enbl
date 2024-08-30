@@ -50,12 +50,15 @@ class CheckMetrics extends Command
         $this->info('Starting to check domain metrics...');
 
         $sites = $this->getSitesToCheck();
+        echo $sites->count() . " sites to be checked\n";
 
         foreach ($sites as $linkSite)
         {
             $domain = $linkSite->domain;
+            $sellerCount = $linkSite->sellers->count();
+            $avgLowPrice = number_format($linkSite->avg_low_price, 2);
 
-            $this->info("Checking Moz & Majestic metrics of {$domain}...");
+            $this->info("Checking {$domain}, Nr sellers: {$sellerCount}, \${$avgLowPrice}...");
             $data = $this->makeAPICall($domain);
             // \Symfony\Component\VarDumper\VarDumper::dump($data);
             sleep(0.05);
@@ -80,15 +83,19 @@ class CheckMetrics extends Command
 
     private function getSitesToCheck($num = 100)
     {
-        $sites = LinkSite::where('is_withdrawn', 0)
+        $sites = LinkSite::withAvgLowPrices()
             ->where(function ($query)
             {
                 $query->where('last_checked', '<', Carbon::now()->subMonth())
                     ->orWhereNull('last_checked');
             })
+            ->where('is_withdrawn', 0)
+            ->has('sellers', '>=', 1)
+            ->where('avg_low_price', '<=', 10)
             ->where('semrush_AS', '>=', 5)
-            ->orderBy('semrush_AS', 'desc')
+            ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
+            ->orderBy('semrush_AS', 'desc')
             ->limit($num)
             ->get();
 

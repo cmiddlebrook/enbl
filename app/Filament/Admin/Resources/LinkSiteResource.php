@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Log;
 use App\Enums\WithdrawalReasonEnum;
 use App\Filament\Admin\Resources\LinkSiteResource\RelationManagers\SellersRelationManager;
 use App\Helpers\NumberFormatter;
+use Carbon\Carbon;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
 class LinkSiteResource extends Resource
@@ -44,10 +45,7 @@ class LinkSiteResource extends Resource
                     Forms\Components\Section::make('Website')->schema([
                         TextInput::make('domain')->required()->unique(ignoreRecord: true),
                         TextInput::make('ip_address')->ipv4(),
-                        TextInput::make('domain_age')
-                            ->label('Domain Age')
-                            ->default(0)
-                            ->rules(['integer', 'between:0,100']),
+                        Forms\Components\DatePicker::make('domain_creation_date'),
                         Forms\Components\DatePicker::make('last_checked'),
                     ])->columns(2),
 
@@ -78,7 +76,7 @@ class LinkSiteResource extends Resource
                     Forms\Components\Section::make('Remove site')->schema([
                         Forms\Components\Toggle::make('is_withdrawn')->label('Withdrawn')->reactive(),
                         Forms\Components\Select::make('withdrawn_reason')
-                            ->visible(fn (Get $get): bool => $get('is_withdrawn'))
+                            ->visible(fn(Get $get): bool => $get('is_withdrawn'))
                             ->prohibitedUnless('is_withdrawn', 'true')
                             ->requiredIf('is_withdrawn', 'true')
                             ->options(WithdrawalReasonEnum::class)
@@ -163,7 +161,7 @@ class LinkSiteResource extends Resource
                 TextColumn::make('domain')->sortable()->searchable(),
                 TextColumn::make('sellers_count')->counts('sellers')->Label('Sellers')->sortable(),
                 TextColumn::make('avg_low_price')->Label('Avg $')->sortable()
-                    ->numeric()              
+                    ->numeric()
                     ->formatStateUsing(function ($state)
                     {
                         return NumberFormatter::format($state);
@@ -172,34 +170,41 @@ class LinkSiteResource extends Resource
                 TextColumn::make('ip_address')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('country_code')->Label('CO')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('semrush_AS')->label('SR AS')->sortable(),
-                TextColumn::make('semrush_traffic')->label('Traffic')->sortable()
-                    ->numeric()                    
-                    ->formatStateUsing(function ($state)
-                    {
-                        return NumberFormatter::format($state);
-                    }),
-                TextColumn::make('semrush_perc_english_traffic')->label('ENT %'),
-                TextColumn::make('semrush_organic_kw')->label('KW')->sortable()
-                    ->numeric()                   
-                    ->formatStateUsing(function ($state)
-                    {
-                        return NumberFormatter::format($state);
-                    }),
-                TextColumn::make('moz_da')->label('DA')->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('moz_pa')->label('PA')->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('moz_rank')->label('MR'),
-                TextColumn::make('moz_links')->label('Links')                   
-                    ->toggleable(isToggledHiddenByDefault: true)
+                TextColumn::make('semrush_traffic')->label('Traffic')->sortable()->toggleable(isToggledHiddenByDefault: true)
                     ->numeric()
                     ->formatStateUsing(function ($state)
                     {
                         return NumberFormatter::format($state);
                     }),
-                TextColumn::make('domain_age')->label('Age')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('semrush_perc_english_traffic')->label('ENT %')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('semrush_organic_kw')->label('KW')->sortable()->toggleable(isToggledHiddenByDefault: true)
+                    ->numeric()
+                    ->formatStateUsing(function ($state)
+                    {
+                        return NumberFormatter::format($state);
+                    }),
+                TextColumn::make('moz_da')->label('DA'),
+                TextColumn::make('moz_pa')->label('PA'),
+                TextColumn::make('moz_rank')->label('MR'),
+                TextColumn::make('moz_links')->label('Links')
+                    ->numeric()
+                    ->formatStateUsing(function ($state)
+                    {
+                        return NumberFormatter::format($state);
+                    }),
+                TextColumn::make('domain_creation_date')->label('Age')->sortable()
+                    ->formatStateUsing(function ($state)
+                    {
+                        $creationDate = Carbon::parse($state);
+                        $now = Carbon::now();
+                        $years = $creationDate->diffInYears($now);
+                        $months = $creationDate->copy()->addYears($years)->diffInMonths($now);
+
+                        return "{$years}y {$months}m";
+                    }),
                 TextColumn::make('majestic_trust_flow')->label('TF')->sortable(),
                 TextColumn::make('majestic_citation_flow')->label('CF'),
-                TextColumn::make('majestic_ref_domains')->label('RD')                   
-                    ->toggleable(isToggledHiddenByDefault: true)
+                TextColumn::make('majestic_ref_domains')->label('RD')
                     ->numeric()
                     ->formatStateUsing(function ($state)
                     {
@@ -207,7 +212,7 @@ class LinkSiteResource extends Resource
                     }),
                 TextColumn::make('majestic_ref_edu')->label('Maj .edu')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('majestic_ref_gov')->label('Maj .gov')->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('facebook_shares')->label('FB')                    
+                TextColumn::make('facebook_shares')->label('FB')
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->numeric()
                     ->formatStateUsing(function ($state)
@@ -215,27 +220,33 @@ class LinkSiteResource extends Resource
                         return NumberFormatter::format($state);
                     }),
                 TextColumn::make('ahrefs_domain_rank')->label('DR')->sortable(),
-                ToggleColumn::make('is_withdrawn')->label('W/D')->disabled(),
+                ToggleColumn::make('is_withdrawn')->label('W/D')->disabled()->toggleable(isToggledHiddenByDefault: true),
             ])
 
-            ->defaultSort(fn ($query) => $query
-                ->orderBy('is_withdrawn', 'asc')
-                ->orderBy('sellers_count', 'desc')
-                ->orderBy('semrush_AS', 'desc')
-                ->orderBy('majestic_trust_flow', 'desc'))
-                                
-    
+            ->defaultPaginationPageOption(25)
+
+            ->defaultSort(
+                fn($query) => $query
+                    ->orderBy('is_withdrawn', 'asc')
+                    ->orderBy('sellers_count', 'desc')
+                    ->orderBy('avg_low_price', 'asc')
+                    ->orderBy('majestic_trust_flow', 'desc')
+                    ->orderBy('semrush_AS', 'desc')
+            )
+
+
             ->filters([
                 Tables\Filters\Filter::make('Band 1')->query(
-                    function ($query) { return $query
-                        ->where('is_withdrawn', 0)
-                        ->has('sellers', '>=', 3)
-                        ->where('avg_low_price', '<=', 30)
-
-                        ->where('semrush_AS', '>=', 5)
-                        ->where('moz_da', '>=', 10)
-                        ->where('moz_pa', '>=', 10)
-                        ->where('majestic_trust_flow', '>=', 5)
+                    function ($query)
+                    {
+                        return $query
+                            ->where('is_withdrawn', 0)
+                            ->has('sellers', '>=', 3)
+                            ->where('avg_low_price', '<=', 30)
+                            // ->where('moz_da', '>=', 10)
+                            // ->where('moz_pa', '>=', 10)
+                            // ->where('semrush_AS', '>=', 5)
+                            // ->where('majestic_trust_flow', '>=', 5)
                         ;
                     }
                 )
