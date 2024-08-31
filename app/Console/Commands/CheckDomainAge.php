@@ -25,7 +25,7 @@ class CheckDomainAge extends Command
 
     public function handle()
     {
-        $sites = $this->getSitesToCheck(100); 
+        $sites = $this->getSitesToCheck(); 
         echo $sites->count() . " sites to be checked\n";
         foreach ($sites as $linkSite)
         {
@@ -45,16 +45,12 @@ class CheckDomainAge extends Command
 
     private function getSitesToCheck($num = 500)
     {
-        $sites = LinkSite::withAvgLowPrices()
-            ->where(function ($query)
-            {
-                $query->where('last_checked', '<', Carbon::now()->subWeek())
-                    ->orWhereNull('last_checked');
-            })
+        $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where('is_withdrawn', 0)
             ->whereNull('domain_creation_date')
             ->has('sellers', '>=', 3)
-            ->where('avg_low_price', '<=', 100)
+            ->where('avg_low_price', '<=', 35)
+            ->where('lowest_price', '<=', 25)
             ->where('semrush_AS', '>=', 5)
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
@@ -90,16 +86,4 @@ class CheckDomainAge extends Command
         }
     }
 
-    private function withdrawNonEnglishSites()
-    {
-        $this->info('Withdrawing any new Non English sites...');
-        
-        DB::table('link_sites')
-            ->whereNotNull('country_code')
-            ->whereNotIn('country_code', ['US', 'CA', 'GB', 'AU', 'NZ'])
-            ->update([
-                'is_withdrawn' => 1,
-                'withdrawn_reason' => 'language'
-            ]);
-    }
 }

@@ -55,23 +55,55 @@ class LinkSite extends Model
             ->orderByPivot('price_guest_post');
     }
 
-    public function lowestPrice(): Attribute
+    // public function scopeWithLowestPrice(Builder $query): Builder
+    // {
+    //     // Subquery to get the lowest price for each link_site_id
+    //     $subquery = DB::table('seller_sites as ss')
+    //         ->selectRaw('ss.link_site_id, MIN(ss.price_guest_post) as lowest_price')
+    //         ->groupBy('ss.link_site_id');
+
+    //     // Join the lowest price subquery to the main query
+    //     return $query->leftJoinSub($subquery, 'lowest_prices', function ($join)
+    //     {
+    //         $join->on('link_sites.id', '=', 'lowest_prices.link_site_id');
+    //     })->addSelect('link_sites.*', 'lowest_prices.lowest_price');
+    // }
+
+    public function scopeWithLowestPrice(Builder $query): Builder
     {
-        return Attribute::make(
-            get: fn() => $this->sellers()->min('price_guest_post')
-        );
+        return $query->leftJoinSub(
+            DB::table('seller_sites')
+                ->selectRaw('link_site_id, MIN(price_guest_post) as lowest_price')
+                ->groupBy('link_site_id'),
+            'lowest_prices',
+            'link_sites.id',
+            'lowest_prices.link_site_id'
+        )->addSelect('link_sites.*', 'lowest_prices.lowest_price');
     }
+
 
     public function scopeWithAvgLowPrices(Builder $query): Builder
     {
         $subquery = DB::table('seller_sites')
+            ->select('link_site_id', 'price_guest_post')
+            ->selectRaw('ROW_NUMBER() OVER (PARTITION BY link_site_id ORDER BY price_guest_post ASC) as row_num');
+
+        $avgSubquery = DB::table(DB::raw("({$subquery->toSql()}) as ranked"))
+            ->mergeBindings($subquery)
+            ->where('row_num', '<=', 3)
             ->selectRaw('link_site_id, AVG(price_guest_post) as avg_low_price')
             ->groupBy('link_site_id');
-        return $query->leftJoinSub($subquery, 'avg_prices', function ($join)
+
+        return $query->leftJoinSub($avgSubquery, 'avg_prices', function ($join)
         {
             $join->on('link_sites.id', '=', 'avg_prices.link_site_id');
         })->addSelect('link_sites.*', 'avg_prices.avg_low_price');
     }
+
+
+
+
+
 
     public function niches()
     {

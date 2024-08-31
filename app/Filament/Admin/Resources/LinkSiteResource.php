@@ -166,6 +166,7 @@ class LinkSiteResource extends Resource
                     {
                         return NumberFormatter::format($state);
                     }),
+                TextColumn::make('lowest_price')->Label('Low $')->sortable(),
                 TextColumn::make('niches_count')->counts('niches')->Label('Niches')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('ip_address')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('country_code')->Label('CO')->toggleable(isToggledHiddenByDefault: true),
@@ -223,7 +224,7 @@ class LinkSiteResource extends Resource
                 ToggleColumn::make('is_withdrawn')->label('W/D')->disabled()->toggleable(isToggledHiddenByDefault: true),
             ])
 
-            ->defaultPaginationPageOption(25)
+            ->defaultPaginationPageOption(10)
 
             ->defaultSort(
                 fn($query) => $query
@@ -236,20 +237,71 @@ class LinkSiteResource extends Resource
 
 
             ->filters([
-                Tables\Filters\Filter::make('Band 1')->query(
+                Tables\Filters\Filter::make('$50')->query(
                     function ($query)
                     {
                         return $query
                             ->where('is_withdrawn', 0)
                             ->has('sellers', '>=', 3)
-                            ->where('avg_low_price', '<=', 30)
-                            // ->where('moz_da', '>=', 10)
-                            // ->where('moz_pa', '>=', 10)
-                            // ->where('semrush_AS', '>=', 5)
-                            // ->where('majestic_trust_flow', '>=', 5)
+                            ->where('avg_low_price', '<=', 28)
+                            ->where('lowest_price', '<=', 20)
+                            ->where('moz_da', '>=', 25)
+                            ->where('moz_pa', '>=', 20)
+                            ->where('semrush_AS', '>=', 10)
+                            ->where('majestic_trust_flow', '>=', 10)
                         ;
                     }
-                )
+                ),
+
+                Tables\Filters\Filter::make('$100')->query(
+                    function ($query)
+                    {
+                        return $query
+                            ->where('is_withdrawn', 0)
+                            ->has('sellers', '>=', 3)
+                            ->where('avg_low_price', '<=', 67)
+                            ->where('lowest_price', '<=', 50)
+                            ->where('moz_da', '>=', 35)
+                            ->where('moz_pa', '>=', 30)
+                            ->where('semrush_AS', '>=', 15)
+                            ->where('majestic_trust_flow', '>=', 10)
+                        ;
+                    }
+                ),
+
+                Tables\Filters\Filter::make('$150')->query(
+                    function ($query)
+                    {
+                        return $query
+                            ->where('is_withdrawn', 0)
+                            ->has('sellers', '>=', 3)
+                            ->where('avg_low_price', '<=', 98)
+                            ->where('lowest_price', '<=', 75)
+                            ->where('moz_da', '>=', 45)
+                            ->where('moz_pa', '>=', 40)
+                            ->where('semrush_AS', '>=', 20)
+                            ->where('majestic_trust_flow', '>=', 15)
+                        ;
+                    }
+                ),
+
+                Tables\Filters\Filter::make('$200')->query(
+                    function ($query)
+                    {
+                        return $query
+                            ->where('is_withdrawn', 0)
+                            ->has('sellers', '>=', 3)
+                            ->where('avg_low_price', '<=', 125)
+                            ->where('lowest_price', '<=', 100)
+                            ->where('moz_da', '>=', 55)
+                            ->where('moz_pa', '>=', 55)
+                            ->where('semrush_AS', '>=', 2)
+                            ->where('majestic_trust_flow', '>=', 20)
+                        ;
+                    }
+                ),
+
+
             ])
 
             ->actions([
@@ -268,7 +320,9 @@ class LinkSiteResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->withAvgLowPrices();
+        ->withLowestPrice()    
+        ->withAvgLowPrices()
+            ;
     }
 
     public static function getRelations(): array
