@@ -49,8 +49,8 @@ class CheckDomainAge extends Command
             ->where('is_withdrawn', 0)
             ->whereNull('domain_creation_date')
             ->has('sellers', '>=', 2)
-            ->where('avg_low_price', '<=', 40)
-            ->where('semrush_AS', '>=', 10)
+            ->where('avg_low_price', '<=', 50)
+            ->where('semrush_AS', '>=', 15)
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
@@ -80,7 +80,14 @@ class CheckDomainAge extends Command
         }
         catch (\GuzzleHttp\Exception\ClientException $e)
         {
-            echo $e->getMessage();
+            $errorMessage = $e->getMessage();
+            if (strpos($errorMessage, "429 Too Many Requests"))
+            {
+                echo "Daily API quota reached\n";
+                exit;
+            }
+            echo $errorMessage;
+
             return false;
         }
     }
