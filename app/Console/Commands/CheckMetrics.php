@@ -49,16 +49,41 @@ class CheckMetrics extends Command
 
         $this->info('Starting to check domain metrics...');
 
-        $sites = $this->getSitesToCheck();
-        echo $sites->count() . " sites to be checked\n";
+        $numSitesChecked = $this->checkPricingBand(10, 25, 5, 10, 0); // $50 band
+        $numSitesChecked += $this->checkPricingBand(10, 50, 10, 15, $numSitesChecked); // $100 band
+    }
+
+    private function checkPricingBand($bandLowPrice, $bandMaxPrice, $priceIncrement, $minSEMRushAS, $numSitesChecked)
+    {
+        echo "Checking Pricing Band from \${$bandLowPrice} to \${bandMaxPrice}\n";
+        echo "Checked {$numSitesChecked} domains so far this run\n";
+        for ($startPrice = $bandLowPrice; $startPrice <= $bandMaxPrice; $startPrice += $priceIncrement)
+        {
+            // echo "startPrice: {$startPrice}\n";
+
+            $lowPrice = $startPrice;            
+            for($avgLowPrice = $lowPrice + $priceIncrement; $avgLowPrice <= $startPrice * 2; $avgLowPrice += $priceIncrement)
+            {
+                // echo "lowPrice: {$lowPrice}\n";
+                // echo "avgLowPrice: {$avgLowPrice}\n";
+
+                $numSitesChecked += $this->checkSites(2, $lowPrice, $avgLowPrice, $minSEMRushAS);
+            }
+        }
+        return $numSitesChecked;
+    }
+
+    private function checkSites($numSellers, $lowestPrice, $avgLowPrice, $minSRAS)
+    {
+        $sites = $this->getSitesToCheck(100, $numSellers, $lowestPrice, $avgLowPrice, $minSRAS);
+        $numSites = $sites->count();
+        echo "Checking {$numSites} with {$numSellers} sellers, lowest price: {$lowestPrice}, low average: {$avgLowPrice}\n";
 
         foreach ($sites as $linkSite)
         {
             $domain = $linkSite->domain;
-            $sellerCount = $linkSite->sellers->count();
-            $avgLowPrice = number_format($linkSite->avg_low_price, 2);
 
-            $this->info("Checking {$domain}, Nr sellers: {$sellerCount}, \${$avgLowPrice}...");
+            $this->info("Checking {$domain}");
             $data = $this->makeAPICall($domain);
             // \Symfony\Component\VarDumper\VarDumper::dump($data);
             sleep(0.05);
@@ -79,9 +104,11 @@ class CheckMetrics extends Command
             echo "{$domain} updated!\n";
             $linkSite->save();
         }
+
+        return $numSites;
     }
 
-    private function getSitesToCheck($num = 100)
+    private function getSitesToCheck($num, $numSellers, $lowestPrice, $avgLowPrice, $minSRAS)
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where(function ($query)
@@ -90,10 +117,10 @@ class CheckMetrics extends Command
                     ->orWhereNull('last_checked');
             })
             ->where('is_withdrawn', 0)
-            ->has('sellers', '>=', 1)
-            ->where('avg_low_price', '<=', 15)
-            ->where('lowest_price', '<=', 15)
-            ->where('semrush_AS', '>=', 5)
+            ->has('sellers', '>=', $numSellers)
+            ->where('lowest_price', '<=', $lowestPrice)
+            ->where('avg_low_price', '<=', $avgLowPrice)
+            ->where('semrush_AS', '>=', $minSRAS)
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')

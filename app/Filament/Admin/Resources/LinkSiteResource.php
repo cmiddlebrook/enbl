@@ -243,12 +243,12 @@ class LinkSiteResource extends Resource
                         return $query
                             ->where('is_withdrawn', 0)
                             ->has('sellers', '>=', 3)
-                            ->where('avg_low_price', '<=', 28)
-                            ->where('lowest_price', '<=', 20)
+                            ->where('avg_low_price', '<=', 23)
+                            ->where('lowest_price', '<=', 15)
                             ->where('moz_da', '>=', 25)
                             ->where('moz_pa', '>=', 20)
                             ->where('semrush_AS', '>=', 10)
-                            ->where('majestic_trust_flow', '>=', 10)
+                            ->where('majestic_trust_flow', '>=', 5)
                         ;
                     }
                 ),
@@ -259,8 +259,8 @@ class LinkSiteResource extends Resource
                         return $query
                             ->where('is_withdrawn', 0)
                             ->has('sellers', '>=', 3)
-                            ->where('avg_low_price', '<=', 67)
-                            ->where('lowest_price', '<=', 50)
+                            ->where('avg_low_price', '<=', 42)
+                            ->where('lowest_price', '<=', 30)
                             ->where('moz_da', '>=', 35)
                             ->where('moz_pa', '>=', 30)
                             ->where('semrush_AS', '>=', 15)
@@ -275,8 +275,8 @@ class LinkSiteResource extends Resource
                         return $query
                             ->where('is_withdrawn', 0)
                             ->has('sellers', '>=', 3)
-                            ->where('avg_low_price', '<=', 98)
-                            ->where('lowest_price', '<=', 75)
+                            ->where('avg_low_price', '<=', 56)
+                            ->where('lowest_price', '<=', 40)
                             ->where('moz_da', '>=', 45)
                             ->where('moz_pa', '>=', 40)
                             ->where('semrush_AS', '>=', 20)
@@ -291,11 +291,11 @@ class LinkSiteResource extends Resource
                         return $query
                             ->where('is_withdrawn', 0)
                             ->has('sellers', '>=', 3)
-                            ->where('avg_low_price', '<=', 125)
-                            ->where('lowest_price', '<=', 100)
+                            ->where('avg_low_price', '<=', 70)
+                            ->where('lowest_price', '<=', 50)
                             ->where('moz_da', '>=', 55)
                             ->where('moz_pa', '>=', 55)
-                            ->where('semrush_AS', '>=', 2)
+                            ->where('semrush_AS', '>=', 25)
                             ->where('majestic_trust_flow', '>=', 20)
                         ;
                     }
