@@ -15,7 +15,9 @@ class NeedsMetricsWidget extends BaseWidget
         return [
             Stat::make('Needs SEMRush', LinkSite::whereNull('semrush_AS')->count()),
             Stat::make('Needs Country', LinkSite::whereNull('country_code')->count()),
+            Stat::make('Needs Domain Age', LinkSite::whereNull('domain_creation_date')->count()),
             Stat::make('Needs Majestic', LinkSite::whereNull('majestic_trust_flow')->count()),
+
         ];
     }
 }

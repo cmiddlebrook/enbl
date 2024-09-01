@@ -26,6 +26,7 @@ class LinkSite extends Model
     protected $fillable = [
         'domain',
         'ip_address',
+        'domain_creation_date',
         'last_checked',
         'is_withdrawn',
         'withdrawn_reason',
