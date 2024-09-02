@@ -56,6 +56,7 @@ class SellerResource extends Resource
                 TextColumn::make('name')->searchable(),
                 TextColumn::make('email')->searchable(),
                 TextColumn::make('linksites_count')->counts('linksites')->Label('Nr Sites')->sortable(),
+                TextColumn::make('num_withdrawn_sites')->Label('Nr WD'),
                 TextColumn::make('average_price')->Label('Avg $')
                     ->numeric()                    
                     ->formatStateUsing(function ($state)

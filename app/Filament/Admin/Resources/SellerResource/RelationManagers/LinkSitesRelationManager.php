@@ -34,12 +34,22 @@ class LinkSitesRelationManager extends RelationManager
             ->recordTitleAttribute('domain')
             ->columns([
                 Tables\Columns\TextColumn::make('domain'),
+                Tables\Columns\ToggleColumn::make('is_withdrawn')->label('W/D')->disabled(),
                 Tables\Columns\TextColumn::make('pivot.price_guest_post')->label('GP Price'),
-                Tables\Columns\TextColumn::make('pivot.price_link_insertion')->label('LI Price'),
                 Tables\Columns\TextColumn::make('semrush_AS')->label('SR AS')->sortable(),
                 Tables\Columns\TextColumn::make('majestic_trust_flow')->label('TF')->sortable(),
+                Tables\Columns\TextColumn::make('majestic_citation_flow')->label('CF'),
                 Tables\Columns\TextColumn::make('moz_da')->label('DA'),
-            ])->defaultSort('price_guest_post', 'asc')
+            ])
+            
+            ->defaultSort(
+                fn($query) => $query
+                    ->orderBy('is_withdrawn', 'asc')
+                    ->orderBy('price_guest_post', 'asc')
+                    ->orderBy('semrush_AS', 'desc')
+                    ->orderBy('majestic_trust_flow', 'desc')
+            )
+
             ->filters([
                 //
             ]);

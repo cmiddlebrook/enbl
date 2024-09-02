@@ -28,11 +28,11 @@ class Seller extends Model
             ->orderByPivot('price_guest_post');
     }
 
-    public function averagePrice(): Attribute
+    protected function numWithdrawnSites(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->linkSites()->avg('price_guest_post')
-        ); 
+            get: fn () => $this->linkSites()->where('is_withdrawn', 1)->count(),
+        );
     }
 
     public function scopeWithAveragePrice(Builder $query)
