@@ -34,6 +34,8 @@ class CheckSpammyDomains extends Command
             'cannabis',
             'cbd',
             'pharma',
+            'cialis',
+            'viagra',
             'casino',
             'poker',
             'roulette',
@@ -45,6 +47,11 @@ class CheckSpammyDomains extends Command
             'coinbase',
             'forex',
             'insurance',
+            'outlet',
+            'michaelkors',
+            'vuitton',
+            'burberry',
+            'rayban',
             'my.id'
         );
     }

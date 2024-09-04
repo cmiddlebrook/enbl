@@ -50,12 +50,15 @@ class CheckMetrics extends Command
         $this->info('Starting to check domain metrics...');
 
         $numSitesChecked = $this->checkPricingBand(10, 25, 5, 10, 0); // $50 band
-        $numSitesChecked += $this->checkPricingBand(10, 50, 10, 15, $numSitesChecked); // $100 band
+        // $numSitesChecked += $this->checkPricingBand(10, 50, 10, 15, $numSitesChecked); // $100 band
+        // $numSitesChecked += $this->checkPricingBand(15, 85, 15, 20, $numSitesChecked); // $175 band
+        // $numSitesChecked += $this->checkPricingBand(15, 135, 15, 25, $numSitesChecked); // $275 band
+        $numSitesChecked += $this->checkPricingBand(15, 200, 20, 30, $numSitesChecked); // $400 band
     }
 
     private function checkPricingBand($bandLowPrice, $bandMaxPrice, $priceIncrement, $minSEMRushAS, $numSitesChecked)
     {
-        echo "Checking Pricing Band from \${$bandLowPrice} to \${bandMaxPrice}\n";
+        echo "Checking Pricing Band from \${$bandLowPrice} to \${$bandMaxPrice}\n";
         echo "Checked {$numSitesChecked} domains so far this run\n";
         for ($startPrice = $bandLowPrice; $startPrice <= $bandMaxPrice; $startPrice += $priceIncrement)
         {

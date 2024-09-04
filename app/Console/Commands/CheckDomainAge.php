@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+use function PHPUnit\Framework\isNull;
 
 class CheckDomainAge extends Command
 {
@@ -33,23 +34,32 @@ class CheckDomainAge extends Command
             $this->info("Checking age of {$domain}");
             $data = $this->makeAPICall($domain);
             sleep(0.01);
-            if (!$data) continue;
+            if (!$data) break;
 
             $creationDate = $data['data']['created_date'] ?? null;
-            $linkSite->domain_creation_date = $creationDate ? Carbon::parse($creationDate)->toDateString() : null;
-            echo "{$domain} updated! Domain age: $linkSite->domain_creation_date \n";
-            $linkSite->save();
 
+            if (!is_null($creationDate))
+            {
+                $linkSite->domain_creation_date = $creationDate ? Carbon::parse($creationDate)->toDateString() : null;
+                echo "{$domain} updated! Domain age: $linkSite->domain_creation_date \n";
+                $linkSite->save();    
+            }
+            else 
+            {
+                echo "{$domain} creation date not found: \n";
+                \Symfony\Component\VarDumper\VarDumper::dump($data);
+                break;
+            }
         }
     }
 
-    private function getSitesToCheck($num = 500)
+    private function getSitesToCheck($num = 100)
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where('is_withdrawn', 0)
             ->whereNull('domain_creation_date')
             ->has('sellers', '>=', 2)
-            ->where('avg_low_price', '<=', 50)
+            ->where('avg_low_price', '<=', 70)
             ->where('semrush_AS', '>=', 15)
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
