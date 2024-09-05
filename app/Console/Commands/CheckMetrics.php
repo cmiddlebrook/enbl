@@ -53,7 +53,7 @@ class CheckMetrics extends Command
         // $numSitesChecked += $this->checkPricingBand(10, 50, 10, 15, $numSitesChecked); // $100 band
         // $numSitesChecked += $this->checkPricingBand(15, 85, 15, 20, $numSitesChecked); // $175 band
         // $numSitesChecked += $this->checkPricingBand(15, 135, 15, 25, $numSitesChecked); // $275 band
-        $numSitesChecked += $this->checkPricingBand(15, 200, 20, 30, $numSitesChecked); // $400 band
+        // $numSitesChecked += $this->checkPricingBand(15, 200, 20, 30, $numSitesChecked); // $400 band
     }
 
     private function checkPricingBand($bandLowPrice, $bandMaxPrice, $priceIncrement, $minSEMRushAS, $numSitesChecked)
@@ -70,7 +70,7 @@ class CheckMetrics extends Command
                 // echo "lowPrice: {$lowPrice}\n";
                 // echo "avgLowPrice: {$avgLowPrice}\n";
 
-                $numSitesChecked += $this->checkSites(2, $lowPrice, $avgLowPrice, $minSEMRushAS);
+                $numSitesChecked += $this->checkSites(1, $lowPrice, $avgLowPrice, $minSEMRushAS);
             }
         }
         return $numSitesChecked;

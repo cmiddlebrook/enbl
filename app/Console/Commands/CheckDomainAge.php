@@ -9,8 +9,6 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-use function PHPUnit\Framework\isNull;
-
 class CheckDomainAge extends Command
 {
     protected $signature = 'check-domain-age';
@@ -33,24 +31,35 @@ class CheckDomainAge extends Command
             $domain = $linkSite->domain;
             $this->info("Checking age of {$domain}");
             $data = $this->makeAPICall($domain);
-            sleep(0.01);
+            // sleep(0.01);
             if (!$data) break;
 
-            $creationDate = $data['data']['created_date'] ?? null;
-
-            if (!is_null($creationDate))
+            if (!$this->updateCreationDate($linkSite, $data['data']['created_date']))
             {
-                $linkSite->domain_creation_date = $creationDate ? Carbon::parse($creationDate)->toDateString() : null;
-                echo "{$domain} updated! Domain age: $linkSite->domain_creation_date \n";
-                $linkSite->save();    
-            }
-            else 
-            {
-                echo "{$domain} creation date not found: \n";
-                \Symfony\Component\VarDumper\VarDumper::dump($data);
-                break;
+                if (strpos($domain, '.com.au'))
+                {
+                    if (!$this->updateCreationDate($linkSite, $data['data']['updated_date']))
+                    {
+                        echo "{$domain} no valid date found: \n";
+                        \Symfony\Component\VarDumper\VarDumper::dump($data);
+                        break;        
+                    }
+                }
             }
         }
+    }
+
+    private function updateCreationDate($linkSite, $date)
+    {
+        $dateString = Carbon::parse($date)->toDateString() ?? null;
+        if (!is_null($dateString))
+        {
+            $linkSite->domain_creation_date = $dateString;
+            echo "{$linkSite->domain} updated! Domain age: {$dateString} \n";
+            $linkSite->save();   
+            return true; 
+        }
+        return false;
     }
 
     private function getSitesToCheck($num = 100)
@@ -59,7 +68,7 @@ class CheckDomainAge extends Command
             ->where('is_withdrawn', 0)
             ->whereNull('domain_creation_date')
             ->has('sellers', '>=', 2)
-            ->where('avg_low_price', '<=', 70)
+            ->where('avg_low_price', '<=', 90)
             ->where('semrush_AS', '>=', 15)
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
