@@ -31,7 +31,6 @@ class CheckDomainAge extends Command
             $domain = $linkSite->domain;
             $this->info("Checking age of {$domain}");
             $data = $this->makeAPICall($domain);
-            // sleep(0.01);
             if (!$data) break;
 
             if (!$this->updateCreationDate($linkSite, $data['data']['created_date']))

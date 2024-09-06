@@ -15,6 +15,8 @@ class CheckIP extends Command
     protected $description = 'Finds the IP address of some link sites';
 
     protected $client;
+    protected $numApiCalls = 0;
+    protected $invalidDomains = [];
 
     public function __construct()
     {
@@ -24,10 +26,9 @@ class CheckIP extends Command
 
     public function handle()
     {
-        for ($i = 0; $i < 20; $i++)
+        for ($i = 0; $i < 10; $i++)
         {
             $sites = $this->getSitesToCheck();
-            echo $sites->count() . " sites to be checked\n";
             foreach ($sites as $linkSite)
             {
                 usleep(200000);
@@ -41,6 +42,8 @@ class CheckIP extends Command
                 }
             }
         }
+        \Symfony\Component\VarDumper\VarDumper::dump($this->invalidDomains);
+        echo "{$this->numApiCalls} API calls made\n";
     }
 
     private function updateIPAddress($linkSite, $ip)
@@ -55,13 +58,13 @@ class CheckIP extends Command
         return false;
     }
 
-    private function getSitesToCheck($num = 50)
+    private function getSitesToCheck($num = 40)
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where('is_withdrawn', 0)
             ->whereNull('ip_address')
-            ->has('sellers', '>=', 2)
-            ->where('avg_low_price', '<=', 25)
+            ->has('sellers', '>=', 1)
+            ->where('avg_low_price', '<=', 50)
             ->where('semrush_AS', '>=', 10)
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
@@ -77,6 +80,7 @@ class CheckIP extends Command
     {
         try
         {
+            ++$this->numApiCalls;
             $response = $this->client->request('GET', "https://seo-api2.p.rapidapi.com/domain-to-ip?url=https://{$domain}", [
                 'headers' => [
                     'X-RapidAPI-Host' => 'seo-api2.p.rapidapi.com',
@@ -93,13 +97,8 @@ class CheckIP extends Command
         catch (\GuzzleHttp\Exception\ClientException $e)
         {
             $errorMessage = $e->getMessage();
-            if (strpos($errorMessage, "400 Bad Request"))
-            {
-                echo "Invalid IP address:\n";
-                exit;
-            }
             echo $errorMessage;
-
+            $this->invalidDomains[] = $domain;
             return false;
         }
     }

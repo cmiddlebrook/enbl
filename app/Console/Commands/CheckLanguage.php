@@ -31,7 +31,6 @@ class CheckLanguage extends Command
             $domain = $linkSite->domain;
             $this->info("Checking language of {$domain}");
             $data = $this->makeAPICall($domain);
-            sleep(0.05);
             if (!$data) continue;
 
             $linkSite->country_code = $data['country'] ?? null;
@@ -51,6 +50,7 @@ class CheckLanguage extends Command
                 ->orWhere('country_code', '');
         })
             ->where('is_withdrawn', 0)
+            ->where('semrush_AS', '>=', 5)
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
             ->limit($num)

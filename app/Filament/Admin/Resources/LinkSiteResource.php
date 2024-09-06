@@ -255,7 +255,33 @@ class LinkSiteResource extends Resource
                             ;
                     }
                 ),
+                
+                Tables\Filters\Filter::make('Cheap Crap')->query(
+                    function ($query)
+                    {
+                        return $query
+                            ->where('semrush_as', '=', 2)
+                            ->where('lowest_price', '<=', 5)
+                            ;
+                    }
+                ),
 
+                Tables\Filters\Filter::make('$25')->query(
+                    function ($query)
+                    {
+                        return $query
+                            ->where('is_withdrawn', 0)
+                            ->has('sellers', '>=', 3)
+                            ->where('avg_low_price', '<=', 13)
+                            ->where('lowest_price', '<=', 10)
+                            ->where('moz_da', '>=', 15)
+                            ->where('moz_pa', '>=', 10)
+                            ->where('semrush_AS', '>=', 5)
+                            ->where('majestic_trust_flow', '>=', 5)
+                        ;
+                    }
+                ),
+                
                 Tables\Filters\Filter::make('$50')->query(
                     function ($query)
                     {
@@ -267,7 +293,7 @@ class LinkSiteResource extends Resource
                             ->where('moz_da', '>=', 25)
                             ->where('moz_pa', '>=', 20)
                             ->where('semrush_AS', '>=', 10)
-                            ->where('majestic_trust_flow', '>=', 5)
+                            ->where('majestic_trust_flow', '>=', 10)
                         ;
                     }
                 ),
@@ -282,8 +308,8 @@ class LinkSiteResource extends Resource
                             ->where('lowest_price', '<=', 50)
                             ->where('moz_da', '>=', 35)
                             ->where('moz_pa', '>=', 30)
-                            ->where('semrush_AS', '>=', 15)
-                            ->where('majestic_trust_flow', '>=', 10)
+                            ->where('semrush_AS', '>=', 20)
+                            ->where('majestic_trust_flow', '>=', 15)
                         ;
                     }
                 ),
@@ -298,8 +324,8 @@ class LinkSiteResource extends Resource
                             ->where('lowest_price', '<=', 85)
                             ->where('moz_da', '>=', 45)
                             ->where('moz_pa', '>=', 40)
-                            ->where('semrush_AS', '>=', 20)
-                            ->where('majestic_trust_flow', '>=', 15)
+                            ->where('semrush_AS', '>=', 25)
+                            ->where('majestic_trust_flow', '>=', 20)
                         ;
                     }
                 ),
@@ -314,8 +340,8 @@ class LinkSiteResource extends Resource
                             ->where('lowest_price', '<=', 135)
                             ->where('moz_da', '>=', 55)
                             ->where('moz_pa', '>=', 55)
-                            ->where('semrush_AS', '>=', 25)
-                            ->where('majestic_trust_flow', '>=', 20)
+                            ->where('semrush_AS', '>=', 30)
+                            ->where('majestic_trust_flow', '>=', 25)
                         ;
                     }
                 ),
