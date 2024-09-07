@@ -51,29 +51,39 @@ class CheckMetrics extends Command
 
         $this->info('Starting to check domain metrics...');
 
-        $this->checkPricingBand(10, 13, 5, 5); // $25 band
-        $this->checkPricingBand(10, 25, 5, 10); // $50 band
-        $this->checkPricingBand(10, 50, 10, 15); // $100 band
-        $this->checkPricingBand(15, 85, 15, 20); // $175 band
-        $this->checkPricingBand(15, 135, 15, 25); // $275 band
-        $this->checkPricingBand(15, 200, 20, 30); // $400 band
-        
+        $this->checkPricingBand(13, 14, 1, 5); // $25 band
+        $this->checkPricingBand(25, 28, 1, 10); // $50 band
+        $this->checkPricingBand(50, 55, 1, 15); // $100 band
+        $this->checkPricingBand(85, 95, 2, 20); // $175 band
+        $this->checkPricingBand(135, 150, 3, 25); // $275 band
+        $this->checkPricingBand(200, 220, 4, 30); // $400 band
+
         echo "{$this->numApiCalls} API calls made\n";
     }
 
-    private function checkPricingBand($bandLowPrice, $bandMaxPrice, $priceIncrement, $minSEMRushAS)
+    private function checkPricingBand($bandMaxPrice, $maxLowAvgPrice, $priceIncrement, $minSEMRushAS)
     {
         if ($this->numApiCalls >= $this->maxApiCalls) return;
 
-        echo "Checking Pricing Band from \${$bandLowPrice} to \${$bandMaxPrice}\n";
-        for ($startPrice = $bandLowPrice; $startPrice <= $bandMaxPrice; $startPrice += $priceIncrement)
+        echo "Checking Pricing Band with max \${$bandMaxPrice} and max average \${$maxLowAvgPrice}\n";
+
+        // first do some broad checks at lower price points
+        $jump = floor($bandMaxPrice / 3);
+        for ($startPrice = 5; $startPrice < $bandMaxPrice;)
         {
-            $lowPrice = $startPrice;            
-            for($avgLowPrice = $lowPrice + $priceIncrement; $avgLowPrice <= $startPrice * 2; $avgLowPrice += $priceIncrement)
-            {
-                $this->checkSites(3, $lowPrice, $avgLowPrice, $minSEMRushAS);
-                if ($this->numApiCalls >= $this->maxApiCalls) break;
-            }
+            $lowAvgThisRun = min(floor($startPrice * 1.5), $maxLowAvgPrice);
+            $this->checkSites(3, $startPrice, $lowAvgThisRun, $minSEMRushAS);
+            if ($this->numApiCalls >= $this->maxApiCalls) break;
+
+            $startPrice += $jump;
+            $startPrice = min($startPrice, $bandMaxPrice);
+        }
+
+        // then check at the max price point for this band but with higher averages
+        for ($avgLowPrice = $bandMaxPrice + $priceIncrement; $avgLowPrice <= $maxLowAvgPrice; $avgLowPrice += $priceIncrement)
+        {
+            $this->checkSites(3, $bandMaxPrice, $avgLowPrice, $minSEMRushAS);
+            if ($this->numApiCalls >= $this->maxApiCalls) break;
         }
     }
 
@@ -105,7 +115,7 @@ class CheckMetrics extends Command
             $linkSite->last_checked = Carbon::now();
 
             echo "{$domain} updated!\n";
-            $linkSite->save();    
+            $linkSite->save();
 
             if ($this->numApiCalls >= $this->maxApiCalls) break;
         }

@@ -33,12 +33,15 @@ class CheckIP extends Command
             {
                 usleep(200000);
                 $domain = $linkSite->domain;
-                $this->info("Checking IP address of {$domain}");
-                $data = $this->makeAPICall($domain);
-                if ($data)
-                {                    
-                    $ip = $data['ip'];
-                    $this->updateIPAddress($linkSite, $ip);
+                if (!in_array($domain, $this->invalidDomains))
+                {
+                    $this->info("Checking IP address of {$domain}");
+                    $data = $this->makeAPICall($domain);
+                    if ($data)
+                    {
+                        $ip = $data['ip'];
+                        $this->updateIPAddress($linkSite, $ip);
+                    }
                 }
             }
         }
@@ -64,7 +67,7 @@ class CheckIP extends Command
             ->where('is_withdrawn', 0)
             ->whereNull('ip_address')
             ->has('sellers', '>=', 1)
-            ->where('avg_low_price', '<=', 50)
+            ->where('avg_low_price', '<=', 80)
             ->where('semrush_AS', '>=', 10)
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
