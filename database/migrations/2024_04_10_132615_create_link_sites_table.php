@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('ip_address')->nullable();
             $table->date('domain_creation_date')->nullable();
             $table->date('last_checked')->nullable();
+            $table->dateTime('last_checked_health')->nullable();
             $table->string('country_code')->nullable();
             $table->boolean('is_withdrawn')->default(0);
             $table->string('withdrawn_reason')->nullable();

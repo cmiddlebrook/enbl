@@ -28,6 +28,7 @@ class LinkSite extends Model
         'ip_address',
         'domain_creation_date',
         'last_checked',
+        'last_checked_health',
         'is_withdrawn',
         'withdrawn_reason',
         'niches',
@@ -56,19 +57,10 @@ class LinkSite extends Model
             ->orderByPivot('price_guest_post');
     }
 
-    // public function scopeWithLowestPrice(Builder $query): Builder
-    // {
-    //     // Subquery to get the lowest price for each link_site_id
-    //     $subquery = DB::table('seller_sites as ss')
-    //         ->selectRaw('ss.link_site_id, MIN(ss.price_guest_post) as lowest_price')
-    //         ->groupBy('ss.link_site_id');
-
-    //     // Join the lowest price subquery to the main query
-    //     return $query->leftJoinSub($subquery, 'lowest_prices', function ($join)
-    //     {
-    //         $join->on('link_sites.id', '=', 'lowest_prices.link_site_id');
-    //     })->addSelect('link_sites.*', 'lowest_prices.lowest_price');
-    // }
+    public function healthChecks()
+    {
+        return $this->hasMany(LinkSiteHealth::class);
+    }
 
     public function scopeWithLowestPrice(Builder $query): Builder
     {
