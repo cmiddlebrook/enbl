@@ -61,14 +61,14 @@ class CheckDomainAge extends Command
         return false;
     }
 
-    private function getSitesToCheck($num = 100)
+    private function getSitesToCheck($num = 500)
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where('is_withdrawn', 0)
             ->whereNull('domain_creation_date')
             ->has('sellers', '>=', 1)
-            ->where('avg_low_price', '<=', 15)
-            ->where('semrush_AS', '>=', 5)
+            ->where('avg_low_price', '<=', 100)
+            ->where('semrush_AS', '>=', 10)
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')

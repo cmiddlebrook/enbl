@@ -15,8 +15,9 @@ class CheckIP extends Command
     protected $description = 'Finds the IP address of some link sites';
 
     protected $client;
-    protected $numApiCalls = 0;
+    protected $numApiCalls = 0; // max 2,000 per day, $5 per month then drop to free @ 50 per day
     protected $invalidDomains = [];
+    protected $domainChecks = [];
 
     public function __construct()
     {
@@ -33,9 +34,11 @@ class CheckIP extends Command
             {
                 usleep(200000);
                 $domain = $linkSite->domain;
+                
                 if (!in_array($domain, $this->invalidDomains))
                 {
                     $this->info("Checking IP address of {$domain}");
+                    $this->updateCheckCount($domain);
                     $data = $this->makeAPICall($domain);
                     if ($data)
                     {
@@ -43,10 +46,28 @@ class CheckIP extends Command
                         $this->updateIPAddress($linkSite, $ip);
                     }
                 }
+
+                if ($this->domainChecks[$domain] > 4)
+                {
+                    $this->invalidDomains[] = $domain;
+                }
             }
         }
-        \Symfony\Component\VarDumper\VarDumper::dump($this->invalidDomains);
+        
+        \Symfony\Component\VarDumper\VarDumper::dump(array_unique($this->invalidDomains));
         echo "{$this->numApiCalls} API calls made\n";
+    }
+
+    private function updateCheckCount($domain)
+    {
+        if (array_key_exists($domain, $this->domainChecks))
+        {
+            $this->domainChecks[$domain]++;
+        }
+        else
+        {
+            $this->domainChecks[$domain] = 1;
+        }
     }
 
     private function updateIPAddress($linkSite, $ip)
@@ -67,8 +88,8 @@ class CheckIP extends Command
             ->where('is_withdrawn', 0)
             ->whereNull('ip_address')
             ->has('sellers', '>=', 1)
-            ->where('avg_low_price', '<=', 80)
-            ->where('semrush_AS', '>=', 10)
+            ->where('avg_low_price', '<=', 200)
+            ->where('semrush_AS', '>=', 5)
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')

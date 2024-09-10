@@ -57,6 +57,7 @@ class CheckMetrics extends Command
         $this->checkPricingBand(85, 95, 2, 20); // $175 band
         $this->checkPricingBand(135, 150, 3, 25); // $275 band
         $this->checkPricingBand(200, 220, 4, 30); // $400 band
+        // $this->checkPricingBand(15, 20, 1, 5);
 
         echo "{$this->numApiCalls} API calls made\n";
     }
@@ -72,7 +73,7 @@ class CheckMetrics extends Command
         for ($startPrice = 5; $startPrice < $bandMaxPrice;)
         {
             $lowAvgThisRun = min(floor($startPrice * 1.5), $maxLowAvgPrice);
-            $this->checkSites(3, $startPrice, $lowAvgThisRun, $minSEMRushAS);
+            $this->checkSites(2, $startPrice, $lowAvgThisRun, $minSEMRushAS);
             if ($this->numApiCalls >= $this->maxApiCalls) break;
 
             $startPrice += $jump;
@@ -82,14 +83,14 @@ class CheckMetrics extends Command
         // then check at the max price point for this band but with higher averages
         for ($avgLowPrice = $bandMaxPrice + $priceIncrement; $avgLowPrice <= $maxLowAvgPrice; $avgLowPrice += $priceIncrement)
         {
-            $this->checkSites(3, $bandMaxPrice, $avgLowPrice, $minSEMRushAS);
+            $this->checkSites(2, $bandMaxPrice, $avgLowPrice, $minSEMRushAS);
             if ($this->numApiCalls >= $this->maxApiCalls) break;
         }
     }
 
     private function checkSites($numSellers, $lowestPrice, $avgLowPrice, $minSRAS)
     {
-        $sites = $this->getSitesToCheck(100, $numSellers, $lowestPrice, $avgLowPrice, $minSRAS);
+        $sites = $this->getSitesToCheck($numSellers, $lowestPrice, $avgLowPrice, $minSRAS);
         $numSites = $sites->count();
         echo "Checking {$numSites} with {$numSellers} sellers, lowest price: {$lowestPrice}, low average: {$avgLowPrice}\n";
 
@@ -121,7 +122,7 @@ class CheckMetrics extends Command
         }
     }
 
-    private function getSitesToCheck($num, $numSellers, $lowestPrice, $avgLowPrice, $minSRAS)
+    private function getSitesToCheck($numSellers, $lowestPrice, $avgLowPrice, $minSRAS)
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where(function ($query)
@@ -137,7 +138,7 @@ class CheckMetrics extends Command
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
-            ->limit($num)
+            ->limit(100)
             ->get();
 
         return $sites;
@@ -157,6 +158,7 @@ class CheckMetrics extends Command
 
             $body = $response->getBody();
             $data = json_decode($body, true);
+            // \Symfony\Component\VarDumper\VarDumper::dump($data);
 
             return $data;
         }

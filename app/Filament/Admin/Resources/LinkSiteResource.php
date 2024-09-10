@@ -247,11 +247,11 @@ class LinkSiteResource extends Resource
                     }
                 ),
 
-                Tables\Filters\Filter::make('SR 10')->query(
+                Tables\Filters\Filter::make('SR10')->query(
                     function ($query)
                     {
                         return $query
-                            ->where('semrush_as', '>=', 10)
+                            ->where('semrush_as', '>=', 5)
                             ;
                     }
                 ),
