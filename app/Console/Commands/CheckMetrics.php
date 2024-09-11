@@ -18,7 +18,7 @@ class CheckMetrics extends Command
 
     protected $client;
     protected $numApiCalls = 0;
-    protected $maxApiCalls = 50;
+    protected $maxApiCalls = 100;
 
     public function __construct()
     {
@@ -73,7 +73,7 @@ class CheckMetrics extends Command
         for ($startPrice = 5; $startPrice < $bandMaxPrice;)
         {
             $lowAvgThisRun = min(floor($startPrice * 1.5), $maxLowAvgPrice);
-            $this->checkSites(2, $startPrice, $lowAvgThisRun, $minSEMRushAS);
+            $this->checkSites(4, $startPrice, $lowAvgThisRun, $minSEMRushAS);
             if ($this->numApiCalls >= $this->maxApiCalls) break;
 
             $startPrice += $jump;
@@ -83,7 +83,7 @@ class CheckMetrics extends Command
         // then check at the max price point for this band but with higher averages
         for ($avgLowPrice = $bandMaxPrice + $priceIncrement; $avgLowPrice <= $maxLowAvgPrice; $avgLowPrice += $priceIncrement)
         {
-            $this->checkSites(2, $bandMaxPrice, $avgLowPrice, $minSEMRushAS);
+            $this->checkSites(4, $bandMaxPrice, $avgLowPrice, $minSEMRushAS);
             if ($this->numApiCalls >= $this->maxApiCalls) break;
         }
     }

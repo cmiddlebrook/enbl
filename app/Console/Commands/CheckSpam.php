@@ -33,7 +33,7 @@ class CheckSpam extends Command
             'hindu',
             'dubai',
             'torrent',
-            'cannabis',
+            'cannabi',
             'cbd',
             'pharma',
             'cialis',
@@ -42,7 +42,9 @@ class CheckSpam extends Command
             'poker',
             'roulette',
             'bingo',
+            'slots',
             'gambling',
+            'gamble',
             'betting',
             'crypto',
             'bitcoin',
@@ -54,7 +56,6 @@ class CheckSpam extends Command
             'vuitton',
             'burberry',
             'rayban',
-            'my.id'
         );
     }
 

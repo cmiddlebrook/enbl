@@ -247,31 +247,25 @@ class LinkSiteResource extends Resource
                     }
                 ),
 
-                Tables\Filters\Filter::make('SR10')->query(
+                Tables\Filters\Filter::make('Purge')->query(
                     function ($query)
                     {
                         return $query
-                            ->where('semrush_as', '>=', 5)
+                            ->has('sellers', '=', 1)
+                            ->where('semrush_as', '<', 2)
+
                             ;
                     }
                 ),
                 
-                Tables\Filters\Filter::make('Cheap Crap')->query(
-                    function ($query)
-                    {
-                        return $query
-                            ->where('semrush_as', '=', 2)
-                            ->where('lowest_price', '<=', 5)
-                            ;
-                    }
-                ),
+
 
                 Tables\Filters\Filter::make('$25')->query(
                     function ($query)
                     {
                         return $query
                             ->where('is_withdrawn', 0)
-                            ->has('sellers', '>=', 3)
+                            ->has('sellers', '>=', 4)
                             ->where('avg_low_price', '<=', 13)
                             ->where('lowest_price', '<=', 10)
                             ->where('moz_da', '>=', 15)
@@ -287,7 +281,7 @@ class LinkSiteResource extends Resource
                     {
                         return $query
                             ->where('is_withdrawn', 0)
-                            ->has('sellers', '>=', 3)
+                            ->has('sellers', '>=', 4)
                             ->where('avg_low_price', '<=', 35)
                             ->where('lowest_price', '<=', 25)
                             ->where('moz_da', '>=', 25)
@@ -303,7 +297,7 @@ class LinkSiteResource extends Resource
                     {
                         return $query
                             ->where('is_withdrawn', 0)
-                            ->has('sellers', '>=', 3)
+                            ->has('sellers', '>=', 4)
                             ->where('avg_low_price', '<=', 75)
                             ->where('lowest_price', '<=', 50)
                             ->where('moz_da', '>=', 35)
@@ -319,7 +313,7 @@ class LinkSiteResource extends Resource
                     {
                         return $query
                             ->where('is_withdrawn', 0)
-                            ->has('sellers', '>=', 3)
+                            ->has('sellers', '>=', 4)
                             ->where('avg_low_price', '<=', 125)
                             ->where('lowest_price', '<=', 85)
                             ->where('moz_da', '>=', 45)
@@ -335,7 +329,7 @@ class LinkSiteResource extends Resource
                     {
                         return $query
                             ->where('is_withdrawn', 0)
-                            ->has('sellers', '>=', 3)
+                            ->has('sellers', '>=', 4)
                             ->where('avg_low_price', '<=', 200)
                             ->where('lowest_price', '<=', 135)
                             ->where('moz_da', '>=', 55)

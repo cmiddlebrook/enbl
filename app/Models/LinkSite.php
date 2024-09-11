@@ -83,7 +83,7 @@ class LinkSite extends Model
 
         $avgSubquery = DB::table(DB::raw("({$subquery->toSql()}) as ranked"))
             ->mergeBindings($subquery)
-            ->where('row_num', '<=', 3)
+            ->where('row_num', '<=', 4)
             ->selectRaw('link_site_id, AVG(price_guest_post) as avg_low_price')
             ->groupBy('link_site_id');
 
