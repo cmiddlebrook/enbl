@@ -247,18 +247,6 @@ class LinkSiteResource extends Resource
                     }
                 ),
 
-                Tables\Filters\Filter::make('Purge')->query(
-                    function ($query)
-                    {
-                        return $query
-                            ->has('sellers', '=', 1)
-                            ->where('semrush_as', '<', 2)
-
-                            ;
-                    }
-                ),
-                
-
 
                 Tables\Filters\Filter::make('$25')->query(
                     function ($query)
