@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 require 'vendor/autoload.php';
 
+use App\Enums\WithdrawalReasonEnum;
 use App\Models\LinkSite;
 use App\Models\LinkSiteHealth;
 use Illuminate\Console\Command;
@@ -30,16 +31,40 @@ class CheckSiteHealth extends Command
 
     public function handle()
     {
-        $this->ignoreWithdrawnDeadSites();
+        $this->displayManualChecks();
         $this->checkDownSites();
+        $this->checkMarkedSites();
         $this->makeNewChecks();
     }
 
-    private function ignoreWithdrawnDeadSites()
+    private function displayManualChecks()
     {
+        $results = LinkSiteHealth::select('link_site_health.link_site_id', 'link_sites.domain')
+            ->join('link_sites', 'link_site_health.link_site_id', '=', 'link_sites.id')
+            ->selectRaw('COUNT(link_site_health.id) as check_count, MIN(link_site_health.check_date) as earliest_check')
+            ->groupBy('link_site_health.link_site_id', 'link_sites.domain')
+            ->havingRaw('COUNT(link_site_health.id) >= 12')
+            ->havingRaw('MIN(link_site_health.check_date) < NOW() - INTERVAL 48 HOUR')
+            ->orderByDesc('check_count')
+            ->get();
 
+        // Output the results to the console
+        foreach ($results as $result)
+        {
+            $siteId = $result->link_site_id;
+            $domain = $result->domain;
+            $this->info(sprintf("%-7s %-30s %-5s %-20s", $siteId, $domain, $result->check_count, $result->earliest_check));
+
+            if ($this->confirm('Do you want to mark this site as dead? (y/n)', false))
+            {
+                $this->markSiteDead($siteId);
+                echo "{$domain} has been marked as dead\n";
+            }
+        }
+
+        // \Symfony\Component\VarDumper\VarDumper::dump($results);
     }
-    
+
     private function checkDownSites()
     {
         $downSites = $this->getDownSites();
@@ -69,6 +94,15 @@ class CheckSiteHealth extends Command
                 // what?? 
             }
         }
+    }
+
+    private function checkMarkedSites()
+    {
+        $sites = LinkSite::
+          where('is_withdrawn', 1)
+        ->where('withdrawn_reason', 'checkhealth')
+        ->get();
+        $this->checkSites($sites);
     }
 
     private function makeNewChecks()
@@ -107,6 +141,16 @@ class CheckSiteHealth extends Command
         $healthRecord->save();
     }
 
+    private function markSiteDead($siteId)
+    {
+        $site = LinkSite::find($siteId);
+        $site->is_withdrawn = 1;
+        $site->withdrawn_reason = WithdrawalReasonEnum::DEADSITE;
+        $site->save();
+
+        $this->deleteHealthChecks($siteId);
+    }
+
     private function deleteHealthChecks($siteId)
     {
         LinkSiteHealth::where('link_site_id', $siteId)->delete();
@@ -114,7 +158,6 @@ class CheckSiteHealth extends Command
 
     private function updateCheckDate($linkSite)
     {
-        // $this->info("Updating check date for {$linkSite->domain}");
         $linkSite->last_checked_health = Carbon::now();
         $linkSite->save();
     }
@@ -172,19 +215,6 @@ class CheckSiteHealth extends Command
             ->values();
     }
 
-    private function getDeadSites()
-    {
-        // sites that have been checked at least 24 times have been down at least a day - I'll class that as dead
-        return LinkSiteHealth::with('linkSite')
-            ->select('link_site_id')
-            ->groupBy('link_site_id')
-            ->havingRaw('COUNT(*) >= 24')
-            ->get()
-            ->pluck('linkSite')
-            ->unique('id')
-            ->values();
-    }
-    
     private function makeAPICall($domain)
     {
         try

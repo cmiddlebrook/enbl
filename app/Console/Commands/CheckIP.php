@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 require 'vendor/autoload.php';
 
+use App\Enums\WithdrawalReasonEnum;
 use App\Models\LinkSite;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,7 @@ class CheckIP extends Command
     protected $description = 'Finds the IP address of some link sites';
 
     protected $client;
-    protected $numApiCalls = 0; // max 2,000 per day, $5 per month then drop to free @ 50 per day
+    protected $numApiCalls = 0; 
     protected $invalidDomains = [];
     protected $domainChecks = [];
 
@@ -27,35 +28,51 @@ class CheckIP extends Command
 
     public function handle()
     {
-        for ($i = 0; $i < 10; $i++)
+        $sites = $this->getSitesToCheck();
+        foreach ($sites as $linkSite)
         {
-            $sites = $this->getSitesToCheck();
-            foreach ($sites as $linkSite)
+            $domain = $linkSite->domain;
+            
+            if (!in_array($domain, $this->invalidDomains))
             {
-                usleep(200000);
-                $domain = $linkSite->domain;
-                
-                if (!in_array($domain, $this->invalidDomains))
-                {
-                    $this->info("Checking IP address of {$domain}");
-                    $this->updateCheckCount($domain);
-                    $data = $this->makeAPICall($domain);
-                    if ($data)
-                    {
-                        $ip = $data['ip'];
-                        $this->updateIPAddress($linkSite, $ip);
-                    }
-                }
+                $this->info("Checking IP address of {$domain}");
+                $this->updateCheckCount($domain);
+                $data = $this->makeAPICall($domain);
 
-                if ($this->domainChecks[$domain] > 4)
-                {
-                    $this->invalidDomains[] = $domain;
-                }
+                $ip = $this->extractIP($data);
+                $this->updateIPAddress($linkSite, $ip);
+            }
+
+            if ($this->domainChecks[$domain] > 4)
+            {
+                $this->invalidDomains[] = $domain;
             }
         }
         
         \Symfony\Component\VarDumper\VarDumper::dump(array_unique($this->invalidDomains));
         echo "{$this->numApiCalls} API calls made\n";
+    }
+
+    private function extractIP($data)
+    {
+        $error = "";
+        if (array_key_exists('a', $data))
+        {
+            $aRecord = $data['a'];
+            if (is_array($aRecord) && array_key_exists(0, $aRecord))
+            {
+                $firstRecord = $aRecord[0];
+                if (is_array($firstRecord) && array_key_exists('ip', $firstRecord))
+                {
+                    return $firstRecord['ip'];
+                }
+                $error = "Missing ip field";
+            }
+            $error = "No 0 element in array";
+        }
+        $error = "Missing a record";
+
+        return $error;
     }
 
     private function updateCheckCount($domain)
@@ -77,12 +94,17 @@ class CheckIP extends Command
             $linkSite->ip_address = $ip;
             echo "{$linkSite->domain} updated! IP Address: {$ip} \n";
             $linkSite->save();
-            return true;
         }
-        return false;
+        else
+        {
+            echo "Invalid IP: {$ip}, marking site for checking\n";
+            $linkSite->is_withdrawn = 1;
+            $linkSite->withdrawn_reason = WithdrawalReasonEnum::CHECKHEALTH;
+            $linkSite->save();
+        }
     }
 
-    private function getSitesToCheck($num = 40)
+    private function getSitesToCheck()
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where('is_withdrawn', 0)
@@ -93,7 +115,7 @@ class CheckIP extends Command
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
-            ->limit($num)
+            ->limit(500)
             ->get();
 
         return $sites;
@@ -105,12 +127,13 @@ class CheckIP extends Command
         try
         {
             ++$this->numApiCalls;
-            $response = $this->client->request('GET', "https://seo-api2.p.rapidapi.com/domain-to-ip?url=https://{$domain}", [
+            $response = $this->client->request('GET', "https://vibrant-dns.p.rapidapi.com/dns/get?domain={$domain}&record_type=a", [
                 'headers' => [
-                    'X-RapidAPI-Host' => 'seo-api2.p.rapidapi.com',
+                    'X-RapidAPI-Host' => 'vibrant-dns.p.rapidapi.com',
                     'X-RapidAPI-Key' => 'e795fa7e7dmshec72b0683f03249p1e6cc3jsn5eb61b037996',
                 ],
             ]);
+            
 
             $body = $response->getBody();
             $data = json_decode($body, true);
@@ -121,6 +144,12 @@ class CheckIP extends Command
         catch (\GuzzleHttp\Exception\ClientException $e)
         {
             $errorMessage = $e->getMessage();
+
+            if (strpos($errorMessage, "429 Too Many Requests"))
+            {
+                echo "Daily API quota reached\n";
+                exit;
+            }
             echo $errorMessage;
             $this->invalidDomains[] = $domain;
             return false;
