@@ -18,7 +18,7 @@ class CheckMetrics extends Command
 
     protected $client;
     protected $numApiCalls = 0;
-    protected $maxApiCalls = 100;
+    protected $maxApiCalls = 1;
 
     public function __construct()
     {
@@ -112,6 +112,13 @@ class CheckMetrics extends Command
             $linkSite->majestic_ref_domains = $data['majesticRefDomains'] ?? null;
             $linkSite->majestic_ref_edu = $data['majesticRefEDU'] ?? null;
             $linkSite->majestic_ref_gov = $data['majesticRefGov'] ?? null;
+            $linkSite->majestic_TTF0_name = $data['majesticTTF0Name'] ?? null;
+            $linkSite->majestic_TTF0_value = $data['majesticTTF0Value'] ?? null;
+            $linkSite->majestic_TTF1_name = $data['majesticTTF1Name'] ?? null;
+            $linkSite->majestic_TTF1_value = $data['majesticTTF1Value'] ?? null;
+            $linkSite->majestic_TTF2_name = $data['majesticTTF2Name'] ?? null;
+            $linkSite->majestic_TTF2_value = $data['majesticTTF2Value'] ?? null;
+
             $linkSite->facebook_shares = $data['FB_shares'] ?? null;
             $linkSite->last_checked_mozmaj = Carbon::now();
 

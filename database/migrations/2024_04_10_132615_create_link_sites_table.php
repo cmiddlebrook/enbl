@@ -30,6 +30,12 @@ return new class extends Migration
             $table->unsignedBigInteger('majestic_ref_domains')->nullable();
             $table->unsignedBigInteger('majestic_ref_edu')->nullable();
             $table->unsignedBigInteger('majestic_ref_gov')->nullable();
+            $table->string('majestic_TTF0_name')->nullable();
+            $table->unsignedTinyInteger('majestic_TTF0_value')->nullable();
+            $table->string('majestic_TTF1_name')->nullable();
+            $table->unsignedTinyInteger('majestic_TTF1_value')->nullable();
+            $table->string('majestic_TTF2_name')->nullable();
+            $table->unsignedTinyInteger('majestic_TTF2_value')->nullable();
             $table->unsignedBigInteger('facebook_shares')->nullable();
             $table->date('last_checked_mozmaj')->nullable();
             $table->unsignedTinyInteger('ahrefs_domain_rank')->nullable();
