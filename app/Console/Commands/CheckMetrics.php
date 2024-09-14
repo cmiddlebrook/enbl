@@ -57,7 +57,7 @@ class CheckMetrics extends Command
         $this->checkPricingBand(85, 95, 2, 20); // $175 band
         $this->checkPricingBand(135, 150, 3, 25); // $275 band
         $this->checkPricingBand(200, 220, 4, 30); // $400 band
-        // $this->checkPricingBand(15, 20, 1, 5);
+        $this->checkPricingBand(15, 20, 1, 5);
 
         echo "{$this->numApiCalls} API calls made\n";
     }
@@ -73,7 +73,7 @@ class CheckMetrics extends Command
         for ($startPrice = 5; $startPrice < $bandMaxPrice;)
         {
             $lowAvgThisRun = min(floor($startPrice * 1.5), $maxLowAvgPrice);
-            $this->checkSites(3, $startPrice, $lowAvgThisRun, $minSEMRushAS);
+            $this->checkSites(2, $startPrice, $lowAvgThisRun, $minSEMRushAS);
             if ($this->numApiCalls >= $this->maxApiCalls) break;
 
             $startPrice += $jump;
@@ -83,7 +83,7 @@ class CheckMetrics extends Command
         // then check at the max price point for this band but with higher averages
         for ($avgLowPrice = $bandMaxPrice + $priceIncrement; $avgLowPrice <= $maxLowAvgPrice; $avgLowPrice += $priceIncrement)
         {
-            $this->checkSites(3, $bandMaxPrice, $avgLowPrice, $minSEMRushAS);
+            $this->checkSites(2, $bandMaxPrice, $avgLowPrice, $minSEMRushAS);
             if ($this->numApiCalls >= $this->maxApiCalls) break;
         }
     }
@@ -113,7 +113,7 @@ class CheckMetrics extends Command
             $linkSite->majestic_ref_edu = $data['majesticRefEDU'] ?? null;
             $linkSite->majestic_ref_gov = $data['majesticRefGov'] ?? null;
             $linkSite->facebook_shares = $data['FB_shares'] ?? null;
-            $linkSite->last_checked = Carbon::now();
+            $linkSite->last_checked_mozmaj = Carbon::now();
 
             echo "{$domain} updated!\n";
             $linkSite->save();
@@ -127,8 +127,8 @@ class CheckMetrics extends Command
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where(function ($query)
             {
-                $query->where('last_checked', '<', Carbon::now()->subMonth())
-                    ->orWhereNull('last_checked');
+                $query->where('last_checked_mozmaj', '<', Carbon::now()->subMonth())
+                    ->orWhereNull('last_checked_mozmaj');
             })
             ->where('is_withdrawn', 0)
             ->has('sellers', '>=', $numSellers)

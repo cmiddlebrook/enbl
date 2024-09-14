@@ -25,10 +25,6 @@ class LinkSite extends Model
 
     protected $fillable = [
         'domain',
-        'ip_address',
-        'domain_creation_date',
-        'last_checked',
-        'last_checked_health',
         'is_withdrawn',
         'withdrawn_reason',
         'niches',
@@ -36,6 +32,7 @@ class LinkSite extends Model
         'semrush_traffic',
         'semrush_perc_english_traffic',
         'semrush_organic_kw',
+        'last_checked_semrush',
         'moz_da',
         'moz_pa',
         'moz_rank',
@@ -47,7 +44,13 @@ class LinkSite extends Model
         'majestic_ref_edu',
         'majestic_ref_gov',
         'facebook_shares',
-        'ahrefs_domain_rank'
+        'last_checked_mozmaj',
+        'ahrefs_domain_rank',
+        'ip_address',
+        'country_code',
+        'domain_creation_date',
+        'last_checked',
+        'last_checked_health',
     ];
 
     public function sellers()

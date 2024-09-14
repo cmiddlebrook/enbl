@@ -14,17 +14,13 @@ return new class extends Migration
         Schema::create('link_sites', function (Blueprint $table) {
             $table->id();
             $table->string('domain')->unique();
-            $table->string('ip_address')->nullable();
-            $table->date('domain_creation_date')->nullable();
-            $table->date('last_checked')->nullable();
-            $table->dateTime('last_checked_health')->nullable();
-            $table->string('country_code')->nullable();
             $table->boolean('is_withdrawn')->default(0);
             $table->string('withdrawn_reason')->nullable();
             $table->unsignedTinyInteger('semrush_AS')->nullable();
             $table->unsignedBigInteger('semrush_traffic')->nullable();
             $table->unsignedTinyInteger('semrush_perc_english_traffic')->nullable();
             $table->unsignedBigInteger('semrush_organic_kw')->nullable();
+            $table->date('last_checked_semrush')->nullable();
             $table->unsignedTinyInteger('moz_da')->nullable();
             $table->unsignedTinyInteger('moz_pa')->nullable();
             $table->decimal('moz_rank', 3, 1)->nullable();
@@ -35,7 +31,13 @@ return new class extends Migration
             $table->unsignedBigInteger('majestic_ref_edu')->nullable();
             $table->unsignedBigInteger('majestic_ref_gov')->nullable();
             $table->unsignedBigInteger('facebook_shares')->nullable();
+            $table->date('last_checked_mozmaj')->nullable();
             $table->unsignedTinyInteger('ahrefs_domain_rank')->nullable();
+            $table->string('ip_address')->nullable();
+            $table->string('country_code')->nullable();
+            $table->date('domain_creation_date')->nullable();
+            $table->date('last_checked')->nullable();
+            $table->dateTime('last_checked_health')->nullable();
             $table->timestamps();
         });
     }

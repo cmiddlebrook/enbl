@@ -68,7 +68,7 @@ class CheckDomainAge extends Command
             ->whereNull('domain_creation_date')
             ->has('sellers', '>=', 1)
             ->where('avg_low_price', '<=', 100)
-            ->where('semrush_AS', '>=', 10)
+            ->where('semrush_AS', '>=', 5)
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')

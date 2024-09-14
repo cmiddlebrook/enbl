@@ -30,10 +30,16 @@ class CheckSiteHealth extends Command
 
     public function handle()
     {
+        $this->ignoreWithdrawnDeadSites();
         $this->checkDownSites();
         $this->makeNewChecks();
     }
 
+    private function ignoreWithdrawnDeadSites()
+    {
+
+    }
+    
     private function checkDownSites()
     {
         $downSites = $this->getDownSites();
@@ -146,8 +152,8 @@ class CheckSiteHealth extends Command
                     ->orWhereNull('last_checked_health');
             })
             ->where('is_withdrawn', 0)
-            ->has('sellers', '>=', 2)
-            ->where('semrush_AS', '>=', 10)
+            ->has('sellers', '>=', 1)
+            ->where('semrush_AS', '>=', 5)
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')

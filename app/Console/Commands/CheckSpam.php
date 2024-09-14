@@ -51,6 +51,7 @@ class CheckSpam extends Command
             'coinbase',
             'forex',
             'insurance',
+            'paydayloan',
             'outlet',
             'michaelkors',
             'vuitton',
