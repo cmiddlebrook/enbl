@@ -43,8 +43,8 @@ class CheckSiteHealth extends Command
             ->join('link_sites', 'link_site_health.link_site_id', '=', 'link_sites.id')
             ->selectRaw('COUNT(link_site_health.id) as check_count, MIN(link_site_health.check_date) as earliest_check')
             ->groupBy('link_site_health.link_site_id', 'link_sites.domain')
-            ->havingRaw('COUNT(link_site_health.id) >= 12')
-            ->havingRaw('MIN(link_site_health.check_date) < NOW() - INTERVAL 48 HOUR')
+            ->havingRaw('COUNT(link_site_health.id) >= 16')
+            ->havingRaw('MIN(link_site_health.check_date) < NOW() - INTERVAL 60 HOUR')
             ->orderByDesc('check_count')
             ->get();
 

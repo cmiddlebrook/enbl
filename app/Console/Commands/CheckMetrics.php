@@ -28,27 +28,6 @@ class CheckMetrics extends Command
 
     public function handle()
     {
-        // $options = ['Moz & Majestic', 'SEMRush KW & Links', 'Ahrefs'];
-        // $action = $this->choice('What metrics would you like to check?', $options, $defaultIndex = 0);
-
-        // $this->info('You have chosen to: ' . $action);
-
-        // switch ($action)
-        // {
-        //     case 'Moz & Majestic':
-        //         $this->info('Updating Moz & Majestic metrics');
-        //         break;
-        //     case 'SEMRush KW & Links':
-        //         $this->info('Updating SEMRush keywords and links');
-        //         break;
-        //     case 'Ahrefs':
-        //         $this->info('Updating Ahrefs metrics');
-        //         break;
-        //     default:
-        //         $this->error('No valid action selected!');
-        //         break;
-        // }
-
         $this->info('Starting to check domain metrics...');
 
         $this->checkPricingBand(13, 14, 1, 5); // $25 band
@@ -112,12 +91,12 @@ class CheckMetrics extends Command
             $linkSite->majestic_ref_domains = $data['majesticRefDomains'] ?? null;
             $linkSite->majestic_ref_edu = $data['majesticRefEDU'] ?? null;
             $linkSite->majestic_ref_gov = $data['majesticRefGov'] ?? null;
-            $linkSite->majestic_TTF0_name = $data['majesticTTF0Name'] ?? null;
-            $linkSite->majestic_TTF0_value = $data['majesticTTF0Value'] ?? null;
-            $linkSite->majestic_TTF1_name = $data['majesticTTF1Name'] ?? null;
-            $linkSite->majestic_TTF1_value = $data['majesticTTF1Value'] ?? null;
-            $linkSite->majestic_TTF2_name = $data['majesticTTF2Name'] ?? null;
-            $linkSite->majestic_TTF2_value = $data['majesticTTF2Value'] ?? null;
+            $linkSite->majestic_TTF0_name = !empty($data['majesticTTF0Name']) ? $data['majesticTTF0Name'] : null;
+            $linkSite->majestic_TTF0_value = !empty($data['majesticTTF0Value']) ? (int)$data['majesticTTF0Value'] : null;
+            $linkSite->majestic_TTF1_name = !empty($data['majesticTTF1Name']) ? $data['majesticTTF1Name'] : null;
+            $linkSite->majestic_TTF1_value = !empty($data['majesticTTF1Value']) ? (int)$data['majesticTTF1Value'] : null;
+            $linkSite->majestic_TTF2_name = !empty($data['majesticTTF2Name']) ? $data['majesticTTF2Name'] : null;
+            $linkSite->majestic_TTF2_value = !empty($data['majesticTTF2Value']) ? (int)$data['majesticTTF2Value'] : null;
 
             $linkSite->facebook_shares = $data['FB_shares'] ?? null;
             $linkSite->last_checked_mozmaj = Carbon::now();
@@ -165,7 +144,7 @@ class CheckMetrics extends Command
 
             $body = $response->getBody();
             $data = json_decode($body, true);
-            // \Symfony\Component\VarDumper\VarDumper::dump($data);
+            \Symfony\Component\VarDumper\VarDumper::dump($data);
 
             return $data;
         }

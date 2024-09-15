@@ -221,7 +221,7 @@ class LinkSiteResource extends Resource
                         return NumberFormatter::format($state);
                     }),
                 TextColumn::make('ahrefs_domain_rank')->label('DR')->sortable(),
-                ToggleColumn::make('is_withdrawn')->label('W/D')->disabled()->toggleable(isToggledHiddenByDefault: true),
+                ToggleColumn::make('is_withdrawn')->label('W/D')->disabled()->toggleable(isToggledHiddenByDefault: false),
             ])
 
             ->defaultPaginationPageOption(10)
