@@ -144,7 +144,7 @@ class CheckMetrics extends Command
 
             $body = $response->getBody();
             $data = json_decode($body, true);
-            \Symfony\Component\VarDumper\VarDumper::dump($data);
+            // \Symfony\Component\VarDumper\VarDumper::dump($data);
 
             return $data;
         }

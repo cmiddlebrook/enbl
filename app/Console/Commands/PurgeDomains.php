@@ -19,14 +19,28 @@ class PurgeDomains extends Command
 
     public function handle()
     {
-        // $this->deleteSingleSellerLowAuthoritySites();
-        $this->deleteHighPrices();
+        $this->deleteSpamSites();
+        $this->deleteLowAuthoritySites('semrush_AS', 5);
+        $this->deleteLowAuthoritySites('moz_da', 10);
+        $this->deleteLowAuthoritySites('moz_pa', 10);
+        $this->deleteLowAuthoritySites('majestic_trust_flow', 3);
+        $this->deleteLowAuthoritySites('semrush_traffic', 100);
+        $this->deleteLowAuthoritySites('semrush_organic_kw', 50);
+        // $this->deleteHighPrices();
     }
 
-    private function deleteSingleSellerLowAuthoritySites()
+    private function deleteSpamSites()
     {
-        $this->deleteSSLA_SellerSiteEntries();
-        $this->deleteSSLA_LinkSites();
+        $sites = LinkSite::where('is_withdrawn', 1)->where('withdrawn_reason', 'spam')->get();
+        $this->deleteSellerSiteEntries($sites);
+        $this->deleteLinkSites();
+    }
+
+    private function deleteLowAuthoritySites($field, $minValue)
+    {
+        $sites = LinkSite::whereNotNull($field)->where($field, '<=', $minValue)->get();
+        $this->deleteSellerSiteEntries($sites);
+        $this->deleteLinkSites();
     }
 
     private function deleteHighPrices()
@@ -58,21 +72,13 @@ class PurgeDomains extends Command
         }
     }
 
-    private function deleteSSLA_SellerSiteEntries()
+    private function deleteSellerSiteEntries($sites)
     {
-        $sites = $this->getSingleSellerLowAuthoritySites();
-
         foreach ($sites as $site)
         {
             $linkSiteId = $site->id;
             $domain = $site->domain;
             $sellers = $site->sellers;
-            if ($sellers->count() != 1)
-            {
-                echo $domain . " has the wrong number of sellers...\n";
-                \Symfony\Component\VarDumper\VarDumper::dump($sellers);
-                exit;
-            }
 
             foreach ($sellers as $seller)
             {                
@@ -84,9 +90,9 @@ class PurgeDomains extends Command
         }
     }
 
-    private function deleteSSLA_LinkSites()
+    private function deleteLinkSites()
     {
-        $sites = $this->getSitesWithoutSellers();
+        $sites = LinkSite::has('sellers', 0)->get();
 
         foreach ($sites as $site)
         {
@@ -110,24 +116,6 @@ class PurgeDomains extends Command
         // \Symfony\Component\VarDumper\VarDumper::dump($sellerSite);
     }
 
-    private function getSingleSellerLowAuthoritySites()
-    {
-        $sites = LinkSite::withLowestPrice()
-            ->has('sellers', '=', 1)
-            ->where('semrush_AS', '<=', 2)
-            ->orderBy('lowest_price', 'desc')
-            ->orderBy('majestic_trust_flow', 'desc')
-            // ->limit(100)
-            ->get();
-
-        return $sites;
-    }
-
-    private function getSitesWithoutSellers()
-    {
-        return LinkSite::has('sellers', '=', 0)->get();
-    }
-
     private function getSitesWithLotsOfSellers($minSellers)
     {
         $sites = LinkSite::withAvgLowPrices()
@@ -139,6 +127,7 @@ class PurgeDomains extends Command
             ->get();
 
         return $sites;
-
     }
+
+
 }
