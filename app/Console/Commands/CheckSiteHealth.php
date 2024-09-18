@@ -31,9 +31,9 @@ class CheckSiteHealth extends Command
 
     public function handle()
     {
-        $this->displayManualChecks();
-        $this->checkDownSites();
-        $this->checkMarkedSites();
+        // $this->displayManualChecks();
+        // $this->checkDownSites();
+        // $this->checkMarkedSites();
         $this->makeNewChecks();
     }
 
@@ -191,12 +191,13 @@ class CheckSiteHealth extends Command
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where(function ($query)
             {
-                $query->where('last_checked_health', '<', Carbon::now()->subMonth())
+                $query->where('last_checked_health', '<', Carbon::now()->subWeek())
                     ->orWhereNull('last_checked_health');
             })
-            ->where('is_withdrawn', 0)
-            ->has('sellers', '>=', 1)
-            ->where('semrush_AS', '>=', 5)
+            // ->where('is_withdrawn', 1)
+            ->where('withdrawn_reason', 'language')
+            // ->has('sellers', '>=', 1)
+            // ->where('semrush_AS', '>=', 5)
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')

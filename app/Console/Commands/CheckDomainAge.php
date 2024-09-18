@@ -61,14 +61,14 @@ class CheckDomainAge extends Command
         return false;
     }
 
-    private function getSitesToCheck($num = 500)
+    private function getSitesToCheck($num = 100)
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where('is_withdrawn', 0)
             ->whereNull('domain_creation_date')
-            ->has('sellers', '>=', 1)
-            ->where('avg_low_price', '<=', 100)
-            ->where('semrush_AS', '>=', 5)
+            // ->has('sellers', '>=', 1)
+            // ->where('avg_low_price', '<=', 100)
+            // ->where('semrush_AS', '>=', 5)
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
@@ -83,6 +83,7 @@ class CheckDomainAge extends Command
     {
         try
         {
+            sleep (5);
             $response = $this->client->request('GET', "https://domain-age-checker2.p.rapidapi.com/domain-age?url={$domain}", [
                 'headers' => [
                     'X-RapidAPI-Host' => 'domain-age-checker2.p.rapidapi.com',

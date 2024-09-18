@@ -204,7 +204,7 @@ class LinkSiteResource extends Resource
                         return "{$years}y {$months}m";
                     }),
                 TextColumn::make('majestic_trust_flow')->label('TF')->sortable(),
-                TextColumn::make('majestic_citation_flow')->label('CF'),
+                TextColumn::make('majestic_citation_flow')->label('CF')->sortable(),
                 TextColumn::make('majestic_ref_domains')->label('RD')
                     ->numeric()
                     ->formatStateUsing(function ($state)

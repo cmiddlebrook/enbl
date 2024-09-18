@@ -121,6 +121,7 @@ class CheckMetrics extends Command
             ->where('lowest_price', '<=', $lowestPrice)
             ->where('avg_low_price', '<=', $avgLowPrice)
             ->where('semrush_AS', '>=', $minSRAS)
+            // ->orderBy('last_checked_mozmaj', 'asc')
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')

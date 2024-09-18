@@ -9,7 +9,6 @@ enum WithdrawalReasonEnum: string implements HasLabel
     case NOFOLLOW = 'nofollow';
     case DIFFICULT = 'difficult';
     case SUBDOMAIN = 'subdomain';
-    case PENALTY = 'penalty';
     case HIGH_SPAM_SCORE = 'spam';
     case DEADSITE = 'deadsite';
     case CHECKHEALTH = 'checkhealth';
@@ -21,7 +20,6 @@ enum WithdrawalReasonEnum: string implements HasLabel
             self::NOFOLLOW => 'No Follow or Poor Link',
             self::DIFFICULT => 'Difficult Posting Rules',
             self::SUBDOMAIN => 'Not a Root Domain',
-            self::PENALTY => 'Penalty',
             self::HIGH_SPAM_SCORE => 'Spam',
             self::DEADSITE => 'Dead Website',
             self::CHECKHEALTH => 'Check Site Health',
