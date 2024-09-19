@@ -31,9 +31,9 @@ class CheckSiteHealth extends Command
 
     public function handle()
     {
-        // $this->displayManualChecks();
-        // $this->checkDownSites();
-        // $this->checkMarkedSites();
+        $this->displayManualChecks();
+        $this->checkDownSites();
+        $this->checkMarkedSites();
         $this->makeNewChecks();
     }
 
@@ -68,7 +68,7 @@ class CheckSiteHealth extends Command
     private function checkDownSites()
     {
         $downSites = $this->getDownSites();
-        $this->info("Checking " . $downSites->count() . " sites that were previously down");
+        echo "Checking " . $downSites->count() . " sites that were previously down\n";
         // \Symfony\Component\VarDumper\VarDumper::dump($downSites);
         // exit;
         foreach ($downSites as $linkSite)
@@ -91,18 +91,20 @@ class CheckSiteHealth extends Command
             }
             else
             {
-                // what?? 
+                echo "Error updating health status of {$linkSite->domain}\n";
             }
         }
     }
 
     private function checkMarkedSites()
     {
-        $sites = LinkSite::
+        $markedSites = LinkSite::
           where('is_withdrawn', 1)
         ->where('withdrawn_reason', 'checkhealth')
         ->get();
-        $this->checkSites($sites);
+
+        echo "Checking " . $markedSites->count() . " sites that are marked for checking\n";
+        $this->checkSites($markedSites);
     }
 
     private function makeNewChecks()
@@ -113,7 +115,7 @@ class CheckSiteHealth extends Command
 
     private function checkSites($sites)
     {
-        $this->info($sites->count() . " sites to be checked");
+        echo $sites->count() . " sites to be checked\n";
         foreach ($sites as $linkSite)
         {
             $domain = $linkSite->domain;
@@ -182,11 +184,11 @@ class CheckSiteHealth extends Command
         }
         else
         {
-            $this->info("Error updating health status of {$linkSite->domain}");
+            echo "Error updating health status of {$linkSite->domain}\n";
         }
     }
 
-    private function getSitesToCheck($num = 900)
+    private function getSitesToCheck($num = 800)
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where(function ($query)
@@ -194,8 +196,8 @@ class CheckSiteHealth extends Command
                 $query->where('last_checked_health', '<', Carbon::now()->subWeek())
                     ->orWhereNull('last_checked_health');
             })
-            // ->where('is_withdrawn', 1)
-            ->where('withdrawn_reason', 'language')
+            ->where('is_withdrawn', 0)
+            // ->where('withdrawn_reason', 'language')
             // ->has('sellers', '>=', 1)
             // ->where('semrush_AS', '>=', 5)
             ->orderBy('avg_low_price', 'asc')
@@ -240,7 +242,7 @@ class CheckSiteHealth extends Command
             $errorMessage = $e->getMessage();
             if (strpos($errorMessage, "429 Too Many Requests"))
             {
-                $this->info("Daily API quota reached");
+                $this->info("API quota reached");
                 exit;
             }
             echo $errorMessage;

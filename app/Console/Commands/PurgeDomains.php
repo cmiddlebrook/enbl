@@ -33,14 +33,14 @@ class PurgeDomains extends Command
     {
         $sites = LinkSite::where('is_withdrawn', 1)->where('withdrawn_reason', 'spam')->get();
         $this->deleteSellerSiteEntries($sites);
-        $this->deleteLinkSites();
+        // $this->deleteLinkSites();
     }
 
     private function deleteLowAuthoritySites($field, $minValue)
     {
         $sites = LinkSite::whereNotNull($field)->where($field, '<=', $minValue)->get();
         $this->deleteSellerSiteEntries($sites);
-        $this->deleteLinkSites();
+        // $this->deleteLinkSites();
     }
 
     private function deleteHighPrices()
@@ -90,25 +90,25 @@ class PurgeDomains extends Command
         }
     }
 
-    private function deleteLinkSites()
-    {
-        $sites = LinkSite::has('sellers', 0)->get();
+    // private function deleteLinkSites()
+    // {
+    //     $sites = LinkSite::has('sellers', 0)->get();
 
-        foreach ($sites as $site)
-        {
-            $domain = $site->domain;
-            $sellers = $site->sellers;
-            if ($sellers->count() != 0)
-            {
-                echo $domain . " still has sellers!...\n";
-                \Symfony\Component\VarDumper\VarDumper::dump($sellers);
-                exit;
-            }
+    //     foreach ($sites as $site)
+    //     {
+    //         $domain = $site->domain;
+    //         $sellers = $site->sellers;
+    //         if ($sellers->count() != 0)
+    //         {
+    //             echo $domain . " still has sellers!...\n";
+    //             \Symfony\Component\VarDumper\VarDumper::dump($sellers);
+    //             exit;
+    //         }
 
-            echo "Deleting {$domain} \n";
-            $site->delete();
-        }
-    }
+    //         echo "Deleting {$domain} \n";
+    //         $site->delete();
+    //     }
+    // }
 
     private function deleteSellerSite($linkSiteId, $sellerId)
     {

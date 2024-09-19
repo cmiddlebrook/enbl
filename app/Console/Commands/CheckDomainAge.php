@@ -61,7 +61,7 @@ class CheckDomainAge extends Command
         return false;
     }
 
-    private function getSitesToCheck($num = 100)
+    private function getSitesToCheck($num = 200)
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where('is_withdrawn', 0)
@@ -83,7 +83,7 @@ class CheckDomainAge extends Command
     {
         try
         {
-            sleep (5);
+            sleep (4);
             $response = $this->client->request('GET', "https://domain-age-checker2.p.rapidapi.com/domain-age?url={$domain}", [
                 'headers' => [
                     'X-RapidAPI-Host' => 'domain-age-checker2.p.rapidapi.com',

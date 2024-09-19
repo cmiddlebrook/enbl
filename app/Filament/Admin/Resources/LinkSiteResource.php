@@ -185,15 +185,15 @@ class LinkSiteResource extends Resource
                         return NumberFormatter::format($state);
                     }),
                 TextColumn::make('moz_da')->label('DA'),
-                TextColumn::make('moz_pa')->label('PA'),
+                TextColumn::make('moz_pa')->label('PA')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('moz_rank')->label('MR')->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('moz_links')->label('Links')->toggleable(isToggledHiddenByDefault: true)
+                TextColumn::make('moz_links')->label('Links')->sortable()->toggleable(isToggledHiddenByDefault: true)
                     ->numeric()
                     ->formatStateUsing(function ($state)
                     {
                         return NumberFormatter::format($state);
                     }),
-                TextColumn::make('domain_creation_date')->label('Age')->sortable()
+                TextColumn::make('domain_creation_date')->label('Age')->sortable()->toggleable(isToggledHiddenByDefault: true)
                     ->formatStateUsing(function ($state)
                     {
                         $creationDate = Carbon::parse($state);
@@ -204,8 +204,8 @@ class LinkSiteResource extends Resource
                         return "{$years}y {$months}m";
                     }),
                 TextColumn::make('majestic_trust_flow')->label('TF')->sortable(),
-                TextColumn::make('majestic_citation_flow')->label('CF')->sortable(),
-                TextColumn::make('majestic_ref_domains')->label('RD')
+                TextColumn::make('majestic_citation_flow')->label('CF')->toggleable(isToggledHiddenByDefault: false),
+                TextColumn::make('majestic_ref_domains')->label('RD')->sortable()->toggleable(isToggledHiddenByDefault: true)
                     ->numeric()
                     ->formatStateUsing(function ($state)
                     {
@@ -247,22 +247,22 @@ class LinkSiteResource extends Resource
                     }
                 ),
 
-
-                // Tables\Filters\Filter::make('$25')->query(
-                //     function ($query)
-                //     {
-                //         return $query
-                //             ->where('is_withdrawn', 0)
-                //             ->has('sellers', '>=', 4)
-                //             ->where('avg_low_price', '<=', 13)
-                //             ->where('lowest_price', '<=', 10)
-                //             ->where('moz_da', '>=', 15)
-                //             ->where('moz_pa', '>=', 10)
-                //             ->where('semrush_AS', '>=', 5)
-                //             ->where('majestic_trust_flow', '>=', 5)
-                //         ;
-                //     }
-                // ),
+                Tables\Filters\Filter::make('Manual')->query(
+                    function ($query)
+                    {
+                        return $query
+                            ->where('is_withdrawn', 0)
+                            ->has('sellers', '>=', 4)
+                            ->has('niches', 0)
+                            ->where('avg_low_price', '<=', 20) 
+                            ->where('lowest_price', '<=', 15) 
+                            ->where('moz_da', '>=', 30)
+                            ->where('moz_pa', '>=', 25)
+                            ->where('semrush_AS', '>=', 20)
+                            ->where('majestic_trust_flow', '>=', 10)
+                        ;
+                    }
+                ),
                 
                 Tables\Filters\Filter::make('$50')->query(
                     function ($query)
@@ -323,6 +323,20 @@ class LinkSiteResource extends Resource
                             ->where('moz_da', '>=', 55)
                             ->where('moz_pa', '>=', 55)
                             ->where('semrush_AS', '>=', 30)
+                            ->where('majestic_trust_flow', '>=', 20)
+                        ;
+                    }
+                ),
+
+                Tables\Filters\Filter::make('Expensive')->query(
+                    function ($query)
+                    {
+                        return $query
+                            ->where('is_withdrawn', 0)
+                            ->where('lowest_price', '>', 100)
+                            ->where('moz_da', '>=', 40)
+                            ->where('moz_pa', '>=', 40)
+                            ->where('semrush_AS', '>=', 25)
                             ->where('majestic_trust_flow', '>=', 20)
                         ;
                     }

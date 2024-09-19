@@ -25,6 +25,8 @@ class CheckLanguage extends Command
 
     public function handle()
     {
+        $this->withdrawNonEnglishTLDs();
+
         $sites = $this->getSitesToCheck();
         foreach ($sites as $linkSite)
         {
@@ -42,7 +44,7 @@ class CheckLanguage extends Command
         $this->withdrawNonEnglishSites();
     }
 
-    private function getSitesToCheck($num = 999)
+    private function getSitesToCheck($num = 900)
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where(function ($query)
@@ -51,7 +53,6 @@ class CheckLanguage extends Command
                     ->orWhere('country_code', '');
             })
             ->where('is_withdrawn', 0)
-            ->where('semrush_AS', '>=', 5)
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
@@ -86,9 +87,9 @@ class CheckLanguage extends Command
         }
     }
 
-    private function withdrawNonEnglishSites()
+    private function withdrawNonEnglishTLDs()
     {
-        $this->info('Withdrawing any new Non English sites...');
+        $this->info('Withdrawing any Non English TLDs...');
 
         $countryExtensions =
             [
@@ -349,6 +350,12 @@ class CheckLanguage extends Command
                 'is_withdrawn' => 1,
                 'withdrawn_reason' => 'language'
             ]);
+
+    }
+
+    private function withdrawNonEnglishSites()
+    {
+        $this->info('Withdrawing any new Non English sites...');
 
         DB::table('link_sites')
             ->whereNotNull('country_code')
