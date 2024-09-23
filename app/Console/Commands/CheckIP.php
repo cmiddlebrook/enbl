@@ -16,7 +16,7 @@ class CheckIP extends Command
     protected $description = 'Finds the IP address of some link sites';
 
     protected $client;
-    protected $numApiCalls = 0; 
+    protected $numApiCalls = 0;
     protected $invalidDomains = [];
     protected $domainChecks = [];
 
@@ -32,7 +32,7 @@ class CheckIP extends Command
         foreach ($sites as $linkSite)
         {
             $domain = $linkSite->domain;
-            
+
             if (!in_array($domain, $this->invalidDomains))
             {
                 $this->info("Checking IP address of {$domain}");
@@ -48,29 +48,33 @@ class CheckIP extends Command
                 $this->invalidDomains[] = $domain;
             }
         }
-        
+
         \Symfony\Component\VarDumper\VarDumper::dump(array_unique($this->invalidDomains));
         echo "{$this->numApiCalls} API calls made\n";
     }
 
     private function extractIP($data)
     {
-        $error = "";
-        if (array_key_exists('a', $data))
+        $error = "No data returned";
+
+        if ($data)
         {
-            $aRecord = $data['a'];
-            if (is_array($aRecord) && array_key_exists(0, $aRecord))
+            if (array_key_exists('a', $data))
             {
-                $firstRecord = $aRecord[0];
-                if (is_array($firstRecord) && array_key_exists('ip', $firstRecord))
+                $aRecord = $data['a'];
+                if (is_array($aRecord) && array_key_exists(0, $aRecord))
                 {
-                    return $firstRecord['ip'];
+                    $firstRecord = $aRecord[0];
+                    if (is_array($firstRecord) && array_key_exists('ip', $firstRecord))
+                    {
+                        return $firstRecord['ip'];
+                    }
+                    $error = "Missing ip field";
                 }
-                $error = "Missing ip field";
+                $error = "No 0 element in array";
             }
-            $error = "No 0 element in array";
+            $error = "Missing a record";
         }
-        $error = "Missing a record";
 
         return $error;
     }
@@ -109,13 +113,10 @@ class CheckIP extends Command
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where('is_withdrawn', 0)
             ->whereNull('ip_address')
-            // ->has('sellers', '>=', 1)
-            // ->where('avg_low_price', '<=', 200)
-            // ->where('semrush_AS', '>=', 5)
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
-            ->limit(500)
+            ->limit(490)
             ->get();
 
         return $sites;
@@ -133,7 +134,7 @@ class CheckIP extends Command
                     'X-RapidAPI-Key' => 'e795fa7e7dmshec72b0683f03249p1e6cc3jsn5eb61b037996',
                 ],
             ]);
-            
+
 
             $body = $response->getBody();
             $data = json_decode($body, true);

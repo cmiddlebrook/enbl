@@ -30,13 +30,11 @@ class CheckMetrics extends Command
     {
         $this->info('Starting to check domain metrics...');
 
-        $this->checkPricingBand(13, 14, 1, 5); // $25 band
-        $this->checkPricingBand(25, 28, 1, 10); // $50 band
-        $this->checkPricingBand(50, 55, 1, 15); // $100 band
-        $this->checkPricingBand(85, 95, 2, 20); // $175 band
-        $this->checkPricingBand(135, 150, 3, 25); // $275 band
-        $this->checkPricingBand(200, 220, 4, 30); // $400 band
-        $this->checkPricingBand(15, 20, 1, 5);
+        $this->checkPricingBand(15, 20, 1, 10); // $50 band
+        $this->checkPricingBand(30, 40, 2, 15); // $100 band
+        $this->checkPricingBand(55, 70, 3, 20); // $175 band
+        $this->checkPricingBand(90, 110, 4, 25); // $275 band
+        // $this->checkPricingBand(130, 155, 5, 30); // $400 band
 
         echo "{$this->numApiCalls} API calls made\n";
     }

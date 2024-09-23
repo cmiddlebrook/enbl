@@ -14,14 +14,13 @@ class NeedsMetricsWidget extends BaseWidget
     {
         return [
             Stat::make('Needs SEMRush', LinkSite::whereNull('semrush_AS')->count()),
-            Stat::make('Needs Country', LinkSite::whereNull('country_code')
+            Stat::make('Needs IP', LinkSite::whereNull('ip_address')
                 ->where('is_withdrawn', 0)->count()),
             Stat::make('Needs Domain Age', LinkSite::whereNull('domain_creation_date')
-                ->where('is_withdrawn', 0)
-                ->where('semrush_AS', '>=', 5)->count()),
+                ->where('is_withdrawn', 0)->count()),
             Stat::make('Needs Majestic', LinkSite::whereNull('majestic_trust_flow')
                 ->where('is_withdrawn', 0)
-                ->where('semrush_AS', '>=', 5)->count()),
+                ->where('semrush_AS', '>=', 20)->count()),
 
         ];
     }

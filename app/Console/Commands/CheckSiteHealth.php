@@ -168,6 +168,13 @@ class CheckSiteHealth extends Command
     {
         if ($status == "Up" || $status == "Down")
         {
+            if ($linkSite->withdrawn_reason == 'checkhealth')
+            {
+                // if a previous marked site is now up, un-withdraw it
+                $linkSite->is_withdrawn = false;
+                $linkSite->withdrawn_reason = null;
+            }
+
             $linkSite->last_checked_health = Carbon::now();
             $linkSite->save();
 
@@ -246,6 +253,7 @@ class CheckSiteHealth extends Command
                 exit;
             }
             echo $errorMessage;
+            exit;
 
             return false;
         }

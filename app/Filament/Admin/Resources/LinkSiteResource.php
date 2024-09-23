@@ -167,7 +167,7 @@ class LinkSiteResource extends Resource
                         return NumberFormatter::format($state);
                     }),
                 TextColumn::make('lowest_price')->Label('Low $')->sortable(),
-                TextColumn::make('niches_count')->counts('niches')->Label('Niches')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('niches_count')->counts('niches')->Label('Niches')->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('ip_address')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('country_code')->Label('CO')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('semrush_AS')->label('SR AS')->sortable(),
@@ -247,6 +247,7 @@ class LinkSiteResource extends Resource
                     }
                 ),
 
+
                 Tables\Filters\Filter::make('Manual')->query(
                     function ($query)
                     {
@@ -270,8 +271,8 @@ class LinkSiteResource extends Resource
                         return $query
                             ->where('is_withdrawn', 0)
                             ->has('sellers', '>=', 4)
-                            ->where('avg_low_price', '<=', 35) // 35
-                            ->where('lowest_price', '<=', 25) // 25
+                            ->where('lowest_price', '<=', 15) 
+                            ->where('avg_low_price', '<=', 20) 
                             ->where('moz_da', '>=', 25)
                             ->where('moz_pa', '>=', 20)
                             ->where('semrush_AS', '>=', 10)
@@ -286,8 +287,8 @@ class LinkSiteResource extends Resource
                         return $query
                             ->where('is_withdrawn', 0)
                             ->has('sellers', '>=', 4)
-                            ->where('avg_low_price', '<=', 75)
-                            ->where('lowest_price', '<=', 50)
+                            ->where('lowest_price', '<=', 30)
+                            ->where('avg_low_price', '<=', 40)
                             ->where('moz_da', '>=', 35)
                             ->where('moz_pa', '>=', 30)
                             ->where('semrush_AS', '>=', 20)
@@ -302,8 +303,8 @@ class LinkSiteResource extends Resource
                         return $query
                             ->where('is_withdrawn', 0)
                             ->has('sellers', '>=', 4)
-                            ->where('avg_low_price', '<=', 125)
-                            ->where('lowest_price', '<=', 85)
+                            ->where('lowest_price', '<=', 55)
+                            ->where('avg_low_price', '<=', 70)
                             ->where('moz_da', '>=', 45)
                             ->where('moz_pa', '>=', 40)
                             ->where('semrush_AS', '>=', 25)
@@ -318,8 +319,8 @@ class LinkSiteResource extends Resource
                         return $query
                             ->where('is_withdrawn', 0)
                             ->has('sellers', '>=', 4)
-                            ->where('avg_low_price', '<=', 200)
-                            ->where('lowest_price', '<=', 135)
+                            ->where('lowest_price', '<=', 90)
+                            ->where('avg_low_price', '<=', 110)
                             ->where('moz_da', '>=', 55)
                             ->where('moz_pa', '>=', 55)
                             ->where('semrush_AS', '>=', 30)

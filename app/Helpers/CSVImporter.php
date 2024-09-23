@@ -126,7 +126,10 @@ class CSVImporter
                 'price_link_insertion' => $cleanedData['price_link_insertion'],
             ]
         );
+
+        $linkSite->niches()->syncWithoutDetaching(1); // add  General niche
     }
+
 
     private function cleanupDomains(array $rowData)
     {

@@ -7,6 +7,9 @@ enum WithdrawalReasonEnum: string implements HasLabel
 {
     case NOT_ENGLISH = 'language';
     case NOFOLLOW = 'nofollow';
+    case MARKED = 'marked';
+    case SELFPUBLISH = 'selfpublish';
+    case NOEVIDENCE = 'noevidence';
     case DIFFICULT = 'difficult';
     case SUBDOMAIN = 'subdomain';
     case HIGH_SPAM_SCORE = 'spam';
@@ -17,7 +20,10 @@ enum WithdrawalReasonEnum: string implements HasLabel
     {
         return match ($this) {
             self::NOT_ENGLISH => 'Not English',
-            self::NOFOLLOW => 'No Follow or Poor Link',
+            self::NOFOLLOW => 'No Follow Link',
+            self::MARKED => 'Content is marked',
+            self::SELFPUBLISH => 'Can self publish freely',
+            self::NOEVIDENCE => 'No evidence of guest posts',
             self::DIFFICULT => 'Difficult Posting Rules',
             self::SUBDOMAIN => 'Not a Root Domain',
             self::HIGH_SPAM_SCORE => 'Spam',
