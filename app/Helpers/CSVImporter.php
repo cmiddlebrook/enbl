@@ -19,15 +19,42 @@ class CSVImporter
     private $errorFile = null;
     private $errorFilename = '';
     private $headerRow = null;
+    private $isFileValid = false;
+    private $csvFile = null;
+    private $markSitesAsGeneral = false;
 
-    public function importLinkSites($file)
+    public function importLinkSites($fileData)
     {
-        $this->importCSVFile($file, 'makeLinkSiteValidator', 'processLinkSiteData');
+        if ($this->validateFile($fileData))
+        {
+            $this->importCSVFile($this->csvFile, 'makeLinkSiteValidator', 'processLinkSiteData');
+        }
     }
 
-    public function importSellerSites($file)
+    public function importSellerSites($fileData)
     {
-        $this->importCSVFile($file, 'makeSellerSiteValidator', 'processSellerSiteData');
+        if ($this->validateFile($fileData))
+        {
+            $this->markSitesAsGeneral = $fileData['is_general'];
+            $this->importCSVFile($this->csvFile, 'makeSellerSiteValidator', 'processSellerSiteData');
+        }
+    }
+
+    private function validateFile($fileData)
+    {
+        $csvFileValue = $fileData['csv_file'];
+        if (count($csvFileValue ?? []) == 1)
+        {
+            $liveWireFile = array_values($csvFileValue)[0];
+            if ($liveWireFile instanceof UploadedFile)
+            {
+                $this->isFileValid = true;
+                $this->csvFile = $liveWireFile;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function initialiseFiles()
@@ -42,44 +69,28 @@ class CSVImporter
 
     private function importCSVFile($file, $validatorFunction, $dataProcessingFunction)
     {
-        try
+        $this->inputFile = fopen($file->getRealPath(), 'r');
+        $this->initialiseFiles();
+
+        while (($row = fgetcsv($this->inputFile)) !== false)
         {
+            $rowData = array_combine($this->headerRow, $row);
+            $cleanedData = $this->cleanupDomains($rowData);
 
-            if ($file instanceof UploadedFile)
+            $validator = $this->$validatorFunction($cleanedData);
+
+            if ($validator->passes())
             {
-                $this->inputFile = fopen($file->getRealPath(), 'r');
-                $this->initialiseFiles();
-
-                while (($row = fgetcsv($this->inputFile)) !== false)
-                {
-                    $rowData = array_combine($this->headerRow, $row);
-                    $cleanedData = $this->cleanupDomains($rowData);
-
-                    $validator = $this->$validatorFunction($cleanedData);
-
-                    if ($validator->passes())
-                    {
-                        $this->$dataProcessingFunction($cleanedData);
-                        $this->numImported++;
-                    }
-                    else
-                    {
-                        $errorMessages = implode('; ', $validator->errors()->all());
-                        $errorRow = array_merge($row, [$errorMessages]);
-                        fputcsv($this->errorFile, $errorRow);
-                        $this->numErrors++;
-                    }
-                }
+                $this->$dataProcessingFunction($cleanedData);
+                $this->numImported++;
             }
             else
             {
-                throw new Exception('Invalid file');
+                $errorMessages = implode('; ', $validator->errors()->all());
+                $errorRow = array_merge($row, [$errorMessages]);
+                fputcsv($this->errorFile, $errorRow);
+                $this->numErrors++;
             }
-        }
-        catch (Exception $e)
-        {
-            // TODO: Do something better than DD here!
-            dd($e->getMessage());
         }
 
         fclose($this->inputFile);
@@ -127,7 +138,10 @@ class CSVImporter
             ]
         );
 
-        $linkSite->niches()->syncWithoutDetaching(1); // add  General niche
+        if ($this->markSitesAsGeneral)
+        {
+            $linkSite->niches()->syncWithoutDetaching(1);
+        }
     }
 
 
@@ -191,6 +205,11 @@ class CSVImporter
         ]);
 
         return $validator;
+    }
+
+    public function isFileValid()
+    {
+        return $this->isFileValid;
     }
 
     public function getNumImported()

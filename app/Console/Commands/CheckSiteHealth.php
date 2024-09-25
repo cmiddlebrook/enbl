@@ -60,6 +60,10 @@ class CheckSiteHealth extends Command
                 $this->markSiteDead($siteId);
                 echo "{$domain} has been marked as dead\n";
             }
+            else 
+            {
+                $this->deleteHealthChecks($siteId);
+            }
         }
 
         // \Symfony\Component\VarDumper\VarDumper::dump($results);
@@ -207,6 +211,7 @@ class CheckSiteHealth extends Command
             // ->where('withdrawn_reason', 'language')
             // ->has('sellers', '>=', 1)
             // ->where('semrush_AS', '>=', 5)
+            ->orderBy('last_checked_health', 'asc')
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')

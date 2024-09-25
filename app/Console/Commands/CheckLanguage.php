@@ -26,6 +26,8 @@ class CheckLanguage extends Command
     public function handle()
     {
         $this->withdrawNonEnglishTLDs();
+        exit; // the code below checks the locale of the HOSTING
+
 
         $sites = $this->getSitesToCheck();
         foreach ($sites as $linkSite)
