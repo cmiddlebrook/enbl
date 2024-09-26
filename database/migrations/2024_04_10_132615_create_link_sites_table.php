@@ -21,6 +21,7 @@ return new class extends Migration
             $table->unsignedTinyInteger('semrush_perc_english_traffic')->nullable();
             $table->unsignedBigInteger('semrush_organic_kw')->nullable();
             $table->date('last_checked_semrush')->nullable();
+            $table->date('last_checked_traffic')->nullable();
             $table->unsignedTinyInteger('moz_da')->nullable();
             $table->unsignedTinyInteger('moz_pa')->nullable();
             $table->decimal('moz_rank', 3, 1)->nullable();

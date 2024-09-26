@@ -13,7 +13,9 @@ class NeedsMetricsWidget extends BaseWidget
     protected function getStats(): array
     {
         return [
-            Stat::make('Needs SEMRush', LinkSite::whereNull('semrush_AS')->count()),
+            Stat::make('Needs SR AS', LinkSite::whereNull('semrush_AS')->count()),
+            Stat::make('Needs SR Traffic', LinkSite::whereNull('semrush_traffic')->count()),
+            Stat::make('Needs SR KW', LinkSite::whereNull('semrush_organic_kw')->count()),
             Stat::make('Needs IP', LinkSite::whereNull('ip_address')
                 ->where('is_withdrawn', 0)->count()),
             Stat::make('Needs Domain Age', LinkSite::whereNull('domain_creation_date')
