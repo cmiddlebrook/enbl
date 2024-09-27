@@ -18,7 +18,7 @@ class CheckTraffic extends Command
 
     protected $client;
     protected $numApiCalls = 0;
-    protected $maxApiCalls = 1000;
+    protected $maxApiCalls = 10000;
 
     public function __construct()
     {
@@ -30,7 +30,7 @@ class CheckTraffic extends Command
     {
         $this->info('Starting to check domain traffic...');
 
-        $this->checkSites(3, 30, 50, 10);
+        $this->checkSites(0, 999, 999, 10);
 
         echo "{$this->numApiCalls} API calls made\n";
     }
@@ -58,24 +58,24 @@ class CheckTraffic extends Command
 
             // if the domain value comes back as unknown, the API call failed. 
             // the API is temperamental, just skip over it and it will be retried on the next run
-            if ($domain == 'unknown') continue; 
+            if ($domain == 'unknown') continue;
 
             if ($domain == 'notfound')
             {
                 $linkSite->is_withdrawn = 1;
                 $linkSite->withdrawn_reason = 'checkhealth';
                 $linkSite->save();
-                echo "{$domain} couldn't be accessed, marked for health check\n";
+                echo "Domain couldn't be accessed, marked for health check\n";
                 continue;
             }
 
             // if other values are reported as unknown, they are too low to record, so set to 0
-            $linkSite->semrush_traffic = $data['sr_traffic'] == 'unknown' ? 0 : $data['sr_traffic'];
-            $linkSite->semrush_organic_kw = $data['sr_kwords'] == 'unknown' ? 0 : $data['sr_kwords'];
-            $linkSite->semrush_perc_english_traffic = 0; 
+            $linkSite->semrush_traffic = $traffic == 'unknown' ? 0 : $traffic;
+            $linkSite->semrush_organic_kw = $keywords == 'unknown' ? 0 : $keywords;
+            $linkSite->semrush_perc_english_traffic = 0;
             $linkSite->last_checked_traffic = Carbon::today();
 
-            echo "{$domain} updated!\n";
+            echo "{$domain} traffic & KW updated!\n";
             $linkSite->save();
 
             if ($this->numApiCalls >= $this->maxApiCalls) break;
@@ -90,7 +90,11 @@ class CheckTraffic extends Command
                 $query->where('last_checked_traffic', '<', Carbon::now()->subWeek())
                     ->orWhereNull('last_checked_traffic');
             })
-            ->where('is_withdrawn', 0)
+            ->where(function ($query)
+            {
+                $query->where('is_withdrawn', 0)
+                    ->orWhereNotIn('withdrawn_reason', ['language', 'subdomain', 'deadsite', 'checkhealth']);
+            })
             ->has('sellers', '>=', $numSellers)
             ->where('lowest_price', '<=', $lowestPrice)
             ->where('avg_low_price', '<=', $avgLowPrice)

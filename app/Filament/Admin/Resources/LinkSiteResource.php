@@ -171,14 +171,14 @@ class LinkSiteResource extends Resource
                 TextColumn::make('ip_address')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('country_code')->Label('CO')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('semrush_AS')->label('SR AS')->sortable(),
-                TextColumn::make('semrush_traffic')->label('Traffic')->sortable()->toggleable(isToggledHiddenByDefault: true)
+                TextColumn::make('semrush_traffic')->label('Traffic')->sortable()
                     ->numeric()
                     ->formatStateUsing(function ($state)
                     {
                         return NumberFormatter::format($state);
                     }),
                 TextColumn::make('semrush_perc_english_traffic')->label('ENT %')->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('semrush_organic_kw')->label('KW')->sortable()->toggleable(isToggledHiddenByDefault: true)
+                TextColumn::make('semrush_organic_kw')->label('KW')->sortable()->toggleable(isToggledHiddenByDefault: false)
                     ->numeric()
                     ->formatStateUsing(function ($state)
                     {
@@ -275,8 +275,9 @@ class LinkSiteResource extends Resource
                             ->where('avg_low_price', '<=', 20) 
                             ->where('moz_da', '>=', 25)
                             ->where('moz_pa', '>=', 20)
-                            ->where('semrush_AS', '>=', 10)
-                            ->where('majestic_trust_flow', '>=', 5)
+                            ->where('semrush_AS', '>=', 15)
+                            ->where('semrush_traffic', '>=', 500)
+                            ->where('majestic_trust_flow', '>=', 10)
                         ;
                     }
                 ),
@@ -292,7 +293,8 @@ class LinkSiteResource extends Resource
                             ->where('moz_da', '>=', 35)
                             ->where('moz_pa', '>=', 30)
                             ->where('semrush_AS', '>=', 20)
-                            ->where('majestic_trust_flow', '>=', 10)
+                            ->where('semrush_traffic', '>=', 1000)
+                            ->where('majestic_trust_flow', '>=', 15)
                         ;
                     }
                 ),
@@ -308,7 +310,9 @@ class LinkSiteResource extends Resource
                             ->where('moz_da', '>=', 45)
                             ->where('moz_pa', '>=', 40)
                             ->where('semrush_AS', '>=', 25)
-                            ->where('majestic_trust_flow', '>=', 15)
+                            ->where('semrush_traffic', '>=', 2500)
+                            // ->where('semrush_organic_kw', '>=', 2500)
+                            ->where('majestic_trust_flow', '>=', 20)
                         ;
                     }
                 ),
@@ -324,7 +328,9 @@ class LinkSiteResource extends Resource
                             ->where('moz_da', '>=', 55)
                             ->where('moz_pa', '>=', 55)
                             ->where('semrush_AS', '>=', 30)
-                            ->where('majestic_trust_flow', '>=', 20)
+                            ->where('semrush_traffic', '>=', 10000)
+                            ->where('semrush_organic_kw', '>=', 5000)
+                            ->where('majestic_trust_flow', '>=', 25)
                         ;
                     }
                 ),

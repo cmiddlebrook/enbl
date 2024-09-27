@@ -19,7 +19,7 @@ class CheckSiteHealth extends Command
     protected $description = 'Checks whether link sites are up or down';
 
     protected $numApiCalls = 0;
-    protected $maxApiCalls = 500;
+    protected $maxApiCalls = 1000;
 
     protected $client;
 
@@ -172,9 +172,9 @@ class CheckSiteHealth extends Command
     {
         if ($status == "Up" || $status == "Down")
         {
-            if ($linkSite->withdrawn_reason == 'checkhealth')
+            if ($linkSite->withdrawn_reason == WithdrawalReasonEnum::CHECKHEALTH)
             {
-                // if a previous marked site is now up, un-withdraw it
+                $this->info("{$linkSite->domain} was withdrawn for checking and is UP, unwithdrawing");
                 $linkSite->is_withdrawn = false;
                 $linkSite->withdrawn_reason = null;
             }
