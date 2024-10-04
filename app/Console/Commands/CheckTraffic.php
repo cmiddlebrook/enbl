@@ -18,7 +18,7 @@ class CheckTraffic extends Command
 
     protected $client;
     protected $numApiCalls = 0;
-    protected $maxApiCalls = 1000;
+    protected $maxApiCalls = 1500;
 
     public function __construct()
     {
@@ -29,19 +29,17 @@ class CheckTraffic extends Command
     public function handle()
     {
         $this->info('Starting to check domain traffic...');
-
-        $this->checkSites(0, 999, 999, 6);
-
+        $this->checkSites(6);
         echo "{$this->numApiCalls} API calls made\n";
     }
 
 
 
-    private function checkSites($numSellers, $lowestPrice, $avgLowPrice, $minSRAS)
+    private function checkSites($minSRAS)
     {
-        $sites = $this->getSitesToCheck($numSellers, $lowestPrice, $avgLowPrice, $minSRAS);
+        $sites = $this->getSitesToCheck($minSRAS);
         $numSites = $sites->count();
-        echo "Checking {$numSites} with {$numSellers} sellers, lowest price: {$lowestPrice}, low average: {$avgLowPrice}\n";
+        echo "Checking {$numSites} with at least {$minSRAS} SEMRush Authority Score\n";
 
         foreach ($sites as $linkSite)
         {
@@ -94,12 +92,12 @@ class CheckTraffic extends Command
         }
     }
 
-    private function getSitesToCheck($numSellers, $lowestPrice, $avgLowPrice, $minSRAS)
+    private function getSitesToCheck($minSRAS)
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where(function ($query)
             {
-                $query->where('last_checked_traffic', '<', Carbon::now()->subDays(15))
+                $query->where('last_checked_traffic', '<', Carbon::now()->subMonth())
                     ->orWhereNull('last_checked_traffic');
             })
             ->where(function ($query)
@@ -107,12 +105,8 @@ class CheckTraffic extends Command
                 $query->where('is_withdrawn', 0)
                     ->orWhereNotIn('withdrawn_reason', ['language', 'subdomain', 'deadsite', 'checkhealth']);
             })
-            ->has('sellers', '>=', $numSellers)
-            ->where('lowest_price', '<=', $lowestPrice)
-            ->where('avg_low_price', '<=', $avgLowPrice)
             ->where('semrush_AS', '>=', $minSRAS)
-            // ->orderBy('last_checked_traffic', 'asc')
-            ->orderBy('avg_low_price', 'asc')
+            ->orderBy('last_checked_traffic', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
             ->get();

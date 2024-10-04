@@ -16,6 +16,10 @@ class CheckDomainAge extends Command
     protected $description = 'Checks the age of the domain of some link sites';
 
     protected $client;
+    protected $numApi1Calls = 0;
+    protected $numApi2Calls = 0;
+    protected $maxApi1Calls = 400;
+    protected $maxApi2Calls = 400;
 
     public function __construct()
     {
@@ -29,26 +33,50 @@ class CheckDomainAge extends Command
         echo $sites->count() . " sites to be checked\n";
         foreach ($sites as $linkSite)
         {
-            $domain = $linkSite->domain;
-            \Symfony\Component\VarDumper\VarDumper::dump($domain);
+            $this->info("Checking age of {$linkSite->domain}");
 
-            $this->info("Checking age of {$domain}");
-            $data = $this->makeAPICall($domain);
-            if (!$data) break;
-
-            if (!$this->updateCreationDate($linkSite, $data['data']['created_date']))
+            if (!$this->tryMethod1API($linkSite))
             {
-                if (strpos($domain, '.com.au'))
+                echo ("API 1 method failed, trying API 2 method\n");
+                if (!$this->tryMethod2API($linkSite))
                 {
-                    if (!$this->updateCreationDate($linkSite, $data['data']['updated_date']))
-                    {
-                        echo "{$domain} no valid date found: \n";
-                        \Symfony\Component\VarDumper\VarDumper::dump($data);
-                        break;
-                    }
+                    echo ("Both API calls tried, and still no luck\n");
+                    exit;
                 }
             }
+
+
         }
+    }
+
+    private function tryMethod1API($linkSite)
+    {
+        $domain = $linkSite->domain;
+        $data = $this->makeAPICallMethod1($domain);
+        $result = false;
+        if ($data)
+        {
+            $result = $this->updateCreationDate($linkSite, $data['data']['created_date']);
+        }
+        return $result;
+    }
+
+    private function tryMethod2API($linkSite)
+    {
+        $domain = $linkSite->domain;
+        $result = false;
+        $data = $this->makeAPICallMethod2($domain);   
+        \Symfony\Component\VarDumper\VarDumper::dump($data);
+        if ($data)
+        {
+            $whois = $data['whois'];
+            $whoisKeys = array_keys($whois);
+            $createdEntry = $whoisKeys[6]; 
+            $createdDate = substr($createdEntry, 18, 10);   // format: "Record created on 2006-03-25 16"
+            // \Symfony\Component\VarDumper\VarDumper::dump($createdDate);
+            $result = $this->updateCreationDate($linkSite, $createdDate);
+        }
+        return $result;
     }
 
     private function updateCreationDate($linkSite, $date)
@@ -67,7 +95,7 @@ class CheckDomainAge extends Command
                 }
 
                 $linkSite->domain_creation_date = $parsedDate;
-                echo "{$linkSite->domain} updated! Domain age: {$parsedDate} \n";
+                echo "{$linkSite->domain} updated! Creation date: {$parsedDate} \n";
                 $linkSite->save();
                 return true;
             }
@@ -76,17 +104,9 @@ class CheckDomainAge extends Command
                 $errorMessage = $e->getMessage();
                 echo $errorMessage;
                 return false;
-            }    
+            }
         }
-        else
-        {
-            // couldn't read the date so we'll need to do a manual check
-            // set a manual date in the future so I can easily find them (kludge!)
-            // $linkSite->domain_creation_date = "2099-09-09";
-            echo "{$linkSite->domain} date not found! \n";
-            // $linkSite->save();
-            // return true;
-        }
+        return false;
     }
 
     private function getSitesToCheck($num = 400)
@@ -104,19 +124,46 @@ class CheckDomainAge extends Command
         return $sites;
     }
 
-
-    private function makeAPICall($domain)
+    private function makeAPICallMethod1($domain)
     {
         try
         {
             sleep(2);
-            // $response = $this->client->request('GET', "https://domain-age-checker2.p.rapidapi.com/domain-age?url={$domain}", [
-            //     'headers' => [
-            //         'X-RapidAPI-Host' => 'domain-age-checker2.p.rapidapi.com',
-            //         'X-RapidAPI-Key' => 'e795fa7e7dmshec72b0683f03249p1e6cc3jsn5eb61b037996',
-            //     ],
-            // ]);
+            if ($this->numApi1Calls >= $this->maxApi1Calls) return false;
+            ++$this->numApi1Calls;
+            $response = $this->client->request('GET', "https://domain-age-checker2.p.rapidapi.com/domain-age?url={$domain}", [
+                'headers' => [
+                    'X-RapidAPI-Host' => 'domain-age-checker2.p.rapidapi.com',
+                    'X-RapidAPI-Key' => 'e795fa7e7dmshec72b0683f03249p1e6cc3jsn5eb61b037996',
+                ],
+            ]);
 
+            $body = $response->getBody();
+            $data = json_decode($body, true);
+            return $data;
+        }
+        catch (\GuzzleHttp\Exception\ClientException $e)
+        {
+            $errorMessage = $e->getMessage();
+            if (strpos($errorMessage, "429 Too Many Requests"))
+            {
+                echo "Daily API quota reached\n";
+                exit;
+            }
+            echo $errorMessage;
+
+            return false;
+        }
+    }
+
+
+    private function makeAPICallMethod2($domain)
+    {
+        try
+        {
+            sleep(2);
+            if ($this->numApi2Calls >= $this->maxApi2Calls) return false;
+            ++$this->numApi2Calls;
             $response = $this->client->request('GET', "https://whois-lookup10.p.rapidapi.com/domain?domain={$domain}", [
                 'headers' => [
                     'X-RapidAPI-Host' => 'whois-lookup10.p.rapidapi.com',
@@ -126,9 +173,6 @@ class CheckDomainAge extends Command
 
             $body = $response->getBody();
             $data = json_decode($body, true);
-            \Symfony\Component\VarDumper\VarDumper::dump($data);
-            exit;
-
             return $data;
         }
         catch (\GuzzleHttp\Exception\ClientException $e)

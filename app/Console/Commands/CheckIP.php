@@ -49,7 +49,6 @@ class CheckIP extends Command
             }
         }
 
-        \Symfony\Component\VarDumper\VarDumper::dump(array_unique($this->invalidDomains));
         echo "{$this->numApiCalls} API calls made\n";
     }
 
