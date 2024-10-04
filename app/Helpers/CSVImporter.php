@@ -200,7 +200,7 @@ class CSVImporter
             'domain' => $this->getDomainValidationRule($data),
             'email' => 'required|email',
             'email2' => 'nullable|email',
-            'price_guest_post' => 'required|numeric|between:1,200',
+            'price_guest_post' => 'required|numeric|between:1,500',
             'price_link_insertion' => 'nullable|numeric'
         ]);
 

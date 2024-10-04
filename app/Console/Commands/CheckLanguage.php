@@ -334,12 +334,13 @@ class CheckLanguage extends Command
                 '.ye', // Yemen
                 '.yt', // Mayotte
                 '.za', // South Africa
+                '.za.com', // South Africa
                 '.zm', // Zambia
                 '.zw', // Zimbabwe
             ];
 
 
-        DB::table('link_sites')
+        $numWithdrawn = DB::table('link_sites')
             ->where(function ($query) use ($countryExtensions)
             {
                 foreach ($countryExtensions as $extension)
@@ -352,6 +353,8 @@ class CheckLanguage extends Command
                 'is_withdrawn' => 1,
                 'withdrawn_reason' => 'language'
             ]);
+
+            echo $numWithdrawn . " sites withdrawn\n";
 
     }
 

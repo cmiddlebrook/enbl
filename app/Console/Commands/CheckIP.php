@@ -110,10 +110,10 @@ class CheckIP extends Command
 
     private function getSitesToCheck()
     {
-        $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
+        $sites = LinkSite::withAvgLowPrices()
             ->where('is_withdrawn', 0)
             ->whereNull('ip_address')
-            ->orderBy('avg_low_price', 'asc')
+            ->orderBy('semrush_organic_kw', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
             ->limit(490)

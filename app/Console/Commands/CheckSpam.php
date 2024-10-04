@@ -28,6 +28,7 @@ class CheckSpam extends Command
         $this->spamWords = array(
             'porn',
             'xxx',
+            'cunt',
             'india',
             'hindi',
             'hindu',

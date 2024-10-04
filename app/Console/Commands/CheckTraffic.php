@@ -18,7 +18,7 @@ class CheckTraffic extends Command
 
     protected $client;
     protected $numApiCalls = 0;
-    protected $maxApiCalls = 10000;
+    protected $maxApiCalls = 1000;
 
     public function __construct()
     {
@@ -30,7 +30,7 @@ class CheckTraffic extends Command
     {
         $this->info('Starting to check domain traffic...');
 
-        $this->checkSites(0, 999, 999, 10);
+        $this->checkSites(0, 999, 999, 6);
 
         echo "{$this->numApiCalls} API calls made\n";
     }
@@ -45,6 +45,8 @@ class CheckTraffic extends Command
 
         foreach ($sites as $linkSite)
         {
+            if ($this->numApiCalls >= $this->maxApiCalls) break;
+
             $domain = $linkSite->domain;
 
             $this->info("Checking {$domain}");
@@ -55,6 +57,7 @@ class CheckTraffic extends Command
             $domain = $data['sr_domain'];
             $traffic = $data['sr_traffic'];
             $keywords = $data['sr_kwords'];
+            $dlinks = $data['sr_dlinks'];
 
             // if the domain value comes back as unknown, the API call failed. 
             // the API is temperamental, just skip over it and it will be retried on the next run
@@ -62,10 +65,20 @@ class CheckTraffic extends Command
 
             if ($domain == 'notfound')
             {
-                $linkSite->is_withdrawn = 1;
-                $linkSite->withdrawn_reason = 'checkhealth';
+                if ($dlinks == 'notfound')
+                {
+                    $linkSite->is_withdrawn = 1;
+                    $linkSite->withdrawn_reason = 'checkhealth';
+                    $linkSite->save();
+                    echo "Domain couldn't be accessed, marked for health check\n";
+                    continue;
+                }
+
+                // there's a value for the domain links but not the domain itself, something is wrong
+                // just update the date and try again another time
+                $linkSite->last_checked_traffic = Carbon::today();
                 $linkSite->save();
-                echo "Domain couldn't be accessed, marked for health check\n";
+                echo "Problem fetching, skipping this run...\n";
                 continue;
             }
 
@@ -78,7 +91,6 @@ class CheckTraffic extends Command
             echo "{$domain} traffic & KW updated!\n";
             $linkSite->save();
 
-            if ($this->numApiCalls >= $this->maxApiCalls) break;
         }
     }
 
@@ -87,7 +99,7 @@ class CheckTraffic extends Command
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where(function ($query)
             {
-                $query->where('last_checked_traffic', '<', Carbon::now()->subWeek())
+                $query->where('last_checked_traffic', '<', Carbon::now()->subDays(15))
                     ->orWhereNull('last_checked_traffic');
             })
             ->where(function ($query)
