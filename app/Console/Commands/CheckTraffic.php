@@ -95,11 +95,11 @@ class CheckTraffic extends Command
     private function getSitesToCheck($minSRAS)
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
-            ->where(function ($query)
-            {
-                $query->where('last_checked_traffic', '<', Carbon::now()->subMonth())
-                    ->orWhereNull('last_checked_traffic');
-            })
+            // ->where(function ($query)
+            // {
+            //     $query->where('last_checked_traffic', '<', Carbon::now()->subDays(15))
+            //         ->orWhereNull('last_checked_traffic');
+            // })
             ->where(function ($query)
             {
                 $query->where('is_withdrawn', 0)
