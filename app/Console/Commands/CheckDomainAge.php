@@ -54,8 +54,9 @@ class CheckDomainAge extends Command
         $domain = $linkSite->domain;
         $data = $this->makeAPICallMethod1($domain);
         $result = false;
-        if ($data)
+        if ($data && array_key_exists('created_date', $data))
         {
+            // \Symfony\Component\VarDumper\VarDumper::dump($data);
             $result = $this->updateCreationDate($linkSite, $data['data']['created_date']);
         }
         return $result;
@@ -66,13 +67,30 @@ class CheckDomainAge extends Command
         $domain = $linkSite->domain;
         $result = false;
         $data = $this->makeAPICallMethod2($domain);   
-        \Symfony\Component\VarDumper\VarDumper::dump($data);
+        // \Symfony\Component\VarDumper\VarDumper::dump($data);
         if ($data)
         {
             $whois = $data['whois'];
-            $whoisKeys = array_keys($whois);
-            $createdEntry = $whoisKeys[6]; 
-            $createdDate = substr($createdEntry, 18, 10);   // format: "Record created on 2006-03-25 16"
+            if (array_key_exists('Registered on', $whois))
+            {
+                $createdDate = $whois['Registered on'];
+            }
+            else if (array_key_exists('Creation Date', $whois))
+            {
+                $createdEntry = $createdEntry = $whois['Creation Date'];
+                if (is_array($createdEntry)) 
+                {
+                    $createdEntry = $createdEntry[0];
+                }
+                $createdDate = substr($createdEntry, 0, 10); // format: "2000-06-14T07:45:27Z"
+            }
+            else
+            {
+                $whoisKeys = array_keys($whois);
+                // \Symfony\Component\VarDumper\VarDumper::dump($whoisKeys);
+                $createdEntry = $whoisKeys[6]; 
+                $createdDate = substr($createdEntry, 18, 10);   // format: "Record created on 2006-03-25 16"    
+            }
             // \Symfony\Component\VarDumper\VarDumper::dump($createdDate);
             $result = $this->updateCreationDate($linkSite, $createdDate);
         }
