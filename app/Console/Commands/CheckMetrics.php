@@ -109,12 +109,13 @@ class CheckMetrics extends Command
     private function getSitesToCheck($numSellers, $lowestPrice, $avgLowPrice, $minSRAS)
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
-            ->where(function ($query)
-            {
-                $query->where('last_checked_mozmaj', '<', Carbon::now()->subMonth())
-                    ->orWhereNull('last_checked_mozmaj');
-            })
+            // ->where(function ($query)
+            // {
+            //     $query->where('last_checked_mozmaj', '<', Carbon::now()->subMonth())
+            //         ->orWhereNull('last_checked_mozmaj');
+            // })
             ->where('is_withdrawn', 0)
+            ->whereNull('last_checked_mozmaj') // remove this once we have filled in the gaps
             ->has('sellers', '>=', $numSellers)
             ->where('lowest_price', '<=', $lowestPrice)
             ->where('avg_low_price', '<=', $avgLowPrice)

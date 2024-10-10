@@ -13,6 +13,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use App\Helpers\CSVImporter;
+use App\Helpers\CSVExporter;
 
 class FileManager extends Page implements HasForms
 {
@@ -40,17 +41,17 @@ class FileManager extends Page implements HasForms
                             ->acceptedFileTypes(['text/csv', 'application/vnd.ms-excel'])
                             ->reactive(),
 
+                            Toggle::make('dummy')->label('Dummy toggle - don\'t click!')->reactive(),
+
                             \Filament\Forms\Components\Actions::make([
                                 \Filament\Forms\Components\Actions\Action::make('upload_linksites_File')
                                     ->label('Upload Link Sites File')
                                     ->action('uploadLinkSitesFile')
                             ])
                             
-                    ])
-                ])->columnSpan(1)
-            ])->statePath('linksite_file'),
+                    ])->statePath('linksite_file')
+                ])->columnSpan(1),
 
-            Grid::make(2)->schema([
                 Group::make()->schema([
                     Section::make()->schema([
 
@@ -69,10 +70,25 @@ class FileManager extends Page implements HasForms
 
                         ]),
 
-                    ])
+                    ])->statePath('seller_file_info')
 
                 ])->columnSpan(1)
-            ])->statePath('seller_file_info')
+            ]),
+
+            Grid::make(2)->schema([
+                Group::make()->schema([
+                    Section::make('Google Sheet')->schema([
+
+                        \Filament\Forms\Components\Actions::make([
+                            \Filament\Forms\Components\Actions\Action::make('export_google_sheet')
+                                ->label('Export Google Sheet')
+                                ->action('exportGoogleSheet')
+
+                        ]),
+
+                    ])->statePath('google_sheet_info')
+                ])->columnSpan(1)
+            ])
 
         ];
 
@@ -91,6 +107,23 @@ class FileManager extends Page implements HasForms
         $csvImporter = new CSVImporter();
         $csvImporter->importLinkSites($this->linksite_file);
         $this->notifyResults($csvImporter);
+    }
+
+    public function exportGoogleSheet()
+    {
+        $csvExporter = new CSVExporter();
+        $csvExporter->exportGoogleSheetCSV();
+
+        $notification = Notification::make()
+            ->icon('fas-file-csv')
+            ->persistent();
+
+        $downloadUrl = url($csvExporter->getGSheetFilename());
+        // $notification->title('INFO: export success');
+        $notification->actions([\Filament\Notifications\Actions\Action::make('download_gsheet_csv')->button()->url($downloadUrl)]);
+        $notification->color('success');
+        $notification->success();
+        $notification->send();
     }
 
     private function notifyResults(CSVImporter $csvImporter)

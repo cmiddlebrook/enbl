@@ -29,7 +29,7 @@ class CheckTraffic extends Command
     public function handle()
     {
         $this->info('Starting to check domain traffic...');
-        $this->checkSites(6);
+        $this->checkSites(5);
         echo "{$this->numApiCalls} API calls made\n";
     }
 
@@ -100,13 +100,15 @@ class CheckTraffic extends Command
             //     $query->where('last_checked_traffic', '<', Carbon::now()->subDays(15))
             //         ->orWhereNull('last_checked_traffic');
             // })
-            ->where(function ($query)
-            {
-                $query->where('is_withdrawn', 0)
-                    ->orWhereNotIn('withdrawn_reason', ['language', 'subdomain', 'deadsite', 'checkhealth']);
-            })
+            // ->where(function ($query)
+            // {
+            //     $query->where('is_withdrawn', 0)
+            //         ->orWhereNotIn('withdrawn_reason', ['language', 'subdomain', 'deadsite', 'checkhealth']);
+            // })
+            ->where('is_withdrawn', 0)
+            ->whereNull('semrush_traffic') // remove when gaps are filled in
             ->where('semrush_AS', '>=', $minSRAS)
-            ->orderBy('last_checked_traffic', 'asc')
+            // ->orderBy('last_checked_traffic', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
             ->get();
@@ -119,7 +121,6 @@ class CheckTraffic extends Command
         try
         {
             ++$this->numApiCalls;
-            sleep(1);
             $response = $this->client->request('GET', "https://seo-rank.my-addr.com/api2/sr/394D46FA5B5CECAC8C20F821CC297F63/{$domain}");
 
             $body = $response->getBody();
