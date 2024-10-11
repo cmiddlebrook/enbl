@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 require 'vendor/autoload.php';
 
+use App\Enums\WithdrawalReasonEnum;
 use App\Models\LinkSite;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -40,12 +41,9 @@ class CheckDomainAge extends Command
                 echo ("API 1 method failed, trying API 2 method\n");
                 if (!$this->tryMethod2API($linkSite))
                 {
-                    echo ("Both API calls tried, and still no luck\n");
-                    exit;
+                    $this->markForHealthCheck($linkSite);
                 }
             }
-
-
         }
     }
 
@@ -125,6 +123,14 @@ class CheckDomainAge extends Command
             }
         }
         return false;
+    }
+
+    private function markForHealthCheck($linkSite)
+    {
+        echo "Both API Calls failed, marking site for manual check\n";
+        $linkSite->is_withdrawn = 1;
+        $linkSite->withdrawn_reason = WithdrawalReasonEnum::CHECKAGE;
+        $linkSite->save();
     }
 
     private function getSitesToCheck($num = 400)
