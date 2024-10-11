@@ -115,11 +115,12 @@ class CSVExporter
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where('is_withdrawn', 0)
-            ->has('sellers', '>=', 5)
+            ->has('sellers', '>=', 4)
+            ->whereNotNull('semrush_traffic')
+            ->whereNotNull('moz_da')
             ->orderBy('semrush_organic_kw', 'desc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
-            // ->limit(1000)
             ->get();
 
         return $sites;

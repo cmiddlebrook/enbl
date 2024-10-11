@@ -18,7 +18,7 @@ class CheckMetrics extends Command
 
     protected $client;
     protected $numApiCalls = 0;
-    protected $maxApiCalls = 100;
+    protected $maxApiCalls = 1000;
 
     public function __construct()
     {
@@ -34,7 +34,7 @@ class CheckMetrics extends Command
         $this->checkPricingBand(30, 40, 2, 15); // $100 band
         $this->checkPricingBand(55, 70, 3, 20); // $175 band
         $this->checkPricingBand(90, 110, 4, 25); // $275 band
-        $this->checkPricingBand(200, 500, 50, 10); // more checks
+        $this->checkPricingBand(200, 500, 50, 5); // more checks
 
         echo "{$this->numApiCalls} API calls made\n";
     }
@@ -50,7 +50,7 @@ class CheckMetrics extends Command
         for ($startPrice = 5; $startPrice < $bandMaxPrice;)
         {
             $lowAvgThisRun = min(floor($startPrice * 1.5), $maxLowAvgPrice);
-            $this->checkSites(5, $startPrice, $lowAvgThisRun, $minSEMRushAS);
+            $this->checkSites(4, $startPrice, $lowAvgThisRun, $minSEMRushAS);
             if ($this->numApiCalls >= $this->maxApiCalls) break;
 
             $startPrice += $jump;
@@ -60,7 +60,7 @@ class CheckMetrics extends Command
         // then check at the max price point for this band but with higher averages
         for ($avgLowPrice = $bandMaxPrice + $priceIncrement; $avgLowPrice <= $maxLowAvgPrice; $avgLowPrice += $priceIncrement)
         {
-            $this->checkSites(5, $bandMaxPrice, $avgLowPrice, $minSEMRushAS);
+            $this->checkSites(4, $bandMaxPrice, $avgLowPrice, $minSEMRushAS);
             if ($this->numApiCalls >= $this->maxApiCalls) break;
         }
     }
@@ -116,6 +116,7 @@ class CheckMetrics extends Command
             // })
             ->where('is_withdrawn', 0)
             ->whereNull('last_checked_mozmaj') // remove this once we have filled in the gaps
+            ->whereNotNull('semrush_traffic')
             ->has('sellers', '>=', $numSellers)
             ->where('lowest_price', '<=', $lowestPrice)
             ->where('avg_low_price', '<=', $avgLowPrice)
@@ -124,7 +125,7 @@ class CheckMetrics extends Command
             ->orderBy('semrush_organic_kw', 'desc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
-            ->limit(100)
+            // ->limit(100)
             ->get();
 
         return $sites;

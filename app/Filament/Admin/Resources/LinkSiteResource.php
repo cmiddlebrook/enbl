@@ -247,6 +247,17 @@ class LinkSiteResource extends Resource
                     }
                 ),
 
+                Tables\Filters\Filter::make('Check Traffic')->query(
+                    function ($query)
+                    {
+                        return $query
+                            ->where('is_withdrawn', 1)
+                            ->where('withdrawn_reason', 'checktraffic')
+                            ->has('sellers', '>=', 5)
+                            ;
+                    }
+                ),
+
 
                 Tables\Filters\Filter::make('Manual')->query(
                     function ($query)
