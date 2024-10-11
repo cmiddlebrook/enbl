@@ -15,6 +15,7 @@ enum WithdrawalReasonEnum: string implements HasLabel
     case HIGH_SPAM_SCORE = 'spam';
     case DEADSITE = 'deadsite';
     case CHECKHEALTH = 'checkhealth';
+    case CHECKTRAFFIC = 'checktraffic';
 
     public function getLabel(): ?string
     {
@@ -29,6 +30,7 @@ enum WithdrawalReasonEnum: string implements HasLabel
             self::HIGH_SPAM_SCORE => 'Spam',
             self::DEADSITE => 'Dead Website',
             self::CHECKHEALTH => 'Check Site Health',
+            self::CHECKTRAFFIC => 'Check Site Traffic',
         };
     }
 }

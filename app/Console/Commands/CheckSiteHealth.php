@@ -104,7 +104,7 @@ class CheckSiteHealth extends Command
     {
         $markedSites = LinkSite::
           where('is_withdrawn', 1)
-        ->where('withdrawn_reason', 'checkhealth')
+        ->where('withdrawn_reason', WithdrawalReasonEnum::CHECKHEALTH)
         ->get();
 
         echo "Checking " . $markedSites->count() . " sites that are marked for checking\n";

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 require 'vendor/autoload.php';
 
+use App\Enums\WithdrawalReasonEnum;
 use App\Models\LinkSite;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -29,88 +30,118 @@ class CheckTraffic extends Command
     public function handle()
     {
         $this->info('Starting to check domain traffic...');
-        $this->checkSites(5);
+        $this->checkNewSites();
+        // $this->updateSites(5);
         echo "{$this->numApiCalls} API calls made\n";
     }
 
 
-
-    private function checkSites($minSRAS)
+    private function checkNewSites()
     {
-        $sites = $this->getSitesToCheck($minSRAS);
+        $sites = $this->getNewSites();
+        $numSites = $sites->count();
+        echo "Checking {$numSites} new sites\n";
+
+        foreach ($sites as $linkSite)
+        {
+            $this->checkSite($linkSite);
+        }
+    }
+
+    private function updateSites($minSRAS)
+    {
+        $sites = $this->getSitesToUpdate($minSRAS);
         $numSites = $sites->count();
         echo "Checking {$numSites} with at least {$minSRAS} SEMRush Authority Score\n";
 
         foreach ($sites as $linkSite)
         {
             if ($this->numApiCalls >= $this->maxApiCalls) break;
+            $this->updateTraffic($linkSite);
+        }
+    }
 
-            $domain = $linkSite->domain;
+    private function checkSite($linkSite)
+    {
+        $this->info("Checking {$linkSite->domain}");
 
-            $this->info("Checking {$domain}");
-            $data = $this->makeAPICall($domain);
-            // \Symfony\Component\VarDumper\VarDumper::dump($data);
-            if (!$data) continue;
+        // the API is temperamental, try several times
+        for ($numTries = 0; $numTries < 5; $numTries++)
+        {
+            if ($this->updateTraffic($linkSite)) return;
+            echo ".";
+            sleep (1);
+        }
 
-            $domain = $data['sr_domain'];
-            $traffic = $data['sr_traffic'];
-            $keywords = $data['sr_kwords'];
-            $dlinks = $data['sr_dlinks'];
+        $this->markForManualCheck($linkSite);
+    }
 
-            // if the domain value comes back as unknown, the API call failed. 
-            // the API is temperamental, just skip over it and it will be retried on the next run
-            if ($domain == 'unknown') continue;
+    private function updateTraffic($linkSite)
+    {
+        $lsDomain = $linkSite->domain;
+        $data = $this->makeAPICall($lsDomain);
+        // \Symfony\Component\VarDumper\VarDumper::dump($data);
+        if (!$data) return false;
 
-            if ($domain == 'notfound')
-            {
-                if ($dlinks == 'notfound')
-                {
-                    $linkSite->is_withdrawn = 1;
-                    $linkSite->withdrawn_reason = 'checkhealth';
-                    $linkSite->save();
-                    echo "Domain couldn't be accessed, marked for health check\n";
-                    continue;
-                }
+        $srDomain = $data['sr_domain'];
+        $traffic = $data['sr_traffic'];
+        $keywords = $data['sr_kwords'];
 
-                // there's a value for the domain links but not the domain itself, something is wrong
-                // just update the date and try again another time
-                $linkSite->last_checked_traffic = Carbon::today();
-                $linkSite->save();
-                echo "Problem fetching, skipping this run...\n";
-                continue;
-            }
+        if ($srDomain == 'unknown') return false;
+        if ($srDomain == 'notfound') return false;
 
+        if ($srDomain == $lsDomain)
+        {
             // if other values are reported as unknown, they are too low to record, so set to 0
             $linkSite->semrush_traffic = $traffic == 'unknown' ? 0 : $traffic;
             $linkSite->semrush_organic_kw = $keywords == 'unknown' ? 0 : $keywords;
             $linkSite->semrush_perc_english_traffic = 0;
             $linkSite->last_checked_traffic = Carbon::today();
 
-            echo "{$domain} traffic & KW updated!\n";
+            echo "{$lsDomain} traffic & KW updated!\n";
             $linkSite->save();
-
+            return true;
         }
     }
 
-    private function getSitesToCheck($minSRAS)
+    private function markForManualCheck($linkSite)
+    {
+        echo " API Call failed, marking site for manual check\n";
+        $linkSite->is_withdrawn = 1;
+        $linkSite->withdrawn_reason = WithdrawalReasonEnum::CHECKTRAFFIC;
+        $linkSite->last_checked_traffic = Carbon::today();
+        $linkSite->save();
+    }
+
+    private function getNewSites()
+    {
+        $sites = LinkSite::whereNull('semrush_traffic')
+            ->where('is_withdrawn', 0)
+            ->orderBy('semrush_AS', 'desc')
+            ->orderBy('majestic_trust_flow', 'desc')
+            // ->limit(5)
+            ->get();
+
+        return $sites;
+    }
+
+    private function getSitesToUpdate($minSRAS)
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
-            // ->where(function ($query)
-            // {
-            //     $query->where('last_checked_traffic', '<', Carbon::now()->subDays(15))
-            //         ->orWhereNull('last_checked_traffic');
-            // })
-            // ->where(function ($query)
-            // {
-            //     $query->where('is_withdrawn', 0)
-            //         ->orWhereNotIn('withdrawn_reason', ['language', 'subdomain', 'deadsite', 'checkhealth']);
-            // })
-            ->where('is_withdrawn', 0)
-            ->whereNull('semrush_traffic') // remove when gaps are filled in
+            ->where(function ($query)
+            {
+                $query->where('last_checked_traffic', '<', Carbon::now()->subDays(15))
+                    ->orWhereNull('last_checked_traffic');
+            })
+            ->where(function ($query)
+            {
+                $query->where('is_withdrawn', 0)
+                    ->orWhereNotIn('withdrawn_reason', ['language', 'subdomain', 'deadsite', 'checkhealth']);
+            })
             ->where('semrush_AS', '>=', $minSRAS)
-            // ->orderBy('last_checked_traffic', 'asc')
-            ->orderBy('majestic_trust_flow', 'desc')
+            ->orderBy('last_checked_traffic', 'asc')
             ->orderBy('semrush_AS', 'desc')
+            ->orderBy('majestic_trust_flow', 'desc')
             ->get();
 
         return $sites;
