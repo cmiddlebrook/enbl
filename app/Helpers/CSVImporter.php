@@ -149,6 +149,7 @@ class CSVImporter
     {
         foreach ($rowData as $key => $value)
         {
+            $rowData[$key] = trim($value);
             if ($value === '')
             {
                 // convert any empty strings to null values

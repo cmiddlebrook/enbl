@@ -224,6 +224,7 @@ class LinkSiteResource extends Resource
                 ToggleColumn::make('is_withdrawn')->label('W/D')->disabled()->toggleable(isToggledHiddenByDefault: false),
             ])
 
+            ->paginated([10, 25, 50, 100, 500])
             ->defaultPaginationPageOption(10)
 
             ->defaultSort(

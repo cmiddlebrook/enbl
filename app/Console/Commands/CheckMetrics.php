@@ -18,7 +18,7 @@ class CheckMetrics extends Command
 
     protected $client;
     protected $numApiCalls = 0;
-    protected $maxApiCalls = 1000;
+    protected $maxApiCalls = 100;
 
     public function __construct()
     {
