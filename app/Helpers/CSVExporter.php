@@ -77,38 +77,12 @@ class CSVExporter
 
     private function calculate100BasedMetrics($value)
     {
-        $rating = 0;
-
-        for ($step = 10; $step <= 100; $step += 10)
-        {
-            if ($value >= $step)
-            {
-                $rating += $step / 10;
-            }
-        }
-
-        return $rating;
+        return round(pow(1.67, ($value / 10) - 1), 2);
     }
 
     private function calculateUnlimitedMetrics($value, $startingMultiplier)
     {
-        $rating = 0;
-        $step = 10; 
-        $multiplier = $startingMultiplier; 
-
-        while ($step <= 100000000) // 100 million
-        {
-            if ($value >= $step)
-            {
-                $rating += $multiplier;
-            }
-
-            // 100, 1k, 10k, 100k, 1m, 10m, 100m
-            $step *= 10;
-            $multiplier++;
-        }
-
-        return $rating;
+        return (round (min(($value / 500), 200), 2));
     }
 
     private function getSitesToCheck()

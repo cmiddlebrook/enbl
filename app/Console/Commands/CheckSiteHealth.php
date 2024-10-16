@@ -31,7 +31,7 @@ class CheckSiteHealth extends Command
 
     public function handle()
     {
-        $this->displayManualChecks();
+         $this->displayManualChecks();
         $this->checkDownSites();
         $this->checkMarkedSites();
         $this->makeNewChecks();
@@ -60,7 +60,7 @@ class CheckSiteHealth extends Command
                 $this->markSiteDead($siteId);
                 echo "{$domain} has been marked as dead\n";
             }
-            else 
+            else
             {
                 $this->deleteHealthChecks($siteId);
             }
@@ -102,10 +102,9 @@ class CheckSiteHealth extends Command
 
     private function checkMarkedSites()
     {
-        $markedSites = LinkSite::
-          where('is_withdrawn', 1)
-        ->where('withdrawn_reason', WithdrawalReasonEnum::CHECKHEALTH)
-        ->get();
+        $markedSites = LinkSite::where('is_withdrawn', 1)
+            ->where('withdrawn_reason', WithdrawalReasonEnum::CHECKHEALTH)
+            ->get();
 
         echo "Checking " . $markedSites->count() . " sites that are marked for checking\n";
         $this->checkSites($markedSites);
