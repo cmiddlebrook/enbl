@@ -31,7 +31,7 @@ class CheckTraffic extends Command
     {
         $this->info('Starting to check domain traffic...');
         $this->checkNewSites();
-        // $this->updateSites(5);
+        $this->updateSites();
         echo "{$this->numApiCalls} API calls made\n";
     }
 
@@ -48,11 +48,11 @@ class CheckTraffic extends Command
         }
     }
 
-    private function updateSites($minSRAS)
+    private function updateSites()
     {
-        $sites = $this->getSitesToUpdate($minSRAS);
+        $sites = $this->getSitesToUpdate();
         $numSites = $sites->count();
-        echo "Checking {$numSites} with at least {$minSRAS} SEMRush Authority Score\n";
+        echo "Checking {$numSites} existing sites \n";
 
         foreach ($sites as $linkSite)
         {
@@ -61,7 +61,7 @@ class CheckTraffic extends Command
         }
     }
 
-    private function checkSite($linkSite)
+    private function checkSite($linkSite, $newSite = false)
     {
         $this->info("Checking {$linkSite->domain}");
 
@@ -73,7 +73,14 @@ class CheckTraffic extends Command
             sleep (1);
         }
 
-        $this->markForManualCheck($linkSite);
+        if ($newSite)
+        {
+            $this->markForManualCheck($linkSite);
+        }
+        else
+        {
+            echo "Could not update traffic, leaving unchanged\n";
+        }
     }
 
     private function updateTraffic($linkSite)
@@ -117,6 +124,7 @@ class CheckTraffic extends Command
     {
         $sites = LinkSite::whereNull('semrush_traffic')
             ->where('is_withdrawn', 0)
+            ->where('semrush_AS', '>=', 5)
             ->orderBy('semrush_AS', 'desc')
             ->orderBy('majestic_trust_flow', 'desc')
             // ->limit(5)
@@ -125,7 +133,7 @@ class CheckTraffic extends Command
         return $sites;
     }
 
-    private function getSitesToUpdate($minSRAS)
+    private function getSitesToUpdate()
     {
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where(function ($query)
@@ -138,7 +146,7 @@ class CheckTraffic extends Command
                 $query->where('is_withdrawn', 0)
                     ->orWhereNotIn('withdrawn_reason', ['language', 'subdomain', 'deadsite', 'checkhealth']);
             })
-            ->where('semrush_AS', '>=', $minSRAS)
+            ->where('semrush_AS', '>=', 5)
             ->orderBy('last_checked_traffic', 'asc')
             ->orderBy('semrush_AS', 'desc')
             ->orderBy('majestic_trust_flow', 'desc')

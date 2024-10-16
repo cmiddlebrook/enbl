@@ -80,7 +80,7 @@ class CheckSpam extends Command
             {
                 if (Str::contains($domain, $spamWord))
                 {
-                    $this->promptUserForDomainWithdrawl($domain);
+                    $this->withdrawDomain($domain);
                 }
             }            
         }
@@ -122,6 +122,8 @@ class CheckSpam extends Command
 
     private function withdrawDomain($domain)
     {
+        echo "Withdrawing {$domain}\n";
+        
         DB::table('link_sites')
         ->where('domain', '=', $domain)
         ->update([
