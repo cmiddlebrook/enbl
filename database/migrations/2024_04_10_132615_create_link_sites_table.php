@@ -40,6 +40,7 @@ return new class extends Migration
             $table->unsignedBigInteger('facebook_shares')->nullable();
             $table->date('last_checked_mozmaj')->nullable();
             $table->unsignedTinyInteger('ahrefs_domain_rank')->nullable();
+            $table->date('last_checked_dr')->nullable();
             $table->string('ip_address')->nullable();
             $table->string('country_code')->nullable();
             $table->date('domain_creation_date')->nullable();
