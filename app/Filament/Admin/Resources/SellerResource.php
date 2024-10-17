@@ -55,6 +55,7 @@ class SellerResource extends Resource
             ->columns([
                 TextColumn::make('name')->searchable(),
                 TextColumn::make('email')->searchable(),
+                TextColumn::make('last_import')->date()->sortable(),
                 TextColumn::make('linksites_count')->counts('linksites')->Label('Nr Sites')->sortable(),
                 TextColumn::make('num_withdrawn_sites')->Label('Nr WD'),
                 TextColumn::make('average_price')->Label('Avg $')

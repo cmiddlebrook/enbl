@@ -203,13 +203,13 @@ class CheckSiteHealth extends Command
         $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
             ->where(function ($query)
             {
-                $query->where('last_checked_health', '<', Carbon::now()->subDays(10))
+                $query->where('last_checked_health', '<', Carbon::now()->subMonth())
                     ->orWhereNull('last_checked_health');
             })
             ->where('is_withdrawn', 0)
             // ->where('withdrawn_reason', 'language')
             // ->has('sellers', '>=', 1)
-            ->where('semrush_AS', '>=', 5)
+            ->where('semrush_AS', '>=', 4)
             ->orderBy('last_checked_health', 'asc')
             ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')

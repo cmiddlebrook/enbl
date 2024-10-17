@@ -44,6 +44,7 @@ class CheckTraffic extends Command
 
         foreach ($sites as $linkSite)
         {
+            if ($this->numApiCalls >= $this->maxApiCalls) break;
             $this->checkSite($linkSite);
         }
     }
