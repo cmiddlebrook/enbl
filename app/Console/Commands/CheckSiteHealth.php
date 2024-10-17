@@ -200,7 +200,7 @@ class CheckSiteHealth extends Command
 
     private function getSitesToCheck($num = 800)
     {
-        $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
+        $sites = LinkSite::withLowestPrice()
             ->where(function ($query)
             {
                 $query->where('last_checked_health', '<', Carbon::now()->subMonth())
@@ -211,7 +211,6 @@ class CheckSiteHealth extends Command
             // ->has('sellers', '>=', 1)
             ->where('semrush_AS', '>=', 4)
             ->orderBy('last_checked_health', 'asc')
-            ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
             ->limit($num)

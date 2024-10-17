@@ -83,29 +83,19 @@ class LinkSite extends Model
         )->addSelect('link_sites.*', 'lowest_prices.lowest_price');
     }
 
-
-    public function scopeWithAvgLowPrices(Builder $query): Builder
+    public function scopeWithThirdLowestPrice(Builder $query): Builder
     {
-        $subquery = DB::table('seller_sites')
-            ->select('link_site_id', 'price_guest_post')
-            ->selectRaw('ROW_NUMBER() OVER (PARTITION BY link_site_id ORDER BY price_guest_post ASC) as row_num');
-
-        $avgSubquery = DB::table(DB::raw("({$subquery->toSql()}) as ranked"))
-            ->mergeBindings($subquery)
-            ->where('row_num', '<=', 4)
-            ->selectRaw('link_site_id, AVG(price_guest_post) as avg_low_price')
-            ->groupBy('link_site_id');
-
-        return $query->leftJoinSub($avgSubquery, 'avg_prices', function ($join)
-        {
-            $join->on('link_sites.id', '=', 'avg_prices.link_site_id');
-        })->addSelect('link_sites.*', 'avg_prices.avg_low_price');
+        return $query->leftJoinSub(
+            DB::table('seller_sites')
+                ->selectRaw('link_site_id, price_guest_post, ROW_NUMBER() OVER (PARTITION BY link_site_id ORDER BY price_guest_post ASC) as row_num'),
+            'ranked_prices',
+            function ($join)
+            {
+                $join->on('link_sites.id', '=', 'ranked_prices.link_site_id')
+                    ->where('ranked_prices.row_num', '=', 3); // Only get the 3rd lowest price
+            }
+        )->addSelect('link_sites.*', 'ranked_prices.price_guest_post as third_lowest_price');
     }
-
-
-
-
-
 
     public function niches()
     {

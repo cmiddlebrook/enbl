@@ -160,13 +160,13 @@ class LinkSiteResource extends Resource
             ->columns([
                 TextColumn::make('domain')->sortable()->searchable(),
                 TextColumn::make('sellers_count')->counts('sellers')->Label('Sellers')->sortable(),
-                TextColumn::make('avg_low_price')->Label('Avg $')->sortable()
+                TextColumn::make('lowest_price')->Label('Low $')->sortable(),
+                TextColumn::make('third_lowest_price')->Label('3rd $')->sortable()
                     ->numeric()
                     ->formatStateUsing(function ($state)
                     {
                         return NumberFormatter::format($state);
                     }),
-                TextColumn::make('lowest_price')->Label('Low $')->sortable(),
                 TextColumn::make('niches_count')->counts('niches')->Label('Niches')->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('ip_address')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('country_code')->Label('CO')->toggleable(isToggledHiddenByDefault: true),
@@ -231,7 +231,7 @@ class LinkSiteResource extends Resource
                 fn($query) => $query
                     ->orderBy('is_withdrawn', 'asc')
                     ->orderBy('sellers_count', 'desc')
-                    ->orderBy('avg_low_price', 'asc')
+                    ->orderBy('lowest_price', 'asc')
                     ->orderBy('majestic_trust_flow', 'desc')
                     ->orderBy('semrush_AS', 'desc')
             )
@@ -381,7 +381,7 @@ class LinkSiteResource extends Resource
     {
         return parent::getEloquentQuery()
         ->withLowestPrice()    
-        ->withAvgLowPrices()
+        ->withThirdLowestPrice()
             ;
     }
 

@@ -39,18 +39,18 @@ class CheckMetrics extends Command
         echo "{$this->numApiCalls} API calls made\n";
     }
 
-    private function checkPricingBand($bandMaxPrice, $maxLowAvgPrice, $priceIncrement, $minSEMRushAS)
+    private function checkPricingBand($bandMaxPrice, $max3rdLowPrice, $priceIncrement, $minSEMRushAS)
     {
         if ($this->numApiCalls >= $this->maxApiCalls) return;
 
-        echo "Checking Pricing Band with max \${$bandMaxPrice} and max average \${$maxLowAvgPrice}\n";
+        echo "Checking Pricing Band with max \${$bandMaxPrice} and max 3rd lowest price \${$max3rdLowPrice}\n";
 
         // first do some broad checks at lower price points
         $jump = floor($bandMaxPrice / 3);
         for ($startPrice = 5; $startPrice < $bandMaxPrice;)
         {
-            $lowAvgThisRun = min(floor($startPrice * 1.5), $maxLowAvgPrice);
-            $this->checkSites(4, $startPrice, $lowAvgThisRun, $minSEMRushAS);
+            $low3rdThisRun = min(floor($startPrice * 1.5), $max3rdLowPrice);
+            $this->checkSites(4, $startPrice, $low3rdThisRun, $minSEMRushAS);
             if ($this->numApiCalls >= $this->maxApiCalls) break;
 
             $startPrice += $jump;
@@ -58,18 +58,18 @@ class CheckMetrics extends Command
         }
 
         // then check at the max price point for this band but with higher averages
-        for ($avgLowPrice = $bandMaxPrice + $priceIncrement; $avgLowPrice <= $maxLowAvgPrice; $avgLowPrice += $priceIncrement)
+        for ($thirdLowestPrice = $bandMaxPrice + $priceIncrement; $thirdLowestPrice <= $max3rdLowPrice; $thirdLowestPrice += $priceIncrement)
         {
-            $this->checkSites(4, $bandMaxPrice, $avgLowPrice, $minSEMRushAS);
+            $this->checkSites(4, $bandMaxPrice, $thirdLowestPrice, $minSEMRushAS);
             if ($this->numApiCalls >= $this->maxApiCalls) break;
         }
     }
 
-    private function checkSites($numSellers, $lowestPrice, $avgLowPrice, $minSRAS)
+    private function checkSites($numSellers, $lowestPrice, $max3rdLowPrice, $minSRAS)
     {
-        $sites = $this->getSitesToCheck($numSellers, $lowestPrice, $avgLowPrice, $minSRAS);
+        $sites = $this->getSitesToCheck($numSellers, $lowestPrice, $max3rdLowPrice, $minSRAS);
         $numSites = $sites->count();
-        echo "Checking {$numSites} with {$numSellers} sellers, lowest price: {$lowestPrice}, low average: {$avgLowPrice}\n";
+        echo "Checking {$numSites} with {$numSellers} sellers, lowest price: {$lowestPrice}, 3rd lowest: {$max3rdLowPrice}\n";
 
         foreach ($sites as $linkSite)
         {
@@ -106,9 +106,9 @@ class CheckMetrics extends Command
         }
     }
 
-    private function getSitesToCheck($numSellers, $lowestPrice, $avgLowPrice, $minSRAS)
+    private function getSitesToCheck($numSellers, $lowestPrice, $max3rdLowPrice, $minSRAS)
     {
-        $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
+        $sites = LinkSite::withLowestPrice()->withThirdLowestPrice()
             // ->where(function ($query)
             // {
             //     $query->where('last_checked_mozmaj', '<', Carbon::now()->subMonth())
@@ -119,7 +119,7 @@ class CheckMetrics extends Command
             ->whereNotNull('semrush_traffic')
             ->has('sellers', '>=', $numSellers)
             ->where('lowest_price', '<=', $lowestPrice)
-            ->where('avg_low_price', '<=', $avgLowPrice)
+            ->having('third_lowest_price', '<=', $max3rdLowPrice)
             ->where('semrush_AS', '>=', $minSRAS)
             // ->orderBy('last_checked_mozmaj', 'asc')
             ->orderBy('semrush_organic_kw', 'desc')

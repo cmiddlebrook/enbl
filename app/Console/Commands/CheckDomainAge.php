@@ -135,8 +135,7 @@ class CheckDomainAge extends Command
 
     private function getSitesToCheck($num = 400)
     {
-        $sites = LinkSite::withAvgLowPrices()
-            ->where('is_withdrawn', 0)
+        $sites = LinkSite::where('is_withdrawn', 0)
             ->whereNull('domain_creation_date')
             ->where('domain', 'not like', '%.au') // skip Australian domains, these are not publically available
             ->orderBy('semrush_organic_kw', 'desc')

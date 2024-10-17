@@ -48,14 +48,13 @@ class CheckLanguage extends Command
 
     private function getSitesToCheck($num = 900)
     {
-        $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
+        $sites = LinkSite::withLowestPrice()
             ->where(function ($query)
             {
                 $query->whereNull('country_code')
                     ->orWhere('country_code', '');
             })
             ->where('is_withdrawn', 0)
-            ->orderBy('avg_low_price', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
             ->limit($num)

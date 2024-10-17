@@ -53,9 +53,9 @@ class CSVExporter
 
     private function calculatePrice($linkSite)
     {
-        $avgLowPrice = $linkSite->avg_low_price;
-        $markup = max($avgLowPrice * 0.25, 10);
-        $price = ceil($avgLowPrice + $markup);
+        $thirdLowestPrice = $linkSite->third_lowest_price;
+        $markup = max($thirdLowestPrice * 0.25, 10);
+        $price = ceil($thirdLowestPrice + $markup);
 
         return $price;
     }
@@ -82,20 +82,25 @@ class CSVExporter
 
     private function calculateUnlimitedMetrics($value, $startingMultiplier)
     {
-        return (round (min(($value / 500), 200), 2));
+        return (round(min(($value / 500), 200), 2));
     }
 
     private function getSitesToCheck()
     {
-        $sites = LinkSite::withAvgLowPrices()->withLowestPrice()
+        $sites = LinkSite::withThirdLowestPrice()
             ->where('is_withdrawn', 0)
-            ->has('sellers', '>=', 4)
             ->whereNotNull('semrush_traffic')
             ->whereNotNull('moz_da')
+            ->has('sellers', '>=', 3)
+            ->whereHas('niches', function ($query)
+            {
+                $query->where('niche_id', 1);
+            })
             ->orderBy('semrush_organic_kw', 'desc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
             ->get();
+
 
         return $sites;
     }

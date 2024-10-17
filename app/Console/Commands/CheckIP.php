@@ -109,8 +109,7 @@ class CheckIP extends Command
 
     private function getSitesToCheck()
     {
-        $sites = LinkSite::withAvgLowPrices()
-            ->where('is_withdrawn', 0)
+        $sites = LinkSite::where('is_withdrawn', 0)
             ->whereNull('ip_address')
             ->orderBy('semrush_organic_kw', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
