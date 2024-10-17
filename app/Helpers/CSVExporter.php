@@ -67,6 +67,7 @@ class CSVExporter
         $rating += $this->calculate100BasedMetrics($linkSite->semrush_AS);
         $rating += $this->calculate100BasedMetrics($linkSite->moz_da);
         $rating += $this->calculate100BasedMetrics($linkSite->majestic_trust_flow);
+        $rating += $this->calculate100BasedMetrics($linkSite->ahrefs_domain_rank);
 
         $rating += $this->calculateUnlimitedMetrics($linkSite->semrush_traffic, 4);
         $rating += $this->calculateUnlimitedMetrics($linkSite->semrush_organic_kw, 5);
