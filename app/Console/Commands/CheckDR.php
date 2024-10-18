@@ -17,6 +17,8 @@ class CheckDR extends Command
 
     protected $client;
     protected $numApiCalls = 0;
+    protected $maxApiCalls = 300;
+    protected $successfulCalls = 0;
 
     public function __construct()
     {
@@ -29,16 +31,42 @@ class CheckDR extends Command
         $sites = $this->getSitesToCheck();
         foreach ($sites as $linkSite)
         {
-            $domain = $linkSite->domain;
-
-            $this->info("Checking Ahrefs DR of {$domain}");
-            $data = $this->makeAPICall($domain);
-            $dr = $data['domain_rating'];
-
-            $this->updateDomainRank($linkSite, $dr);
+            if ($this->numApiCalls >= $this->maxApiCalls) break;
+            $this->checkSite($linkSite);
         }
 
         echo "{$this->numApiCalls} API calls made\n";
+        echo "{$this->successfulCalls} Successful updates made\n";
+    }
+
+    private function checkSite($linkSite)
+    {
+        $this->info("Checking DR of {$linkSite->domain}");
+        $this->checkDomainRank($linkSite);
+        return;
+
+        // skipping this mechanism for now as will be too expensive to try too many times
+
+        // the API is temperamental, try several times
+        for ($numTries = 0; $numTries < 5; $numTries++)
+        {
+            if ($this->checkDomainRank($linkSite)) return;
+            echo ".";
+            sleep (1);
+        }
+
+        $this->markForManualCheck($linkSite);
+    }
+
+    private function checkDomainRank($linkSite)
+    {
+        $data = $this->makeAPICall($linkSite->domain);
+
+        if (array_key_exists('error', $data)) return false;
+
+        $dr = $data['domain_rating'];
+        $this->updateDomainRank($linkSite, $dr);
+        return true;
     }
 
     private function updateDomainRank($linkSite, $dr)
@@ -46,6 +74,16 @@ class CheckDR extends Command
         echo "{$linkSite->domain} has domain rank of {$dr}\n";
         $linkSite->ahrefs_domain_rank = $dr;
         $linkSite->last_checked_dr = Carbon::today();
+        $linkSite->save();
+        $this->successfulCalls++;
+    }
+
+    private function markForManualCheck($linkSite)
+    {
+        echo " API Call failed, marking site for manual check\n";
+        $linkSite->is_withdrawn = 1;
+        $linkSite->withdrawn_reason = WithdrawalReasonEnum::CHECKDR;
+        $linkSite->last_checked_traffic = Carbon::today();
         $linkSite->save();
     }
 
@@ -56,7 +94,7 @@ class CheckDR extends Command
             ->orderBy('semrush_organic_kw', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
-            ->limit(300)
+            ->limit(10)
             ->get();
 
         return $sites;
@@ -79,6 +117,7 @@ class CheckDR extends Command
             $body = $response->getBody();
             $data = json_decode($body, true);
             // \Symfony\Component\VarDumper\VarDumper::dump($data);
+            // exit;
 
             return $data;
         }

@@ -100,11 +100,16 @@ class CheckIP extends Command
         }
         else
         {
-            echo "Invalid IP: {$ip}, marking site for checking\n";
-            $linkSite->is_withdrawn = 1;
-            $linkSite->withdrawn_reason = WithdrawalReasonEnum::CHECKHEALTH;
-            $linkSite->save();
+            $this->markForHealthCheck($linkSite, $ip);
         }
+    }
+
+    private function markForHealthCheck($linkSite, $ip)
+    {
+        echo "Invalid IP: {$ip}, marking site for checking\n";
+        $linkSite->is_withdrawn = 1;
+        $linkSite->withdrawn_reason = WithdrawalReasonEnum::CHECKHEALTH;
+        $linkSite->save();
     }
 
     private function getSitesToCheck()

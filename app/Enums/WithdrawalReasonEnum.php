@@ -17,6 +17,7 @@ enum WithdrawalReasonEnum: string implements HasLabel
     case CHECKHEALTH = 'checkhealth';
     case CHECKTRAFFIC = 'checktraffic';
     case CHECKAGE = 'checkage';
+    case CHECKDR = 'checkdr';
 
     public function getLabel(): ?string
     {
@@ -33,6 +34,7 @@ enum WithdrawalReasonEnum: string implements HasLabel
             self::CHECKHEALTH => 'Check Site Health',
             self::CHECKTRAFFIC => 'Check Site Traffic',
             self::CHECKAGE => 'Check Domain Age',
+            self::CHECKDR => 'Check Domain Rank',
         };
     }
 }
