@@ -20,16 +20,19 @@ class CSVExporter
         $this->gsheetFilename = 'downloads/csv_google_sheet_' . $timestamp . '_' . Str::random(4) . '.csv';
         $this->gsheet = fopen(public_path($this->gsheetFilename), 'w');
 
-        $header = ['Domain', 'Price $US', 'Rating', 'SEMRush Score', 'Traffic', 'Keywords', 'Ref Domains', 'Moz DA', 'Majestic TF', 'Majestic CF'];
+        $header = ['Domain', 'Price $US', 'Rating', 'SEMRush AS', 'Traffic', 'Keywords', 'Ref Domains', 'Moz DA', 'Majestic TF', 'Majestic CF'];
         fputcsv($this->gsheet, $header);
 
         $sites = $this->getSitesToCheck();
         foreach ($sites as $linkSite)
         {
+            $price = $this->calculatePrice($linkSite);
+            if ($price > 25) continue; // stick to cheapie sites for now
+
             $row =
                 [
                     $linkSite->domain,
-                    $this->calculatePrice($linkSite),
+                    $price,
                     $this->calculateRating($linkSite),
                     $linkSite->semrush_AS,
                     $linkSite->semrush_traffic,
