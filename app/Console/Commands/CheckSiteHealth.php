@@ -198,7 +198,7 @@ class CheckSiteHealth extends Command
         }
     }
 
-    private function getSitesToCheck($num = 800)
+    private function getSitesToCheck($num = 500)
     {
         $sites = LinkSite::withLowestPrice()
             ->where(function ($query)
@@ -207,8 +207,6 @@ class CheckSiteHealth extends Command
                     ->orWhereNull('last_checked_health');
             })
             ->where('is_withdrawn', 0)
-            // ->where('withdrawn_reason', 'language')
-            // ->has('sellers', '>=', 1)
             ->where('semrush_AS', '>=', 4)
             ->orderBy('last_checked_health', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')

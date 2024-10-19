@@ -11,47 +11,80 @@ use Exception;
 
 class CSVExporter
 {
-    private $gsheetFilename = '';
+    private $allSitesFilename = '';
+    private $ukOnlyFilename = '';
     private $gsheet = null;
+    private $ukSheet = null;
 
     public function exportGoogleSheetCSV()
     {
-        $timestamp = Carbon::now()->format('Y-m-d-H-i');
-        $this->gsheetFilename = 'downloads/csv_google_sheet_' . $timestamp . '_' . Str::random(4) . '.csv';
-        $this->gsheet = fopen(public_path($this->gsheetFilename), 'w');
-
-        $header = ['Domain', 'Price $US', 'Rating', 'SEMRush AS', 'Traffic', 'Keywords', 'Ref Domains', 'Moz DA', 'Majestic TF', 'Majestic CF'];
-        fputcsv($this->gsheet, $header);
+        $this->initialiseFiles();
 
         $sites = $this->getSitesToCheck();
         foreach ($sites as $linkSite)
         {
-            $price = $this->calculatePrice($linkSite);
-            if ($price > 25) continue; // stick to cheapie sites for now
+            $this->writeDomainRow($linkSite, $this->gsheet);
 
-            $row =
-                [
-                    $linkSite->domain,
-                    $price,
-                    $this->calculateRating($linkSite),
-                    $linkSite->semrush_AS,
-                    $linkSite->semrush_traffic,
-                    $linkSite->semrush_organic_kw,
-                    $linkSite->majestic_ref_domains,
-                    $linkSite->moz_da,
-                    $linkSite->majestic_trust_flow,
-                    $linkSite->majestic_citation_flow,
-                ];
-
-            fputcsv($this->gsheet, $row);
+            if (Str::endsWith($linkSite->domain, '.uk'))
+            {
+                $this->writeDomainRow($linkSite, $this->ukSheet);
+            }
+            
         }
 
-        fclose($this->gsheet);
+        $this->closeFiles();
     }
 
-    public function getGSheetFilename()
+    public function getAllSitesFilename()
     {
-        return $this->gsheetFilename;
+        return $this->allSitesFilename;
+    }
+
+    public function getUKOnlyFilename()
+    {
+        return $this->ukOnlyFilename;
+    }
+
+    private function initialiseFiles()
+    {
+        $timestamp = Carbon::now()->format('Y-m-d-H-i');
+        $this->allSitesFilename = 'downloads/csv_google_sheet_' . $timestamp . '_' . Str::random(4) . '.csv';
+        $this->gsheet = fopen(public_path($this->allSitesFilename), 'w');
+
+        $this->ukOnlyFilename = 'downloads/csv_uk_sheet_' . $timestamp . ' ' . Str::random(4) . '.csv';
+        $this->ukSheet = fopen(public_path($this->ukOnlyFilename), 'w');
+
+        $header = ['Domain', 'Price $US', 'Rating', 'SEMRush AS', 'Traffic', 'Keywords', 'Ref Domains', 'Moz DA', 'Majestic TF', 'Majestic CF'];
+        fputcsv($this->gsheet, $header);
+        fputcsv($this->ukSheet, $header);
+    }
+
+    private function writeDomainRow($linkSite, $file)
+    {
+        $price = $this->calculatePrice($linkSite);
+        if ($price > 25) return; // stick to cheapie sites for now
+
+        $row =
+            [
+                $linkSite->domain,
+                $price,
+                $this->calculateRating($linkSite),
+                $linkSite->semrush_AS,
+                $linkSite->semrush_traffic,
+                $linkSite->semrush_organic_kw,
+                $linkSite->majestic_ref_domains,
+                $linkSite->moz_da,
+                $linkSite->majestic_trust_flow,
+                $linkSite->majestic_citation_flow,
+            ];
+
+        fputcsv($file, $row);
+    }
+
+    private function closeFiles()
+    {
+        fclose($this->gsheet);
+        fclose($this->ukSheet);
     }
 
     private function calculatePrice($linkSite)

@@ -94,7 +94,7 @@ class CheckDR extends Command
             ->orderBy('semrush_organic_kw', 'asc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')
-            ->limit(10)
+            ->limit(100)
             ->get();
 
         return $sites;

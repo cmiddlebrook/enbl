@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Pages;
 
+use Illuminate\Support\Str;
 use Filament\Pages\Page;
 use Filament\Forms\Get;
 use Filament\Forms\Contracts\HasForms;
@@ -41,14 +42,14 @@ class FileManager extends Page implements HasForms
                             ->acceptedFileTypes(['text/csv', 'application/vnd.ms-excel'])
                             ->reactive(),
 
-                            Toggle::make('dummy')->label('Dummy toggle - don\'t click!')->reactive(),
+                        Toggle::make('dummy')->label('Dummy toggle - don\'t click!')->reactive(),
 
-                            \Filament\Forms\Components\Actions::make([
-                                \Filament\Forms\Components\Actions\Action::make('upload_linksites_File')
-                                    ->label('Upload Link Sites File')
-                                    ->action('uploadLinkSitesFile')
-                            ])
-                            
+                        \Filament\Forms\Components\Actions::make([
+                            \Filament\Forms\Components\Actions\Action::make('upload_linksites_File')
+                                ->label('Upload Link Sites File')
+                                ->action('uploadLinkSitesFile')
+                        ])
+
                     ])->statePath('linksite_file')
                 ])->columnSpan(1),
 
@@ -114,13 +115,22 @@ class FileManager extends Page implements HasForms
         $csvExporter = new CSVExporter();
         $csvExporter->exportGoogleSheetCSV();
 
+        $allSitesUrl = url($csvExporter->getAllSitesFilename());
+        $this->sendPopupNotification('All Sites CSV', $allSitesUrl);
+
+        $ukOnlyUrl = url($csvExporter->getUKOnlyFilename());
+        $this->sendPopupNotification('UK Only CSV', $ukOnlyUrl);
+    }
+
+    private function sendPopupNotification($label, $url)
+    {
+        $slug = Str::slug($label);
         $notification = Notification::make()
             ->icon('fas-file-csv')
             ->persistent();
 
-        $downloadUrl = url($csvExporter->getGSheetFilename());
-        // $notification->title('INFO: export success');
-        $notification->actions([\Filament\Notifications\Actions\Action::make('download_gsheet_csv')->button()->url($downloadUrl)]);
+        $downloadUrl = url($url);
+        $notification->actions([\Filament\Notifications\Actions\Action::make($slug)->label($label)->button()->url($downloadUrl)]);
         $notification->color('success');
         $notification->success();
         $notification->send();
@@ -129,7 +139,7 @@ class FileManager extends Page implements HasForms
     private function notifyResults(CSVImporter $csvImporter)
     {
         if (!$csvImporter->isFileValid()) return;
-        
+
         $numErrors = $csvImporter->getNumErrors();
         $bodyText = "{$csvImporter->getNumImported()} rows imported, with {$numErrors} errors";
 
