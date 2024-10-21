@@ -52,10 +52,14 @@ class CheckDomainAge extends Command
         $domain = $linkSite->domain;
         $data = $this->makeAPICallMethod1($domain);
         $result = false;
-        if ($data && array_key_exists('created_date', $data))
+        // \Symfony\Component\VarDumper\VarDumper::dump($data);
+        if ($data && array_key_exists('data', $data))
         {
-            // \Symfony\Component\VarDumper\VarDumper::dump($data);
-            $result = $this->updateCreationDate($linkSite, $data['data']['created_date']);
+            $innerData = $data['data'];
+            if (is_array($data['data']) && array_key_exists('created_date', $innerData))
+            {
+                $result = $this->updateCreationDate($linkSite, $data['data']['created_date']);
+            }
         }
         return $result;
     }
@@ -64,7 +68,7 @@ class CheckDomainAge extends Command
     {
         $domain = $linkSite->domain;
         $result = false;
-        $data = $this->makeAPICallMethod2($domain);   
+        $data = $this->makeAPICallMethod2($domain);
         // \Symfony\Component\VarDumper\VarDumper::dump($data);
         if ($data)
         {
@@ -76,7 +80,7 @@ class CheckDomainAge extends Command
             else if (array_key_exists('Creation Date', $whois))
             {
                 $createdEntry = $createdEntry = $whois['Creation Date'];
-                if (is_array($createdEntry)) 
+                if (is_array($createdEntry))
                 {
                     $createdEntry = $createdEntry[0];
                 }
@@ -86,7 +90,7 @@ class CheckDomainAge extends Command
             {
                 $whoisKeys = array_keys($whois);
                 // \Symfony\Component\VarDumper\VarDumper::dump($whoisKeys);
-                $createdEntry = $whoisKeys[6]; 
+                $createdEntry = $whoisKeys[6];
                 $createdDate = substr($createdEntry, 18, 10);   // format: "Record created on 2006-03-25 16"    
             }
             // \Symfony\Component\VarDumper\VarDumper::dump($createdDate);
@@ -163,6 +167,8 @@ class CheckDomainAge extends Command
 
             $body = $response->getBody();
             $data = json_decode($body, true);
+            // \Symfony\Component\VarDumper\VarDumper::dump($data);
+            // exit;
             return $data;
         }
         catch (\GuzzleHttp\Exception\ClientException $e)
