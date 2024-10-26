@@ -50,7 +50,7 @@ class CheckMetrics extends Command
         for ($startPrice = 5; $startPrice < $bandMaxPrice;)
         {
             $low3rdThisRun = min(floor($startPrice * 1.5), $max3rdLowPrice);
-            $this->checkSites(4, $startPrice, $low3rdThisRun, $minSEMRushAS);
+            $this->checkSites(3, $startPrice, $low3rdThisRun, $minSEMRushAS);
             if ($this->numApiCalls >= $this->maxApiCalls) break;
 
             $startPrice += $jump;
@@ -60,7 +60,7 @@ class CheckMetrics extends Command
         // then check at the max price point for this band but with higher averages
         for ($thirdLowestPrice = $bandMaxPrice + $priceIncrement; $thirdLowestPrice <= $max3rdLowPrice; $thirdLowestPrice += $priceIncrement)
         {
-            $this->checkSites(4, $bandMaxPrice, $thirdLowestPrice, $minSEMRushAS);
+            $this->checkSites(3, $bandMaxPrice, $thirdLowestPrice, $minSEMRushAS);
             if ($this->numApiCalls >= $this->maxApiCalls) break;
         }
     }

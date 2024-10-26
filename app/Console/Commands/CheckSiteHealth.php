@@ -252,6 +252,17 @@ class CheckSiteHealth extends Command
                 $this->info("API quota reached");
                 exit;
             }
+            else if (strpos($errorMessage, "502 Bad Gateway"))
+            {
+                echo "API Unreachable, waiting a few seconds ";
+                for ($i = 0; $i < 10; ++$i)
+                {
+                    echo '.';
+                    sleep(1);
+                }
+                return false;
+            }
+            
             echo $errorMessage;
             exit;
 

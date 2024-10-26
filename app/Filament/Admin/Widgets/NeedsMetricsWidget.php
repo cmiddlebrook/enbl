@@ -15,19 +15,18 @@ class NeedsMetricsWidget extends BaseWidget
         return [
             Stat::make('Needs SR AS', LinkSite::whereNull('semrush_AS')
                 ->where('is_withdrawn', 0)->count()),
-            Stat::make('Needs IP', LinkSite::whereNull('ip_address')
-                ->where('is_withdrawn', 0)
-                ->has('sellers', '>=', 3)->count()),
-            Stat::make('Needs Domain Age', LinkSite::whereNull('domain_creation_date')
+            Stat::make('Needs DR', LinkSite::whereNull('ahrefs_domain_rank')
                 ->where('is_withdrawn', 0)
                 ->has('sellers', '>=', 3)->count()),
             Stat::make('Needs Majestic', LinkSite::whereNull('majestic_trust_flow')
                 ->where('is_withdrawn', 0)
                 ->has('sellers', '>=', 3)->count()),
-            Stat::make('Needs DR', LinkSite::whereNull('ahrefs_domain_rank')
+            Stat::make('Needs Domain Age', LinkSite::whereNull('domain_creation_date')
                 ->where('is_withdrawn', 0)
                 ->has('sellers', '>=', 3)->count()),
-
+            Stat::make('Needs IP', LinkSite::whereNull('ip_address')
+                ->where('is_withdrawn', 0)
+                ->has('sellers', '>=', 3)->count()),
         ];
     }
 }
