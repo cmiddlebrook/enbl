@@ -20,7 +20,7 @@ use App\Helpers\NumberFormatter;
 class SellerResource extends Resource
 {
     protected static ?string $model = Seller::class;
-    protected static ?string $navigationGroup = 'Links';
+    protected static ?string $navigationGroup = 'Resources';
     protected static ?string $navigationIcon = 'fas-user-secret';
     protected static ?int $navigationSort = 1;
 

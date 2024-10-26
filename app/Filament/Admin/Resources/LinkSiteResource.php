@@ -26,7 +26,7 @@ use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 class LinkSiteResource extends Resource
 {
     protected static ?string $model = LinkSite::class;
-    protected static ?string $navigationGroup = 'Links';
+    protected static ?string $navigationGroup = 'Resources';
     protected static ?string $navigationIcon = 'fas-link';
     protected static ?int $navigationSort = 0;
 

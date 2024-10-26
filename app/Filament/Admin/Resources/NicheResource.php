@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class NicheResource extends Resource
 {
     protected static ?string $model = Niche::class;
-    protected static ?string $navigationGroup = 'Links';
+    protected static ?string $navigationGroup = 'Resources';
     protected static ?string $navigationIcon = 'heroicon-c-tag';
     protected static ?int $navigationSort = 2;
 
