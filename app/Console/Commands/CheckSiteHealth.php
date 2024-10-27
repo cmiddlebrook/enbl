@@ -31,7 +31,7 @@ class CheckSiteHealth extends Command
 
     public function handle()
     {
-         $this->displayManualChecks();
+        $this->displayManualChecks();
         $this->checkDownSites();
         $this->checkMarkedSites();
         $this->makeNewChecks();
@@ -47,10 +47,15 @@ class CheckSiteHealth extends Command
             ->havingRaw('MIN(link_site_health.check_date) < NOW() - INTERVAL 60 HOUR')
             ->orderByDesc('check_count')
             ->get();
+        
+        echo $results->count() . " need checking manually\n";
+        $maxChecks = (int) $this->ask('How many manual checks do you want to do?');
 
-        // Output the results to the console
+        $checksDone = 0;
         foreach ($results as $result)
         {
+            if ($checksDone >= $maxChecks) return;
+
             $siteId = $result->link_site_id;
             $domain = $result->domain;
             $this->info(sprintf("%-7s %-30s %-5s %-20s", $siteId, $domain, $result->check_count, $result->earliest_check));
@@ -64,6 +69,8 @@ class CheckSiteHealth extends Command
             {
                 $this->deleteHealthChecks($siteId);
             }
+
+            ++$checksDone;            
         }
 
         // \Symfony\Component\VarDumper\VarDumper::dump($results);
@@ -252,7 +259,7 @@ class CheckSiteHealth extends Command
                 $this->info("API quota reached");
                 exit;
             }
-            else if (strpos($errorMessage, "502 Bad Gateway"))
+            else if (strpos($errorMessage, "The API is unreachable"))
             {
                 echo "API Unreachable, waiting a few seconds ";
                 for ($i = 0; $i < 10; ++$i)

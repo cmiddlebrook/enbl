@@ -49,6 +49,7 @@ class CheckNewDomains extends Command
             'roulette',
             'bingo',
             'slots',
+            'blackjack',
             'gambling',
             'gamble',
             'betting',
@@ -63,6 +64,7 @@ class CheckNewDomains extends Command
             'vuitton',
             'burberry',
             'rayban',
+            'gucci',
         );
     }
 
