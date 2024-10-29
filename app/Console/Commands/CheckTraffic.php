@@ -125,7 +125,7 @@ class CheckTraffic extends Command
     {
         $sites = LinkSite::whereNull('semrush_traffic')
             ->where('is_withdrawn', 0)
-            ->where('semrush_AS', '>=', 5)
+            ->where('semrush_AS', '>=', 6)
             ->orderBy('semrush_AS', 'desc')
             ->orderBy('majestic_trust_flow', 'desc')
             // ->limit(5)

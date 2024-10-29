@@ -31,7 +31,8 @@ class CheckSiteHealth extends Command
 
     public function handle()
     {
-        $this->displayManualChecks();
+        // $this->displayManualChecks();
+        $this->withdrawDeadSites();
         $this->checkDownSites();
         $this->checkMarkedSites();
         $this->makeNewChecks();
@@ -47,7 +48,7 @@ class CheckSiteHealth extends Command
             ->havingRaw('MIN(link_site_health.check_date) < NOW() - INTERVAL 60 HOUR')
             ->orderByDesc('check_count')
             ->get();
-        
+
         echo $results->count() . " need checking manually\n";
         $maxChecks = (int) $this->ask('How many manual checks do you want to do?');
 
@@ -70,10 +71,32 @@ class CheckSiteHealth extends Command
                 $this->deleteHealthChecks($siteId);
             }
 
-            ++$checksDone;            
+            ++$checksDone;
         }
 
         // \Symfony\Component\VarDumper\VarDumper::dump($results);
+    }
+
+    private function withdrawDeadSites()
+    {
+        // this query brings back all sites that have had at least 20 separate health checks
+        // and have been recorded as down for at least 60 hours
+        $sites = LinkSiteHealth::select('link_site_health.link_site_id', 'link_sites.domain')
+            ->join('link_sites', 'link_site_health.link_site_id', '=', 'link_sites.id')
+            ->selectRaw('COUNT(link_site_health.id) as check_count, MIN(link_site_health.check_date) as earliest_check')
+            ->groupBy('link_site_health.link_site_id', 'link_sites.domain')
+            ->havingRaw('COUNT(link_site_health.id) >= 20')
+            ->havingRaw('MIN(link_site_health.check_date) < NOW() - INTERVAL 60 HOUR')
+            ->orderByDesc('check_count')
+            ->get();
+
+        foreach ($sites as $linkSite)
+        {
+            $siteId = $linkSite->link_site_id;
+            $domain = $linkSite->domain;
+            $this->markSiteDead($siteId);
+            echo "{$domain} has been marked as dead\n";
+        }
     }
 
     private function checkDownSites()
@@ -269,7 +292,7 @@ class CheckSiteHealth extends Command
                 }
                 return false;
             }
-            
+
             echo $errorMessage;
             exit;
 
