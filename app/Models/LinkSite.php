@@ -71,32 +71,6 @@ class LinkSite extends Model
         return $this->hasMany(LinkSiteHealth::class);
     }
 
-    public function scopeWithLowestPrice(Builder $query): Builder
-    {
-        return $query->leftJoinSub(
-            DB::table('seller_sites')
-                ->selectRaw('link_site_id, MIN(price_guest_post) as lowest_price')
-                ->groupBy('link_site_id'),
-            'lowest_prices',
-            'link_sites.id',
-            'lowest_prices.link_site_id'
-        )->addSelect('link_sites.*', 'lowest_prices.lowest_price');
-    }
-
-    public function scopeWithThirdLowestPrice(Builder $query): Builder
-    {
-        return $query->leftJoinSub(
-            DB::table('seller_sites')
-                ->selectRaw('link_site_id, price_guest_post, ROW_NUMBER() OVER (PARTITION BY link_site_id ORDER BY price_guest_post ASC) as row_num'),
-            'ranked_prices',
-            function ($join)
-            {
-                $join->on('link_sites.id', '=', 'ranked_prices.link_site_id')
-                    ->where('ranked_prices.row_num', '=', 3); // Only get the 3rd lowest price
-            }
-        )->addSelect('link_sites.*', 'ranked_prices.price_guest_post as third_lowest_price');
-    }
-
     public function niches()
     {
         return $this->belongsToMany(Niche::class, 'link_site_niches');

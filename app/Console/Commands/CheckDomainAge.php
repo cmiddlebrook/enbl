@@ -34,15 +34,23 @@ class CheckDomainAge extends Command
         echo $sites->count() . " sites to be checked\n";
         foreach ($sites as $linkSite)
         {
-            $this->info("Checking age of {$linkSite->domain}");
-
-            if (!$this->tryMethod1API($linkSite))
+            try
             {
-                echo ("API 1 method failed, trying API 2 method\n");
-                if (!$this->tryMethod2API($linkSite))
+                $this->info("Checking age of {$linkSite->domain}");
+
+                if (!$this->tryMethod1API($linkSite))
                 {
-                    $this->markForHealthCheck($linkSite);
+                    echo ("API 1 method failed, trying API 2 method\n");
+                    if (!$this->tryMethod2API($linkSite))
+                    {
+                        $this->markForHealthCheck($linkSite);
+                    }
                 }
+            }
+            catch (Exception $e)
+            {
+                $this->markForHealthCheck($linkSite);
+                echo "Exception encountered:\n" . $e->getMessage();
             }
         }
     }
@@ -142,6 +150,7 @@ class CheckDomainAge extends Command
         $sites = LinkSite::where('is_withdrawn', 0)
             ->whereNull('domain_creation_date')
             ->where('domain', 'not like', '%.au') // skip Australian domains, these are not publically available
+            // ->where('domain', 'thekochfamilyblog.com') // test individual domain
             ->orderBy('semrush_organic_kw', 'desc')
             ->orderBy('majestic_trust_flow', 'desc')
             ->orderBy('semrush_AS', 'desc')

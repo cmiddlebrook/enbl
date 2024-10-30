@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\LinkSiteResource\Pages;
 use App\Filament\Admin\Resources\LinkSiteResource\RelationManagers;
 use App\Models\LinkSite;
+use App\Models\LinkSiteWithPrices;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -161,7 +162,7 @@ class LinkSiteResource extends Resource
                 TextColumn::make('domain')->sortable()->searchable(),
                 TextColumn::make('sellers_count')->counts('sellers')->Label('Sellers')->sortable(),
                 TextColumn::make('lowest_price')->Label('Low $')->sortable(),
-                TextColumn::make('third_lowest_price')->Label('3rd $')->sortable()
+                TextColumn::make('fourth_lowest_price')->Label('4th $')->sortable()
                     ->numeric()
                     ->formatStateUsing(function ($state)
                     {
@@ -243,8 +244,7 @@ class LinkSiteResource extends Resource
                     function ($query)
                     {
                         return $query
-                            ->where('is_withdrawn', 0)
-                            ;
+                            ->where('is_withdrawn', 0);
                     }
                 ),
 
@@ -255,36 +255,19 @@ class LinkSiteResource extends Resource
                             ->where('is_withdrawn', 1)
                             ->where('withdrawn_reason', 'checktraffic')
                             ->has('sellers', '>=', 5)
-                            ;
-                    }
-                ),
-
-
-                Tables\Filters\Filter::make('Manual')->query(
-                    function ($query)
-                    {
-                        return $query
-                            ->where('is_withdrawn', 0)
-                            ->has('sellers', '>=', 4)
-                            ->has('niches', 0)
-                            ->where('avg_low_price', '<=', 20) 
-                            ->where('lowest_price', '<=', 15) 
-                            ->where('moz_da', '>=', 30)
-                            ->where('moz_pa', '>=', 25)
-                            ->where('semrush_AS', '>=', 20)
-                            ->where('majestic_trust_flow', '>=', 10)
                         ;
                     }
                 ),
-                
+
+
                 Tables\Filters\Filter::make('$50')->query(
                     function ($query)
                     {
                         return $query
                             ->where('is_withdrawn', 0)
                             ->has('sellers', '>=', 4)
-                            ->where('lowest_price', '<=', 15) 
-                            ->where('avg_low_price', '<=', 20) 
+                            ->where('lowest_price', '<=', 15)
+                            ->where('fourth_lowest_price', '<=', 20)
                             ->where('moz_da', '>=', 25)
                             ->where('moz_pa', '>=', 20)
                             ->where('semrush_AS', '>=', 15)
@@ -301,7 +284,7 @@ class LinkSiteResource extends Resource
                             ->where('is_withdrawn', 0)
                             ->has('sellers', '>=', 4)
                             ->where('lowest_price', '<=', 30)
-                            ->where('avg_low_price', '<=', 40)
+                            ->where('fourth_lowest_price', '<=', 40)
                             ->where('moz_da', '>=', 35)
                             ->where('moz_pa', '>=', 30)
                             ->where('semrush_AS', '>=', 20)
@@ -311,41 +294,18 @@ class LinkSiteResource extends Resource
                     }
                 ),
 
-                Tables\Filters\Filter::make('$175')->query(
+                Tables\Filters\Filter::make('Wide')->query(
                     function ($query)
                     {
                         return $query
                             ->where('is_withdrawn', 0)
                             ->has('sellers', '>=', 4)
-                            ->where('lowest_price', '<=', 55)
-                            ->where('avg_low_price', '<=', 70)
-                            ->where('moz_da', '>=', 45)
-                            ->where('moz_pa', '>=', 40)
-                            ->where('semrush_AS', '>=', 25)
-                            ->where('semrush_traffic', '>=', 2500)
-                            // ->where('semrush_organic_kw', '>=', 2500)
-                            ->where('majestic_trust_flow', '>=', 20)
+                            ->where('lowest_price', '>=', 20)
+                            ->where('price_difference_percentage', '>=', 2)
                         ;
                     }
                 ),
 
-                Tables\Filters\Filter::make('$275')->query(
-                    function ($query)
-                    {
-                        return $query
-                            ->where('is_withdrawn', 0)
-                            ->has('sellers', '>=', 4)
-                            ->where('lowest_price', '<=', 90)
-                            ->where('avg_low_price', '<=', 110)
-                            ->where('moz_da', '>=', 55)
-                            ->where('moz_pa', '>=', 55)
-                            ->where('semrush_AS', '>=', 30)
-                            ->where('semrush_traffic', '>=', 10000)
-                            ->where('semrush_organic_kw', '>=', 5000)
-                            ->where('majestic_trust_flow', '>=', 25)
-                        ;
-                    }
-                ),
 
                 Tables\Filters\Filter::make('Expensive')->query(
                     function ($query)
@@ -380,10 +340,13 @@ class LinkSiteResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-        ->withLowestPrice()    
-        ->withThirdLowestPrice()
-            ;
+            ->join('link_site_with_prices', 'link_sites.id', '=', 'link_site_with_prices.link_site_id') // Join the view
+            ->select('link_sites.*', 
+                'link_site_with_prices.lowest_price', 
+                'link_site_with_prices.fourth_lowest_price',
+                'link_site_with_prices.price_difference_percentage'); 
     }
+
 
     public static function getRelations(): array
     {

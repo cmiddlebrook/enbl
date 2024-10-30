@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 require 'vendor/autoload.php';
 
 use App\Models\LinkSite;
+use App\Models\LinkSiteWithPrices;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -39,18 +40,18 @@ class CheckMetrics extends Command
         echo "{$this->numApiCalls} API calls made\n";
     }
 
-    private function checkPricingBand($bandMaxPrice, $max3rdLowPrice, $priceIncrement, $minSEMRushAS)
+    private function checkPricingBand($bandMaxPrice, $max4thLowPrice, $priceIncrement, $minSEMRushAS)
     {
         if ($this->numApiCalls >= $this->maxApiCalls) return;
 
-        echo "Checking Pricing Band with max \${$bandMaxPrice} and max 3rd lowest price \${$max3rdLowPrice}\n";
+        echo "Checking Pricing Band with max \${$bandMaxPrice} and max 4th lowest price \${$max4thLowPrice}\n";
 
         // first do some broad checks at lower price points
         $jump = floor($bandMaxPrice / 3);
         for ($startPrice = 5; $startPrice < $bandMaxPrice;)
         {
-            $low3rdThisRun = min(floor($startPrice * 1.5), $max3rdLowPrice);
-            $this->checkSites(3, $startPrice, $low3rdThisRun, $minSEMRushAS);
+            $low3rdThisRun = min(floor($startPrice * 1.5), $max4thLowPrice);
+            $this->checkSites(4, $startPrice, $low3rdThisRun, $minSEMRushAS);
             if ($this->numApiCalls >= $this->maxApiCalls) break;
 
             $startPrice += $jump;
@@ -58,18 +59,18 @@ class CheckMetrics extends Command
         }
 
         // then check at the max price point for this band but with higher averages
-        for ($thirdLowestPrice = $bandMaxPrice + $priceIncrement; $thirdLowestPrice <= $max3rdLowPrice; $thirdLowestPrice += $priceIncrement)
+        for ($thirdLowestPrice = $bandMaxPrice + $priceIncrement; $thirdLowestPrice <= $max4thLowPrice; $thirdLowestPrice += $priceIncrement)
         {
-            $this->checkSites(3, $bandMaxPrice, $thirdLowestPrice, $minSEMRushAS);
+            $this->checkSites(4, $bandMaxPrice, $thirdLowestPrice, $minSEMRushAS);
             if ($this->numApiCalls >= $this->maxApiCalls) break;
         }
     }
 
-    private function checkSites($numSellers, $lowestPrice, $max3rdLowPrice, $minSRAS)
+    private function checkSites($numSellers, $lowestPrice, $max4thLowPrice, $minSRAS)
     {
-        $sites = $this->getSitesToCheck($numSellers, $lowestPrice, $max3rdLowPrice, $minSRAS);
+        $sites = $this->getSitesToCheck($numSellers, $lowestPrice, $max4thLowPrice, $minSRAS);
         $numSites = $sites->count();
-        echo "Checking {$numSites} with {$numSellers} sellers, lowest price: {$lowestPrice}, 3rd lowest: {$max3rdLowPrice}\n";
+        echo "Checking {$numSites} with {$numSellers} sellers, lowest price: {$lowestPrice}, 4th lowest: {$max4thLowPrice}\n";
 
         foreach ($sites as $linkSite)
         {
@@ -106,27 +107,41 @@ class CheckMetrics extends Command
         }
     }
 
-    private function getSitesToCheck($numSellers, $lowestPrice, $max3rdLowPrice, $minSRAS)
+    private function getSitesToCheck($numSellers, $lowestPrice, $max4thLowPrice, $minSRAS)
     {
-        $sites = LinkSite::withLowestPrice()->withThirdLowestPrice()
-            // ->where(function ($query)
-            // {
-            //     $query->where('last_checked_mozmaj', '<', Carbon::now()->subMonth())
-            //         ->orWhereNull('last_checked_mozmaj');
-            // })
-            ->where('is_withdrawn', 0)
-            ->whereNull('last_checked_mozmaj') // remove this once we have filled in the gaps
-            ->whereNotNull('semrush_traffic')
+        // $sites = LinkSite::where('is_withdrawn', 0)
+        //     // ->where(function ($query)
+        //     // {
+        //     //     $query->where('last_checked_mozmaj', '<', Carbon::now()->subMonth())
+        //     //         ->orWhereNull('last_checked_mozmaj');
+        //     // })
+        //     ->whereNull('last_checked_mozmaj') // remove this once we have filled in the gaps
+        //     ->whereNotNull('semrush_traffic')
+        //     ->has('sellers', '>=', $numSellers)
+        //     ->where('lowest_price', '<=', $lowestPrice)
+        //     ->having('fourth_lowest_price', '<=', $max4thLowPrice)
+        //     ->where('semrush_AS', '>=', $minSRAS)
+        //     // ->orderBy('last_checked_mozmaj', 'asc')
+        //     ->orderBy('semrush_organic_kw', 'desc')
+        //     ->orderBy('majestic_trust_flow', 'desc')
+        //     ->orderBy('semrush_AS', 'desc')
+        //     // ->limit(100)
+        //     ->get();
+
+
+        $sites = LinkSite::select('link_sites.*', 'link_site_with_prices.lowest_price', 'link_site_with_prices.fourth_lowest_price', 'link_site_with_prices.price_difference_percentage')
+            ->join('link_site_with_prices', 'link_sites.id', '=', 'link_site_with_prices.link_site_id')
+            ->where('link_sites.is_withdrawn', 0)
+            ->whereNull('link_sites.last_checked_mozmaj')
+            ->whereNotNull('link_sites.semrush_traffic')
             ->has('sellers', '>=', $numSellers)
-            ->where('lowest_price', '<=', $lowestPrice)
-            ->having('third_lowest_price', '<=', $max3rdLowPrice)
-            ->where('semrush_AS', '>=', $minSRAS)
-            // ->orderBy('last_checked_mozmaj', 'asc')
-            ->orderBy('semrush_organic_kw', 'desc')
-            ->orderBy('majestic_trust_flow', 'desc')
-            ->orderBy('semrush_AS', 'desc')
-            // ->limit(100)
+            ->where('link_site_with_prices.lowest_price', '<=', $lowestPrice)
+            ->having('link_site_with_prices.fourth_lowest_price', '<=', $max4thLowPrice)
+            ->where('link_sites.semrush_AS', '>=', $minSRAS)
+            ->orderByDesc('link_sites.semrush_organic_kw', 'link_sites.majestic_trust_flow', 'link_sites.semrush_AS')
             ->get();
+
+
 
         return $sites;
     }
