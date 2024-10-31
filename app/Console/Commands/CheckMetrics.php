@@ -129,19 +129,19 @@ class CheckMetrics extends Command
         //     ->get();
 
 
-        $sites = LinkSite::select('link_sites.*', 'link_site_with_prices.lowest_price', 'link_site_with_prices.fourth_lowest_price', 'link_site_with_prices.price_difference_percentage')
-            ->join('link_site_with_prices', 'link_sites.id', '=', 'link_site_with_prices.link_site_id')
-            ->where('link_sites.is_withdrawn', 0)
-            ->whereNull('link_sites.last_checked_mozmaj')
-            ->whereNotNull('link_sites.semrush_traffic')
-            ->has('sellers', '>=', $numSellers)
-            ->where('link_site_with_prices.lowest_price', '<=', $lowestPrice)
-            ->having('link_site_with_prices.fourth_lowest_price', '<=', $max4thLowPrice)
-            ->where('link_sites.semrush_AS', '>=', $minSRAS)
-            ->orderByDesc('link_sites.semrush_organic_kw', 'link_sites.majestic_trust_flow', 'link_sites.semrush_AS')
-            ->get();
-
-
+        $sites = LinkSite::select('link_sites.*', 'p.lowest_price', 'p.fourth_lowest_price', 'p.price_difference_percentage')
+        ->join('link_site_with_prices as p', 'link_sites.id', '=', 'p.link_site_id')
+        ->where('link_sites.is_withdrawn', 0)
+        ->whereNull('link_sites.last_checked_mozmaj')
+        ->whereNotNull('link_sites.semrush_traffic')
+        ->has('sellers', '>=', $numSellers)
+        ->where('p.lowest_price', '<=', $lowestPrice)
+        ->having('p.fourth_lowest_price', '<=', $max4thLowPrice)
+        ->where('link_sites.semrush_AS', '>=', $minSRAS)
+        ->orderByDesc('link_sites.semrush_organic_kw')
+        ->orderByDesc('link_sites.majestic_trust_flow')
+        ->orderByDesc('link_sites.semrush_AS')
+        ->get();
 
         return $sites;
     }
