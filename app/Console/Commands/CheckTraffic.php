@@ -136,17 +136,17 @@ class CheckTraffic extends Command
 
     private function getSitesToUpdate()
     {
-        $sites = LinkSite::withLowestPrice()->withThirdLowestPrice()
+        $sites = LinkSite::where('is_withdrawn', 0)
             ->where(function ($query)
             {
-                $query->where('last_checked_traffic', '<', Carbon::now()->subDays(15))
+                $query->where('last_checked_traffic', '<', Carbon::now()->subDays(20))
                     ->orWhereNull('last_checked_traffic');
             })
-            ->where(function ($query)
-            {
-                $query->where('is_withdrawn', 0)
-                    ->orWhereNotIn('withdrawn_reason', ['language', 'subdomain', 'deadsite', 'checkhealth', 'checktraffic']);
-            })
+            // ->where(function ($query)
+            // {
+            //     $query->where('is_withdrawn', 0)
+            //         ->orWhereNotIn('withdrawn_reason', ['language', 'subdomain', 'deadsite', 'checkhealth', 'checktraffic']);
+            // })
             ->where('semrush_AS', '>=', 5)
             ->orderBy('last_checked_traffic', 'asc')
             ->orderBy('semrush_AS', 'desc')
