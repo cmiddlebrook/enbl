@@ -70,7 +70,7 @@ class CheckMetrics extends Command
     {
         $sites = $this->getSitesToCheck($numSellers, $lowestPrice, $max4thLowPrice, $minSRAS);
         $numSites = $sites->count();
-        echo "Checking {$numSites} with {$numSellers} sellers, lowest price: {$lowestPrice}, 4th lowest: {$max4thLowPrice}\n";
+        echo "Checking {$numSites} with {$numSellers} sellers, max low price: {$lowestPrice}, max 4th lowest: {$max4thLowPrice}\n";
 
         foreach ($sites as $linkSite)
         {
@@ -109,38 +109,19 @@ class CheckMetrics extends Command
 
     private function getSitesToCheck($numSellers, $lowestPrice, $max4thLowPrice, $minSRAS)
     {
-        // $sites = LinkSite::where('is_withdrawn', 0)
-        //     // ->where(function ($query)
-        //     // {
-        //     //     $query->where('last_checked_mozmaj', '<', Carbon::now()->subMonth())
-        //     //         ->orWhereNull('last_checked_mozmaj');
-        //     // })
-        //     ->whereNull('last_checked_mozmaj') // remove this once we have filled in the gaps
-        //     ->whereNotNull('semrush_traffic')
-        //     ->has('sellers', '>=', $numSellers)
-        //     ->where('lowest_price', '<=', $lowestPrice)
-        //     ->having('fourth_lowest_price', '<=', $max4thLowPrice)
-        //     ->where('semrush_AS', '>=', $minSRAS)
-        //     // ->orderBy('last_checked_mozmaj', 'asc')
-        //     ->orderBy('semrush_organic_kw', 'desc')
-        //     ->orderBy('majestic_trust_flow', 'desc')
-        //     ->orderBy('semrush_AS', 'desc')
-        //     // ->limit(100)
-        //     ->get();
-
-
         $sites = LinkSite::select('link_sites.*', 'p.lowest_price', 'p.fourth_lowest_price', 'p.price_difference_percentage')
         ->join('link_site_with_prices as p', 'link_sites.id', '=', 'p.link_site_id')
         ->where('link_sites.is_withdrawn', 0)
-        ->whereNull('link_sites.last_checked_mozmaj')
+        // ->whereNull('link_sites.last_checked_mozmaj')
+        ->where('link_sites.last_checked_mozmaj', '>=', Carbon::now()->subDays(90))
         ->whereNotNull('link_sites.semrush_traffic')
         ->has('sellers', '>=', $numSellers)
         ->where('p.lowest_price', '<=', $lowestPrice)
-        ->having('p.fourth_lowest_price', '<=', $max4thLowPrice)
+        ->where('p.fourth_lowest_price', '<=', $max4thLowPrice)
         ->where('link_sites.semrush_AS', '>=', $minSRAS)
         ->orderByDesc('link_sites.semrush_organic_kw')
-        ->orderByDesc('link_sites.majestic_trust_flow')
         ->orderByDesc('link_sites.semrush_AS')
+        ->orderByDesc('p.fourth_lowest_price')
         ->get();
 
         return $sites;

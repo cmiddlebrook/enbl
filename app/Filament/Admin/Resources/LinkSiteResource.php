@@ -259,6 +259,19 @@ class LinkSiteResource extends Resource
                     }
                 ),
 
+                Tables\Filters\Filter::make('Fast Rankers')->query(
+                    function ($query)
+                    {
+                        return $query
+                            ->where('is_withdrawn', 0)
+                            ->where('domain_creation_date', '>', Carbon::now()->subMonth(6))
+                            ->where('semrush_AS', '>=', 20)
+                            ->where('semrush_traffic', '>=', 2000)
+                            ->where('semrush_organic_kw', '>=', 1000)
+                            ->where('majestic_trust_flow', '>=', 10)
+                        ;
+                    }
+                ),
 
                 Tables\Filters\Filter::make('$50')->query(
                     function ($query)
