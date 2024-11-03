@@ -11,11 +11,13 @@
         "php": "^8.1",
         "filament/filament": "^3.0-stable",
         "filament/notifications": "^3.1",
+        "google/apiclient": "^2.18",
         "guzzlehttp/guzzle": "^7.2",
         "jeremykendall/php-domain-parser": "^6.3",
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
+        "masbug/flysystem-google-drive-ext": "^2.4",
         "owenvoke/blade-fontawesome": "^2.6",
         "symfony/var-dumper": "^6.4"
     },

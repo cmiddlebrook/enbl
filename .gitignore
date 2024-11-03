@@ -5,7 +5,9 @@
 /public/storage
 /public/downloads/*.*
 /storage/*.key
+/storage/backups/
 /vendor
+/config/rheybrook-marketing-1fb09c3c23a5.json
 .env
 .env.backup
 .env.production
