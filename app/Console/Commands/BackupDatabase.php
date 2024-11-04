@@ -51,44 +51,14 @@ class BackupDatabase extends Command
                 'fields' => 'id'
             ]);
             
-            $result = $file->id;
+            $fileId = $file->id;
+            $this->info("Database backup completed successfully! {$fileId}");
 
-            // List files in the shared folder
-            // $query = "'$folderId' in parents";
-            // $response = $service->files->listFiles(array(
-            //     'q' => $query,
-            //     'fields' => 'files(id, name)',
-            // ));
-
-            // // Output found files to the console
-            // if (empty($response->files))
-            // {
-            //     $this->info("No files found in the folder with ID: $folderId.");
-            // }
-            // else
-            // {
-            //     foreach ($response->files as $file)
-            //     {
-            //         $this->info("Found file: {$file->name} ({$file->id})");
-            //     }
-            // }
         }
         catch (\Exception $e)
         {
             // Catch any exceptions and output to console
             $this->error("An error occurred: " . $e->getMessage());
-        }
-
-        $testFilePath = storage_path('app\\' . env('GOOGLE_DRIVE_FOLDER_ID') . '\\test.txt');
-        $result = Storage::disk('google')->put('test.txt', fopen($testFilePath, 'r'));
-        dd($result);
-
-        // Optional: Delete the local backup file
-        // unlink($backupPath);
-
-        $exitCode = Artisan::call('backup:run --only-db');
-        $output = Artisan::output();
-        $this->info($output);
-        // $this->info('Database backup completed successfully!');
+        }       
     }
 }

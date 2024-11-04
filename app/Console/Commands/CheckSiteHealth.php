@@ -20,6 +20,8 @@ class CheckSiteHealth extends Command
 
     protected $numApiCalls = 0;
     protected $maxApiCalls = 1000;
+    protected $numApiErrors = 0;
+    protected $maxApiErrors = 3;
 
     protected $client;
 
@@ -111,6 +113,8 @@ class CheckSiteHealth extends Command
 
             $domain = $linkSite->domain;
             $data = $this->checkSite($domain);
+
+            if (!$data) continue;
 
             $stillDown = ($data['status'] == 'Down');
             if ($stillDown)
@@ -289,28 +293,34 @@ class CheckSiteHealth extends Command
             if (is_null($data)) throw new Exception("Null data when checking {$domain}");
             return $data;
         }
-        catch (\GuzzleHttp\Exception\ClientException $e)
+        catch (\GuzzleHttp\Exception\RequestException $e)
         {
+            if ($this->numApiErrors >= $this->maxApiErrors)
+            {
+                echo "Too many API errors, exiting script\n";
+                exit;
+            }
+            ++$this->numApiErrors;
+
             $errorMessage = $e->getMessage();
             if (strpos($errorMessage, "429 Too Many Requests"))
             {
-                $this->info("API quota reached");
+                echo "API quota reached, exiting script\n";
                 exit;
             }
             else if (strpos($errorMessage, "The API is unreachable"))
             {
-                echo "API Unreachable, waiting a few seconds ";
+                $this->info("API Unreachable, waiting a few seconds ");
                 for ($i = 0; $i < 10; ++$i)
                 {
                     echo '.';
                     sleep(1);
                 }
+                echo "\n";
                 return false;
             }
 
             echo $errorMessage;
-            exit;
-
             return false;
         }
     }
