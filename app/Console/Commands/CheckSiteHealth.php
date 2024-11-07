@@ -234,31 +234,29 @@ class CheckSiteHealth extends Command
 
     private function getSitesToCheck($num = 500)
     {
-        // $sites = LinkSite::withLowestPrice()
+        // $sites = LinkSite::select('link_sites.*', 'p.lowest_price', 'p.fourth_lowest_price', 'p.price_difference_percentage')
+        //     ->join('link_site_with_prices as p', 'link_sites.id', '=', 'p.link_site_id')
         //     ->where(function ($query)
         //     {
-        //         $query->where('last_checked_health', '<', Carbon::now()->subMonth())
-        //             ->orWhereNull('last_checked_health');
+        //         $query->where('link_sites.last_checked_health', '<', Carbon::now()->subMonth())
+        //             ->orWhereNull('link_sites.last_checked_health');
         //     })
-        //     ->where('is_withdrawn', 0)
-        //     ->orderBy('last_checked_health', 'asc')
-        //     ->orderBy('majestic_trust_flow', 'desc')
-        //     ->orderBy('semrush_AS', 'desc')
+        //     ->where('link_sites.is_withdrawn', 0)
+        //     ->orderBy('link_sites.last_checked_health', 'asc')
+        //     ->orderBy('link_sites.majestic_trust_flow', 'desc')
+        //     ->orderBy('link_sites.semrush_AS', 'desc')
         //     ->limit($num)
         //     ->get();
 
-
-        $sites = LinkSite::select('link_sites.*', 'p.lowest_price', 'p.fourth_lowest_price', 'p.price_difference_percentage')
-            ->join('link_site_with_prices as p', 'link_sites.id', '=', 'p.link_site_id')
-            ->where(function ($query)
-            {
-                $query->where('link_sites.last_checked_health', '<', Carbon::now()->subMonth())
-                    ->orWhereNull('link_sites.last_checked_health');
-            })
-            ->where('link_sites.is_withdrawn', 0)
-            ->orderBy('link_sites.last_checked_health', 'asc')
-            ->orderBy('link_sites.majestic_trust_flow', 'desc')
-            ->orderBy('link_sites.semrush_AS', 'desc')
+        $sites = LinkSite::where(function ($query)
+        {
+            $query->where('last_checked_health', '<', Carbon::now()->subMonth())
+                ->orWhereNull('last_checked_health');
+        })
+            ->where('is_withdrawn', 0)
+            ->orderBy('last_checked_health', 'asc')
+            ->orderBy('majestic_trust_flow', 'desc')
+            ->orderBy('semrush_AS', 'desc')
             ->limit($num)
             ->get();
 

@@ -30,47 +30,22 @@ class CheckMetrics extends Command
     public function handle()
     {
         $this->info('Starting to check domain metrics...');
-
-        $this->checkPricingBand(15, 20, 1, 10); // $50 band
-        $this->checkPricingBand(30, 40, 2, 15); // $100 band
-        $this->checkPricingBand(55, 70, 3, 20); // $175 band
-        $this->checkPricingBand(90, 110, 4, 25); // $275 band
-        $this->checkPricingBand(200, 500, 50, 5); // more checks
-
+        $this->checkSites(4, 25, 10);
+        $this->checkSites(4, 25, 2);
+        $this->checkSites(4, 100, 10);
+        $this->checkSites(4, 500, 2);
+        $this->checkSites(3, 500, 2);
+        $this->checkSites(2, 500, 2);
+        $this->checkSites(1, 500, 2);
         echo "{$this->numApiCalls} API calls made\n";
     }
 
-    private function checkPricingBand($bandMaxPrice, $max4thLowPrice, $priceIncrement, $minSEMRushAS)
+
+    private function checkSites($numSellers, $max4thLowPrice, $minSRAS)
     {
-        if ($this->numApiCalls >= $this->maxApiCalls) return;
-
-        echo "Checking Pricing Band with max \${$bandMaxPrice} and max 4th lowest price \${$max4thLowPrice}\n";
-
-        // first do some broad checks at lower price points
-        $jump = floor($bandMaxPrice / 3);
-        for ($startPrice = 5; $startPrice < $bandMaxPrice;)
-        {
-            $low3rdThisRun = min(floor($startPrice * 1.5), $max4thLowPrice);
-            $this->checkSites(4, $startPrice, $low3rdThisRun, $minSEMRushAS);
-            if ($this->numApiCalls >= $this->maxApiCalls) break;
-
-            $startPrice += $jump;
-            $startPrice = min($startPrice, $bandMaxPrice);
-        }
-
-        // then check at the max price point for this band but with higher averages
-        for ($thirdLowestPrice = $bandMaxPrice + $priceIncrement; $thirdLowestPrice <= $max4thLowPrice; $thirdLowestPrice += $priceIncrement)
-        {
-            $this->checkSites(4, $bandMaxPrice, $thirdLowestPrice, $minSEMRushAS);
-            if ($this->numApiCalls >= $this->maxApiCalls) break;
-        }
-    }
-
-    private function checkSites($numSellers, $lowestPrice, $max4thLowPrice, $minSRAS)
-    {
-        $sites = $this->getSitesToCheck($numSellers, $lowestPrice, $max4thLowPrice, $minSRAS);
+        $sites = $this->getSitesToCheck($numSellers, $max4thLowPrice, $minSRAS);
         $numSites = $sites->count();
-        echo "Checking {$numSites} with {$numSellers} sellers, max low price: {$lowestPrice}, max 4th lowest: {$max4thLowPrice}\n";
+        echo "Checking {$numSites} with {$numSellers} sellers, max 4th lowest: {$max4thLowPrice}\n";
 
         foreach ($sites as $linkSite)
         {
@@ -81,6 +56,8 @@ class CheckMetrics extends Command
             // \Symfony\Component\VarDumper\VarDumper::dump($data);
             if (!$data) continue;
 
+            if ($this->numApiCalls >= $this->maxApiCalls) return; 
+            
             $linkSite->moz_da = $data['mozDA'] ?? null;
             $linkSite->moz_pa = $data['mozPA'] ?? null;
             $linkSite->moz_rank = $data['mozRank'] ?? null;
@@ -102,27 +79,28 @@ class CheckMetrics extends Command
 
             echo "{$domain} updated!\n";
             $linkSite->save();
-
-            if ($this->numApiCalls >= $this->maxApiCalls) break;
         }
     }
 
-    private function getSitesToCheck($numSellers, $lowestPrice, $max4thLowPrice, $minSRAS)
+    private function getSitesToCheck($numSellers, $max4thLowPrice, $minSRAS)
     {
         $sites = LinkSite::select('link_sites.*', 'p.lowest_price', 'p.fourth_lowest_price', 'p.price_difference_percentage')
-        ->join('link_site_with_prices as p', 'link_sites.id', '=', 'p.link_site_id')
-        ->where('link_sites.is_withdrawn', 0)
-        // ->whereNull('link_sites.last_checked_mozmaj')
-        ->where('link_sites.last_checked_mozmaj', '>=', Carbon::now()->subDays(90))
-        ->whereNotNull('link_sites.semrush_traffic')
-        ->has('sellers', '>=', $numSellers)
-        ->where('p.lowest_price', '<=', $lowestPrice)
-        ->where('p.fourth_lowest_price', '<=', $max4thLowPrice)
-        ->where('link_sites.semrush_AS', '>=', $minSRAS)
-        ->orderByDesc('link_sites.semrush_organic_kw')
-        ->orderByDesc('link_sites.semrush_AS')
-        ->orderByDesc('p.fourth_lowest_price')
-        ->get();
+            ->join('link_site_with_prices as p', 'link_sites.id', '=', 'p.link_site_id')
+            ->where('link_sites.is_withdrawn', 0)
+            ->where(function ($query)
+            {
+                $query->whereNull('link_sites.last_checked_mozmaj')
+                    ->orWhere('link_sites.last_checked_mozmaj', '<=', Carbon::now()->subDays(90));
+            })
+            ->whereNotNull('link_sites.semrush_traffic')
+            ->has('sellers', '>=', $numSellers)
+            ->where('p.fourth_lowest_price', '<=', $max4thLowPrice)
+            ->where('link_sites.semrush_AS', '>=', $minSRAS)
+            ->orderBy('link_sites.last_checked_mozmaj')
+            ->orderByDesc('link_sites.semrush_organic_kw')
+            ->orderByDesc('link_sites.semrush_AS')
+            ->orderByDesc('p.fourth_lowest_price')
+            ->get();
 
         return $sites;
     }
