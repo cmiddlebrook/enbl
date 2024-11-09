@@ -21,6 +21,7 @@ class CheckSiteHealth extends Command
     {
         // $this->displayManualChecks();
         $this->withdrawDeadSites();
+        // $this->checkDeadSites();
         $this->checkDownSites();
         $this->checkMarkedSites();
         $this->makeNewChecks();
@@ -113,6 +114,32 @@ class CheckSiteHealth extends Command
         }
     }
 
+    private function checkDeadSites()
+    {
+        $deadSites = LinkSite::where('is_withdrawn', 1)
+            ->where('withdrawn_reason', WithdrawalReasonEnum::DEADSITE)
+            ->get();
+
+        echo "Checking " . $deadSites->count() . " sites that are marked DEAD\n";
+        foreach ($deadSites as $linkSite)
+        {
+            $domain = $linkSite->domain;
+            $response = $this->checkSite($domain);
+
+            if ($response->successful())
+            {
+                echo "{$domain} was marked as dead, now resurrected!\n";
+                $linkSite->is_withdrawn = 0;
+                $linkSite->withdrawn_reason = null;
+                $linkSite->save();
+            }
+            else
+            {
+                $this->info("$domain is still dead...");
+            }
+        }
+    }
+
     private function checkMarkedSites()
     {
         $markedSites = LinkSite::where('is_withdrawn', 1)
@@ -180,23 +207,20 @@ class CheckSiteHealth extends Command
 
     private function updateStatus($linkSite, $response)
     {
-        if ($response->successful())
+        if ($linkSite->withdrawn_reason == WithdrawalReasonEnum::CHECKHEALTH)
         {
-            if ($linkSite->withdrawn_reason == WithdrawalReasonEnum::CHECKHEALTH)
-            {
-                $this->info("{$linkSite->domain} was withdrawn for checking and is UP, unwithdrawing");
-                $linkSite->is_withdrawn = false;
-                $linkSite->withdrawn_reason = null;
-            }
-
-            $linkSite->last_checked_health = Carbon::now();
-            $linkSite->save();
+            $linkSite->is_withdrawn = false;
+            $linkSite->withdrawn_reason = null;
         }
-        else
+
+        if (!$response->successful())
         {
-            echo $response->body();
+            echo "$linkSite->domain had status code: {$response->status()}\n";
             $this->recordDownStatus($linkSite);
         }
+
+        $linkSite->last_checked_health = Carbon::now();
+        $linkSite->save();
     }
 
     private function getSitesToCheck($num = 500)
@@ -244,7 +268,7 @@ class CheckSiteHealth extends Command
                 [],  // Headers can be empty for failure
                 $e->getMessage() // Body contains the exception message
             );
-            
+
             // Wrap the Guzzle response into an Illuminate response that behaves like the one from Http::get()
             return new \Illuminate\Http\Client\Response($failedResponse);
         }
