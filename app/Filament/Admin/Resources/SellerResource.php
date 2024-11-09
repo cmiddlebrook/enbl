@@ -12,6 +12,7 @@ use Filament\Forms\Form;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -24,7 +25,7 @@ class SellerResource extends Resource
     protected static ?string $navigationIcon = 'fas-user-secret';
     protected static ?int $navigationSort = 1;
 
-    
+
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::count();
@@ -42,7 +43,7 @@ class SellerResource extends Resource
                 Forms\Components\Group::make()->schema([
                     Forms\Components\Section::make()->schema([
                         TextInput::make('name'),
-                        TextInput::make('email')->email()->required()->unique(ignoreRecord:true),
+                        TextInput::make('email')->email()->required()->unique(ignoreRecord: true),
                         Forms\Components\MarkdownEditor::make('notes')
                     ])
                 ])
@@ -58,22 +59,10 @@ class SellerResource extends Resource
                 TextColumn::make('last_import')->date()->sortable(),
                 TextColumn::make('linksites_count')->counts('linksites')->Label('Nr Sites')->sortable(),
                 TextColumn::make('num_withdrawn_sites')->Label('Nr WD'),
-                TextColumn::make('average_price')->Label('Avg $')
-                    ->numeric()                    
-                    ->formatStateUsing(function ($state)
-                    {
-                        return NumberFormatter::format($state);
-                    })
-                    ->sortable(query: function (Builder $query, string $direction): Builder 
-                    {
-                        return $query
-                            ->withCount('linkSites')
-                            ->withAveragePrice()
-                            ->orderBy('average_price', $direction);
-                    }),
+                ToggleColumn::make('is_blocked')->label('Blocked')->disabled()->toggleable(isToggledHiddenByDefault: false),
             ])
-            ->defaultSort('average_price', 'asc')
-  
+            ->defaultSort('last_import', 'asc')
+
             ->filters([
                 //
             ])
@@ -81,13 +70,12 @@ class SellerResource extends Resource
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make(),
                     Tables\Actions\EditAction::make(),
-                    Tables\Actions\DeleteAction::make()
-                ])  
+                    Tables\Actions\DeleteAction::make(),
+
+                ])
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    
-                ]),
+                Tables\Actions\BulkActionGroup::make([]),
             ]);
     }
 

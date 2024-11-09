@@ -21,13 +21,12 @@ class NeedsMetricsWidget extends BaseWidget
             Stat::make('Needs Majestic', LinkSite::whereNull('majestic_trust_flow')
                 ->where('is_withdrawn', 0)
                 ->where('semrush_AS', '>=', 5)
-                ->has('sellers', '>=', 3)->count()),
+                ->has('sellers', '>=', 1)->count()),
             Stat::make('Needs Domain Age', LinkSite::whereNull('domain_creation_date')
                 ->where('is_withdrawn', 0)
                 ->has('sellers', '>=', 3)->count()),
             Stat::make('Needs IP', LinkSite::whereNull('ip_address')
-                ->where('is_withdrawn', 0)
-                ->has('sellers', '>=', 3)->count()),
+                ->where('is_withdrawn', 0)->count()),
         ];
     }
 }

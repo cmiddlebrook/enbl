@@ -19,8 +19,8 @@ class CheckDomainAge extends Command
     protected $client;
     protected $numApi1Calls = 0;
     protected $numApi2Calls = 0;
-    protected $maxApi1Calls = 400;
-    protected $maxApi2Calls = 400;
+    protected $maxApi1Calls = 300;
+    protected $maxApi2Calls = 200;
 
     public function __construct()
     {
@@ -160,7 +160,7 @@ class CheckDomainAge extends Command
         return $sites;
     }
 
-    private function makeAPICallMethod1($domain)
+    private function makeAPICallMethod2($domain)
     {
         try
         {
@@ -195,7 +195,7 @@ class CheckDomainAge extends Command
     }
 
 
-    private function makeAPICallMethod2($domain)
+    private function makeAPICallMethod1($domain)
     {
         try
         {

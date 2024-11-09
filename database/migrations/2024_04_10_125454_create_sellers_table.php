@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name')->nullable();
             $table->string('email')->unique();
+            $table->boolean('is_blocked')->default(0);
+            $table->string('blocked_reason')->nullable();
             $table->date('last_import')->nullable();
             $table->date('last_order')->nullable();
             $table->unsignedTinyInteger('rating')->nullable();

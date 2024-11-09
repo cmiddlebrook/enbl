@@ -19,7 +19,7 @@ class CheckMetrics extends Command
 
     protected $client;
     protected $numApiCalls = 0;
-    protected $maxApiCalls = 100;
+    protected $maxApiCalls = 120;
 
     public function __construct()
     {
@@ -94,7 +94,7 @@ class CheckMetrics extends Command
             })
             ->whereNotNull('link_sites.semrush_traffic')
             ->has('sellers', '>=', $numSellers)
-            ->where('p.fourth_lowest_price', '<=', $max4thLowPrice)
+            // ->where('p.fourth_lowest_price', '<=', $max4thLowPrice)
             ->where('link_sites.semrush_AS', '>=', $minSRAS)
             ->orderBy('link_sites.last_checked_mozmaj')
             ->orderByDesc('link_sites.semrush_organic_kw')

@@ -18,6 +18,10 @@ class Seller extends Model
     protected $fillable = [
         'name',
         'email',
+        'is_blocked',
+        'blocked_reason',
+        'last_import',
+        'rating',
         'notes'
     ];
 
@@ -35,11 +39,4 @@ class Seller extends Model
         );
     }
 
-    public function scopeWithAveragePrice(Builder $query)
-    {
-        $query->addSelect([
-            'average_price' => SellerSite::selectRaw('avg(price_guest_post)')
-                ->whereColumn('seller_sites.seller_id', 'sellers.id')
-        ]);
-    }
 }

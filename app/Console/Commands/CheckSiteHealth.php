@@ -8,28 +8,14 @@ use App\Enums\WithdrawalReasonEnum;
 use App\Models\LinkSite;
 use App\Models\LinkSiteHealth;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 use Exception;
-use Filament\Forms\Components\Card;
 
 class CheckSiteHealth extends Command
 {
     protected $signature = 'check-site-health';
     protected $description = 'Checks whether link sites are up or down';
-
-    protected $numApiCalls = 0;
-    protected $maxApiCalls = 1000;
-    protected $numApiErrors = 0;
-    protected $maxApiErrors = 3;
-
-    protected $client;
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->client = new \GuzzleHttp\Client();
-    }
 
     public function handle()
     {
@@ -112,24 +98,17 @@ class CheckSiteHealth extends Command
             $this->updateCheckDate($linkSite);
 
             $domain = $linkSite->domain;
-            $data = $this->checkSite($domain);
+            $response = $this->checkSite($domain);
 
-            if (!$data) continue;
-
-            $stillDown = ($data['status'] == 'Down');
-            if ($stillDown)
-            {
-                $this->info("{$domain} is still DOWN. recording new check date");
-                $this->recordDownStatus($linkSite->id);
-            }
-            else if ($data['status'] == 'Up')
+            if ($response->successful())
             {
                 $this->info("{$domain} is now UP, deleting health checks :-)");
                 $this->deleteHealthChecks($linkSite->id);
             }
             else
             {
-                echo "Error updating health status of {$linkSite->domain}\n";
+                $this->info("{$domain} is still DOWN. recording new check date");
+                $this->recordDownStatus($linkSite);
             }
         }
     }
@@ -156,23 +135,21 @@ class CheckSiteHealth extends Command
         foreach ($sites as $linkSite)
         {
             $domain = $linkSite->domain;
-            $this->info("Checking status of {$domain}");
-            $data = $this->makeAPICall($domain);
+            $response = $this->checkSite($domain);
 
-            $this->updateStatus($linkSite, $data['status']);
-            if ($this->numApiCalls >= $this->maxApiCalls) break;
+            $this->updateStatus($linkSite, $response);
         }
     }
 
     private function checkSite($domain)
     {
         $this->info("Checking status of {$domain}");
-        $data = $this->makeAPICall($domain);
-        return $data;
+        return $this->makeAPICall($domain);
     }
 
-    private function recordDownStatus($siteId)
+    private function recordDownStatus($linkSite)
     {
+        $siteId = $linkSite->id;
         $healthRecord = new LinkSiteHealth();
         $healthRecord->link_site_id = $siteId;
         $healthRecord->check_date = Carbon::now();
@@ -201,9 +178,9 @@ class CheckSiteHealth extends Command
         $linkSite->save();
     }
 
-    private function updateStatus($linkSite, $status)
+    private function updateStatus($linkSite, $response)
     {
-        if ($status == "Up" || $status == "Down")
+        if ($response->successful())
         {
             if ($linkSite->withdrawn_reason == WithdrawalReasonEnum::CHECKHEALTH)
             {
@@ -214,40 +191,16 @@ class CheckSiteHealth extends Command
 
             $linkSite->last_checked_health = Carbon::now();
             $linkSite->save();
-
-            if ($status == "Down")
-            {
-                $this->info("{$linkSite->domain} is DOWN!");
-
-                $healthRecord = new LinkSiteHealth();
-                $healthRecord->link_site_id = $linkSite->id;
-                $healthRecord->check_date = Carbon::now();
-                $healthRecord->up = 0;
-                $healthRecord->save();
-            }
         }
         else
         {
-            echo "Error updating health status of {$linkSite->domain}\n";
+            echo $response->body();
+            $this->recordDownStatus($linkSite);
         }
     }
 
     private function getSitesToCheck($num = 500)
     {
-        // $sites = LinkSite::select('link_sites.*', 'p.lowest_price', 'p.fourth_lowest_price', 'p.price_difference_percentage')
-        //     ->join('link_site_with_prices as p', 'link_sites.id', '=', 'p.link_site_id')
-        //     ->where(function ($query)
-        //     {
-        //         $query->where('link_sites.last_checked_health', '<', Carbon::now()->subMonth())
-        //             ->orWhereNull('link_sites.last_checked_health');
-        //     })
-        //     ->where('link_sites.is_withdrawn', 0)
-        //     ->orderBy('link_sites.last_checked_health', 'asc')
-        //     ->orderBy('link_sites.majestic_trust_flow', 'desc')
-        //     ->orderBy('link_sites.semrush_AS', 'desc')
-        //     ->limit($num)
-        //     ->get();
-
         $sites = LinkSite::where(function ($query)
         {
             $query->where('last_checked_health', '<', Carbon::now()->subMonth())
@@ -276,50 +229,24 @@ class CheckSiteHealth extends Command
     {
         try
         {
-            ++$this->numApiCalls;
-            $response = $this->client->request('GET', "https://check-if-website-is-up-or-down.p.rapidapi.com/?domain={$domain}", [
-                'headers' => [
-                    'X-RapidAPI-Host' => 'check-if-website-is-up-or-down.p.rapidapi.com',
-                    'X-RapidAPI-Key' => 'e795fa7e7dmshec72b0683f03249p1e6cc3jsn5eb61b037996',
-                ],
-            ]);
+            return Http::timeout(20)->get("https://{$domain}");
 
-            $body = $response->getBody();
-            $data = json_decode($body, true);
-            // \Symfony\Component\VarDumper\VarDumper::dump($data);
-
-            if (is_null($data)) throw new Exception("Null data when checking {$domain}");
-            return $data;
+            // \Symfony\Component\VarDumper\VarDumper::dump($response);
+            // exit;
         }
-        catch (\GuzzleHttp\Exception\RequestException $e)
+        catch (\Exception $e)
         {
-            if ($this->numApiErrors >= $this->maxApiErrors)
-            {
-                echo "Too many API errors, exiting script\n";
-                exit;
-            }
-            ++$this->numApiErrors;
+            // echo "Exception!!!\n";
+            // echo $e->getMessage();
 
-            $errorMessage = $e->getMessage();
-            if (strpos($errorMessage, "429 Too Many Requests"))
-            {
-                echo "API quota reached, exiting script\n";
-                exit;
-            }
-            else if (strpos($errorMessage, "The API is unreachable"))
-            {
-                $this->info("API Unreachable, waiting a few seconds ");
-                for ($i = 0; $i < 10; ++$i)
-                {
-                    echo '.';
-                    sleep(1);
-                }
-                echo "\n";
-                return false;
-            }
-
-            echo $errorMessage;
-            return false;
+            $failedResponse = new \GuzzleHttp\Psr7\Response(
+                520, // HTTP status code
+                [],  // Headers can be empty for failure
+                $e->getMessage() // Body contains the exception message
+            );
+            
+            // Wrap the Guzzle response into an Illuminate response that behaves like the one from Http::get()
+            return new \Illuminate\Http\Client\Response($failedResponse);
         }
     }
 }
