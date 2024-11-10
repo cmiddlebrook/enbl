@@ -227,7 +227,7 @@ class CheckSiteHealth extends Command
     {
         $sites = LinkSite::where(function ($query)
         {
-            $query->where('last_checked_health', '<', Carbon::now()->subMonth())
+            $query->where('last_checked_health', '<', Carbon::now()->subWeek())
                 ->orWhereNull('last_checked_health');
         })
             ->where('is_withdrawn', 0)

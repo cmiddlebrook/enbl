@@ -38,10 +38,10 @@ class CheckDomainAge extends Command
             {
                 $this->info("Checking age of {$linkSite->domain}");
 
-                if (!$this->tryMethod1API($linkSite))
+                if (!$this->tryMethod2API($linkSite))
                 {
-                    echo ("API 1 method failed, trying API 2 method\n");
-                    if (!$this->tryMethod2API($linkSite))
+                    echo ("API 2 method failed, trying API 1 method\n");
+                    if (!$this->tryMethod1API($linkSite))
                     {
                         $this->markForHealthCheck($linkSite);
                     }
@@ -55,10 +55,10 @@ class CheckDomainAge extends Command
         }
     }
 
-    private function tryMethod1API($linkSite)
+    private function tryMethod2API($linkSite)
     {
         $domain = $linkSite->domain;
-        $data = $this->makeAPICallMethod1($domain);
+        $data = $this->makeAPICallMethod2($domain);
         $result = false;
         // \Symfony\Component\VarDumper\VarDumper::dump($data);
         if ($data && array_key_exists('data', $data))
@@ -72,11 +72,11 @@ class CheckDomainAge extends Command
         return $result;
     }
 
-    private function tryMethod2API($linkSite)
+    private function tryMethod1API($linkSite)
     {
         $domain = $linkSite->domain;
         $result = false;
-        $data = $this->makeAPICallMethod2($domain);
+        $data = $this->makeAPICallMethod1($domain);
         // \Symfony\Component\VarDumper\VarDumper::dump($data);
         if ($data)
         {
@@ -164,9 +164,9 @@ class CheckDomainAge extends Command
     {
         try
         {
-            sleep(2);
-            if ($this->numApi1Calls >= $this->maxApi1Calls) return false;
-            ++$this->numApi1Calls;
+            sleep(1);
+            if ($this->numApi2Calls >= $this->maxApi2Calls) return false;
+            ++$this->numApi2Calls;
             $response = $this->client->request('GET', "https://domain-age-checker2.p.rapidapi.com/domain-age?url={$domain}", [
                 'headers' => [
                     'X-RapidAPI-Host' => 'domain-age-checker2.p.rapidapi.com',
@@ -199,9 +199,9 @@ class CheckDomainAge extends Command
     {
         try
         {
-            sleep(2);
-            if ($this->numApi2Calls >= $this->maxApi2Calls) return false;
-            ++$this->numApi2Calls;
+            sleep(1);
+            if ($this->numApi1Calls >= $this->maxApi1Calls) return false;
+            ++$this->numApi1Calls;
             $response = $this->client->request('GET', "https://whois-lookup10.p.rapidapi.com/domain?domain={$domain}", [
                 'headers' => [
                     'X-RapidAPI-Host' => 'whois-lookup10.p.rapidapi.com',
