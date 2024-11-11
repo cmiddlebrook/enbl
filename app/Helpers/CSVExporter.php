@@ -91,7 +91,7 @@ class CSVExporter
     private function calculatePrice($linkSite)
     {
         $fourthLowestPrice = $linkSite->fourth_lowest_price;
-        $markup = max($fourthLowestPrice * 0.25, 10);
+        $markup = max($fourthLowestPrice * 0.3, 12);
         $price = ceil($fourthLowestPrice + $markup);
 
         return $price;
