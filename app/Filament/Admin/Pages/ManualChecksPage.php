@@ -4,9 +4,12 @@ namespace App\Filament\Admin\Pages;
 
 use Filament\Pages\Page;
 
-class DeadSitesPage extends Page
+use App\Models\LinkSite;
+
+class ManualChecksPage extends Page 
 {
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static string $view = 'filament.admin.pages.manual-checks-page';
 
-    protected static string $view = 'filament.admin.pages.dead-sites-page';
+
 }

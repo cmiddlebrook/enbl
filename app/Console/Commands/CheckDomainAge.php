@@ -17,10 +17,9 @@ class CheckDomainAge extends Command
     protected $description = 'Checks the age of the domain of some link sites';
 
     protected $client;
-    protected $numApi1Calls = 0;
-    protected $numApi2Calls = 0;
-    protected $maxApi1Calls = 300;
-    protected $maxApi2Calls = 200;
+    protected $numApiCalls = 0;
+    protected $maxApiCalls = 300;
+
 
     public function __construct()
     {
@@ -38,13 +37,9 @@ class CheckDomainAge extends Command
             {
                 $this->info("Checking age of {$linkSite->domain}");
 
-                if (!$this->tryMethod2API($linkSite))
+                if (!$this->checkDomainAge($linkSite))
                 {
-                    echo ("API 2 method failed, trying API 1 method\n");
-                    if (!$this->tryMethod1API($linkSite))
-                    {
-                        $this->markForHealthCheck($linkSite);
-                    }
+                    $this->markForHealthCheck($linkSite);
                 }
             }
             catch (Exception $e)
@@ -55,28 +50,11 @@ class CheckDomainAge extends Command
         }
     }
 
-    private function tryMethod2API($linkSite)
-    {
-        $domain = $linkSite->domain;
-        $data = $this->makeAPICallMethod2($domain);
-        $result = false;
-        // \Symfony\Component\VarDumper\VarDumper::dump($data);
-        if ($data && array_key_exists('data', $data))
-        {
-            $innerData = $data['data'];
-            if (is_array($data['data']) && array_key_exists('created_date', $innerData))
-            {
-                $result = $this->updateCreationDate($linkSite, $data['data']['created_date']);
-            }
-        }
-        return $result;
-    }
-
-    private function tryMethod1API($linkSite)
+    private function checkDomainAge($linkSite)
     {
         $domain = $linkSite->domain;
         $result = false;
-        $data = $this->makeAPICallMethod1($domain);
+        $data = $this->makeAPICall($domain);
         // \Symfony\Component\VarDumper\VarDumper::dump($data);
         if ($data)
         {
@@ -139,13 +117,13 @@ class CheckDomainAge extends Command
 
     private function markForHealthCheck($linkSite)
     {
-        echo "Both API Calls failed, marking site for manual check\n";
+        echo "Marking site for manual check\n";
         $linkSite->is_withdrawn = 1;
         $linkSite->withdrawn_reason = WithdrawalReasonEnum::CHECKAGE;
         $linkSite->save();
     }
 
-    private function getSitesToCheck($num = 400)
+    private function getSitesToCheck($num = 300)
     {
         $sites = LinkSite::where('is_withdrawn', 0)
             ->whereNull('domain_creation_date')
@@ -160,48 +138,14 @@ class CheckDomainAge extends Command
         return $sites;
     }
 
-    private function makeAPICallMethod2($domain)
+
+    private function makeAPICall($domain)
     {
         try
         {
             sleep(1);
-            if ($this->numApi2Calls >= $this->maxApi2Calls) return false;
-            ++$this->numApi2Calls;
-            $response = $this->client->request('GET', "https://domain-age-checker2.p.rapidapi.com/domain-age?url={$domain}", [
-                'headers' => [
-                    'X-RapidAPI-Host' => 'domain-age-checker2.p.rapidapi.com',
-                    'X-RapidAPI-Key' => 'e795fa7e7dmshec72b0683f03249p1e6cc3jsn5eb61b037996',
-                ],
-            ]);
-
-            $body = $response->getBody();
-            $data = json_decode($body, true);
-            // \Symfony\Component\VarDumper\VarDumper::dump($data);
-            // exit;
-            return $data;
-        }
-        catch (\GuzzleHttp\Exception\ClientException $e)
-        {
-            $errorMessage = $e->getMessage();
-            if (strpos($errorMessage, "429 Too Many Requests"))
-            {
-                echo "Daily API quota reached\n";
-                exit;
-            }
-            echo $errorMessage;
-
-            return false;
-        }
-    }
-
-
-    private function makeAPICallMethod1($domain)
-    {
-        try
-        {
-            sleep(1);
-            if ($this->numApi1Calls >= $this->maxApi1Calls) return false;
-            ++$this->numApi1Calls;
+            if ($this->numApiCalls >= $this->maxApiCalls) return false;
+            ++$this->numApiCalls;
             $response = $this->client->request('GET', "https://whois-lookup10.p.rapidapi.com/domain?domain={$domain}", [
                 'headers' => [
                     'X-RapidAPI-Host' => 'whois-lookup10.p.rapidapi.com',
