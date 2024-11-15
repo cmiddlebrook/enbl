@@ -62,7 +62,7 @@ class CSVExporter
     private function writeDomainRow($linkSite, $file)
     {
         $price = $this->calculatePrice($linkSite);
-        if ($price > 25) return; // stick to cheapie sites for now
+        if ($price > 30) return; // stick to cheapie sites for now
 
         $row =
             [
@@ -132,9 +132,6 @@ class CSVExporter
             ->whereNotNull('link_sites.semrush_traffic')
             ->whereNotNull('link_sites.last_checked_mozmaj')
             ->has('sellers', '>=', 4)
-            ->whereHas('niches', function ($query) {
-                $query->where('niche_id', 1);
-            })
             ->orderByDesc('link_sites.semrush_organic_kw')
             ->orderByDesc('link_sites.majestic_trust_flow')
             ->orderByDesc('link_sites.semrush_AS')

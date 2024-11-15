@@ -19,12 +19,12 @@ class CheckSiteHealth extends Command
 
     public function handle()
     {
-        $this->checkDeadSites();
-        $this->displayManualChecks();
-        // $this->withdrawDeadSites();
-        // $this->checkDownSites();
-        // $this->checkMarkedSites();
-        // $this->makeNewChecks();
+        // $this->checkDeadSites();
+        // $this->displayManualChecks();
+        $this->withdrawDeadSites();
+        $this->checkDownSites();
+        $this->checkMarkedSites();
+        $this->makeNewChecks();
     }
 
     private function displayManualChecks()
