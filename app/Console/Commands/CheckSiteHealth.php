@@ -19,38 +19,33 @@ class CheckSiteHealth extends Command
 
     public function handle()
     {
-        // $this->displayManualChecks();
-        $this->withdrawDeadSites();
-        // $this->checkDeadSites();
-        $this->checkDownSites();
-        $this->checkMarkedSites();
-        $this->makeNewChecks();
+        $this->checkDeadSites();
+        $this->displayManualChecks();
+        // $this->withdrawDeadSites();
+        // $this->checkDownSites();
+        // $this->checkMarkedSites();
+        // $this->makeNewChecks();
     }
 
     private function displayManualChecks()
     {
-        $results = LinkSiteHealth::select('link_site_health.link_site_id', 'link_sites.domain')
-            ->join('link_sites', 'link_site_health.link_site_id', '=', 'link_sites.id')
-            ->selectRaw('COUNT(link_site_health.id) as check_count, MIN(link_site_health.check_date) as earliest_check')
-            ->groupBy('link_site_health.link_site_id', 'link_sites.domain')
-            ->havingRaw('COUNT(link_site_health.id) >= 16')
-            ->havingRaw('MIN(link_site_health.check_date) < NOW() - INTERVAL 60 HOUR')
-            ->orderByDesc('check_count')
+        $sites = LinkSite::where('is_withdrawn', 1)
+            ->where('withdrawn_reason', WithdrawalReasonEnum::CHECKHEALTHMANUAL)
             ->get();
 
-        echo $results->count() . " need checking manually\n";
-        $maxChecks = (int) $this->ask('How many manual checks do you want to do?');
+        echo $sites->count() . " sites marked for manual check\n";
+        foreach ($sites as $linkSite)
+            $maxChecks = (int) $this->ask('How many manual checks do you want to do?');
 
         $checksDone = 0;
-        foreach ($results as $result)
+        foreach ($sites as $linkSite)
         {
             if ($checksDone >= $maxChecks) return;
 
-            $siteId = $result->link_site_id;
-            $domain = $result->domain;
-            $this->info(sprintf("%-7s %-30s %-5s %-20s", $siteId, $domain, $result->check_count, $result->earliest_check));
+            $siteId = $linkSite->link_site_id;
+            $domain = $linkSite->domain;
 
-            if ($this->confirm('Do you want to mark this site as dead? (y/n)', false))
+            if ($this->confirm("Do you want to mark {$domain} as dead? (y/n)", false))
             {
                 $this->markSiteDead($siteId);
                 echo "{$domain} has been marked as dead\n";
@@ -126,12 +121,9 @@ class CheckSiteHealth extends Command
             $domain = $linkSite->domain;
             $response = $this->checkSite($domain);
 
-            if ($response->successful())
+            if ($response->successful() OR $response->status() == 403)
             {
-                echo "{$domain} was marked as dead, now resurrected!\n";
-                $linkSite->is_withdrawn = 0;
-                $linkSite->withdrawn_reason = null;
-                $linkSite->save();
+                $this->markForManualCheck($linkSite);
             }
             else
             {
@@ -205,6 +197,14 @@ class CheckSiteHealth extends Command
         $linkSite->save();
     }
 
+    private function markForManualCheck($linkSite)
+    {
+        echo $linkSite->domain . " has a status of 403, marking for manual check\n";
+        $linkSite->is_withdrawn = 1;
+        $linkSite->withdrawn_reason = WithdrawalReasonEnum::CHECKHEALTHMANUAL;
+        $linkSite->save();
+    }
+
     private function updateStatus($linkSite, $response)
     {
         if ($linkSite->withdrawn_reason == WithdrawalReasonEnum::CHECKHEALTH)
@@ -217,6 +217,10 @@ class CheckSiteHealth extends Command
         {
             echo "$linkSite->domain had status code: {$response->status()}\n";
             $this->recordDownStatus($linkSite);
+        }
+        else if ($response->status() == 403)
+        {
+            $this->markForManualCheck($linkSite);
         }
 
         $linkSite->last_checked_health = Carbon::now();

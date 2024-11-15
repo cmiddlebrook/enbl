@@ -14,7 +14,9 @@ enum WithdrawalReasonEnum: string implements HasLabel
     case SUBDOMAIN = 'subdomain';
     case SPAM = 'spam';
     case DEADSITE = 'deadsite';
+    case INVALID = 'invalid';
     case CHECKHEALTH = 'checkhealth';
+    case CHECKHEALTHMANUAL = 'checkhealthmanual';
     case CHECKTRAFFIC = 'checktraffic';
     case CHECKAGE = 'checkage';
     case CHECKDR = 'checkdr';
@@ -31,7 +33,9 @@ enum WithdrawalReasonEnum: string implements HasLabel
             self::SUBDOMAIN => 'Not a Root Domain',
             self::SPAM => 'Spam',
             self::DEADSITE => 'Dead Website',
+            self::INVALID => 'Invalid guest post website',
             self::CHECKHEALTH => 'Check Site Health',
+            self::CHECKHEALTHMANUAL => 'Manually check site health',
             self::CHECKTRAFFIC => 'Check Site Traffic',
             self::CHECKAGE => 'Check Domain Age',
             self::CHECKDR => 'Check Domain Rank',
