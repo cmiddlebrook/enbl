@@ -19,7 +19,7 @@ class CheckMetrics extends Command
 
     protected $client;
     protected $numApiCalls = 0;
-    protected $maxApiCalls = 120;
+    protected $maxApiCalls = 120; // drop to 65 when I downgrade plan
 
     public function __construct()
     {

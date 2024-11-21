@@ -139,7 +139,7 @@ class CheckTraffic extends Command
         $sites = LinkSite::where('is_withdrawn', 0)
             ->where(function ($query)
             {
-                $query->where('last_checked_traffic', '<', Carbon::now()->subDays(20))
+                $query->where('last_checked_traffic', '<', Carbon::now()->subMonth(1))
                     ->orWhereNull('last_checked_traffic');
             })
             // ->where(function ($query)
