@@ -160,8 +160,8 @@ class LinkSiteResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('domain')->sortable()->searchable(),
-                TextColumn::make('sellers_count')->counts('sellers')->Label('Sellers')->sortable(),
-                TextColumn::make('lowest_price')->Label('Low $')->sortable(),
+                TextColumn::make('sellers_count')->counts('sellers')->Label('Publishers')->sortable()->toggleable(isToggledHiddenByDefault: false),
+                TextColumn::make('lowest_price')->Label('Price $')->sortable(),
                 TextColumn::make('fourth_lowest_price')->Label('4th $')->sortable()
                     ->numeric()
                     ->formatStateUsing(function ($state)
@@ -188,6 +188,12 @@ class LinkSiteResource extends Resource
                 TextColumn::make('moz_da')->label('DA'),
                 TextColumn::make('moz_pa')->label('PA')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('moz_rank')->label('MR')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('majestic_ref_domains')->label('RD')->sortable()->toggleable(isToggledHiddenByDefault: true)
+                    ->numeric()
+                    ->formatStateUsing(function ($state)
+                    {
+                        return NumberFormatter::format($state);
+                    }),
                 TextColumn::make('moz_links')->label('Links')->sortable()->toggleable(isToggledHiddenByDefault: true)
                     ->numeric()
                     ->formatStateUsing(function ($state)
@@ -206,12 +212,6 @@ class LinkSiteResource extends Resource
                     }),
                 TextColumn::make('majestic_trust_flow')->label('TF')->sortable(),
                 TextColumn::make('majestic_citation_flow')->label('CF')->toggleable(isToggledHiddenByDefault: false),
-                TextColumn::make('majestic_ref_domains')->label('RD')->sortable()->toggleable(isToggledHiddenByDefault: true)
-                    ->numeric()
-                    ->formatStateUsing(function ($state)
-                    {
-                        return NumberFormatter::format($state);
-                    }),
                 TextColumn::make('majestic_ref_edu')->label('Maj .edu')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('majestic_ref_gov')->label('Maj .gov')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('facebook_shares')->label('FB')
