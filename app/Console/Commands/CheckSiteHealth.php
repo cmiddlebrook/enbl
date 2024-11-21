@@ -20,45 +20,10 @@ class CheckSiteHealth extends Command
     public function handle()
     {
         // $this->checkDeadSites();
-        // $this->displayManualChecks();
         $this->withdrawDeadSites();
         $this->checkDownSites();
         $this->checkMarkedSites();
         $this->makeNewChecks();
-    }
-
-    private function displayManualChecks()
-    {
-        $sites = LinkSite::where('is_withdrawn', 1)
-            ->where('withdrawn_reason', WithdrawalReasonEnum::CHECKHEALTHMANUAL)
-            ->get();
-
-        echo $sites->count() . " sites marked for manual check\n";
-        foreach ($sites as $linkSite)
-            $maxChecks = (int) $this->ask('How many manual checks do you want to do?');
-
-        $checksDone = 0;
-        foreach ($sites as $linkSite)
-        {
-            if ($checksDone >= $maxChecks) return;
-
-            $siteId = $linkSite->link_site_id;
-            $domain = $linkSite->domain;
-
-            if ($this->confirm("Do you want to mark {$domain} as dead? (y/n)", false))
-            {
-                $this->markSiteDead($siteId);
-                echo "{$domain} has been marked as dead\n";
-            }
-            else
-            {
-                $this->deleteHealthChecks($siteId);
-            }
-
-            ++$checksDone;
-        }
-
-        // \Symfony\Component\VarDumper\VarDumper::dump($results);
     }
 
     private function withdrawDeadSites()
@@ -121,8 +86,9 @@ class CheckSiteHealth extends Command
             $domain = $linkSite->domain;
             $response = $this->checkSite($domain);
 
-            if ($response->successful() OR $response->status() == 403)
+            if ($response->successful() or $response->status() == 403)
             {
+                echo "{$domain} had status code: {$response->status()}\n";
                 $this->markForManualCheck($linkSite);
             }
             else
@@ -197,14 +163,6 @@ class CheckSiteHealth extends Command
         $linkSite->save();
     }
 
-    private function markForManualCheck($linkSite)
-    {
-        echo $linkSite->domain . " has a status of 403, marking for manual check\n";
-        $linkSite->is_withdrawn = 1;
-        $linkSite->withdrawn_reason = WithdrawalReasonEnum::CHECKHEALTHMANUAL;
-        $linkSite->save();
-    }
-
     private function updateStatus($linkSite, $response)
     {
         if ($linkSite->withdrawn_reason == WithdrawalReasonEnum::CHECKHEALTH)
@@ -216,11 +174,15 @@ class CheckSiteHealth extends Command
         if (!$response->successful())
         {
             echo "$linkSite->domain had status code: {$response->status()}\n";
-            $this->recordDownStatus($linkSite);
-        }
-        else if ($response->status() == 403)
-        {
-            $this->markForManualCheck($linkSite);
+
+            if ($response->status() == 403)
+            {
+                // ignore, the site is just refusing my bot
+            }
+            else
+            {
+                $this->recordDownStatus($linkSite);
+            }
         }
 
         $linkSite->last_checked_health = Carbon::now();
@@ -257,10 +219,26 @@ class CheckSiteHealth extends Command
     {
         try
         {
-            return Http::timeout(20)->get("https://{$domain}");
+            $cookies = [
+                'sessionid' => '1234567890abcdef',
+                'csrftoken' => 'abcdef1234567890',
+            ];
+
+            return Http::timeout(20)
+                ->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language' => 'en-US,en;q=0.5',
+                    'Referer' => 'https://www.google.com/',
+                ])
+                ->withCookies($cookies, $domain)
+                ->get("https://{$domain}");
+
+            // $response = Http::timeout(20)->get("https://www.stamford.edu/");
 
             // \Symfony\Component\VarDumper\VarDumper::dump($response);
             // exit;
+            // return $response;
         }
         catch (\Exception $e)
         {

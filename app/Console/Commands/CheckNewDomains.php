@@ -71,19 +71,20 @@ class CheckNewDomains extends Command
 
     public function handle()
     {
+        $this->checkSpam();
         $this->checkSubdomains();
         $this->withdrawNonEnglishTLDs();
-        $this->checkSpam();
     }
 
     private function checkSubdomains()
     {
         $count = 0;
         $sites = $this->getAllLiveSites();
+        echo "Checking {$sites->count()} sites for subdomains\n";
+
         foreach ($sites as $linkSite)
         {
             $domain = $linkSite->domain;
-            // $this->info("Checking root of {$domain}...");
 
             // check what the root is and compare
             $result = $this->publicSuffixList->resolve($domain);
@@ -91,19 +92,13 @@ class CheckNewDomains extends Command
 
             if ($regDomain !== $domain)
             {
-                $this->info("{$domain} does not match {$regDomain}");
-                DB::table('link_sites')
-                ->where('domain', '=', $domain)
-                ->update([
-                    'is_withdrawn' => 1,
-                    'withdrawn_reason' => 'subdomain'
-                ]);
+                ++$count;
+                // $this->info("{$domain} does not match {$regDomain}");
+                $this->withdrawDomain($domain, WithdrawalReasonEnum::SUBDOMAIN);
             }
-
-            ++$count;
         }
 
-        $this->info("{$count} domains checked");
+        echo "{$count} subdomains withdrawn\n";
     }
 
     private function withdrawNonEnglishTLDs()
@@ -356,9 +351,7 @@ class CheckNewDomains extends Command
                 '.zw', // Zimbabwe
             ];
 
-
-        $numWithdrawn = DB::table('link_sites')
-            ->where(function ($query) use ($countryExtensions)
+        $foreignDomains = LinkSite::where(function ($query) use ($countryExtensions)
             {
                 foreach ($countryExtensions as $extension)
                 {
@@ -366,64 +359,58 @@ class CheckNewDomains extends Command
                 }
             })
             ->where('is_withdrawn', 0)
-            ->update([
-                'is_withdrawn' => 1,
-                'withdrawn_reason' => WithdrawalReasonEnum::NOT_ENGLISH,
-            ]);
+            ->get();
 
-            echo $numWithdrawn . " sites withdrawn\n";
-
+        foreach ($foreignDomains as $linkSite)
+        {
+            $this->withdrawDomain($linkSite->domain, WithdrawalReasonEnum::NOT_ENGLISH);
+        }
+        echo "{$foreignDomains->count()} foreign domains withdrawn\n";
     }
 
     private function checkSpam()
     {
         $this->checkDomainNameStrings();
-        // $this->checkBlacklist();
     }
 
     private function checkDomainNameStrings()
-    {        
+    {
         $sites = $this->getAllLiveSites();
+        echo "Checking {$sites->count()} sites for spam\n";
+
+        $count = 0;
         foreach ($sites as $linkSite)
         {
             $domain = $linkSite->domain;
-            // $this->info("Parsing Domain {$domain}");
 
             foreach ($this->spamWords as $spamWord)
             {
                 if (Str::contains($domain, $spamWord))
                 {
+                    ++$count;
                     $this->withdrawDomain($domain, WithdrawalReasonEnum::SPAM);
                 }
-            }            
+            }
         }
+
+        echo "{$count} SPAM domains withdrawn\n";
     }
 
     private function withdrawDomain($domain, $reason)
     {
-        echo "Withdrawing {$domain}\n";
-        
+        $this->info("WD reason: {$reason->value} - {$domain}");
+
         DB::table('link_sites')
-        ->where('domain', '=', $domain)
-        ->update([
-            'is_withdrawn' => 1,
-            'withdrawn_reason' => $reason,
-        ]);
-        echo "{$domain} withdrawn\n";
+            ->where('domain', '=', $domain)
+            ->update([
+                'is_withdrawn' => 1,
+                'withdrawn_reason' => $reason,
+            ]);
     }
 
 
     private function getAllLiveSites()
     {
         return LinkSite::where('is_withdrawn', 0)->get();
-    }
-
-    private function getSitesToCheck()
-    {
-        $sites = LinkSite::where('is_withdrawn', 0)
-            ->orderBy('semrush_AS', 'desc')
-            ->get();
-
-        return $sites;
     }
 }
