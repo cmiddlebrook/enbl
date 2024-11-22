@@ -129,9 +129,9 @@ class CheckDomainAge extends Command
             ->whereNull('domain_creation_date')
             ->where('domain', 'not like', '%.au') // skip Australian domains, these are not publically available
             // ->where('domain', 'thekochfamilyblog.com') // test individual domain
-            ->orderBy('semrush_organic_kw', 'desc')
-            ->orderBy('majestic_trust_flow', 'desc')
-            ->orderBy('semrush_AS', 'desc')
+            ->orderByDesc('semrush_organic_kw')
+            ->orderByDesc('majestic_trust_flow')
+            ->orderByDesc('semrush_AS')
             ->limit($num)
             ->get();
 

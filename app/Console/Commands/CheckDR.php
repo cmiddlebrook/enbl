@@ -43,19 +43,6 @@ class CheckDR extends Command
     {
         $this->info("Checking DR of {$linkSite->domain}");
         $this->checkDomainRank($linkSite);
-        return;
-
-        // skipping this mechanism for now as will be too expensive to try too many times
-
-        // the API is temperamental, try several times
-        for ($numTries = 0; $numTries < 5; $numTries++)
-        {
-            if ($this->checkDomainRank($linkSite)) return;
-            echo ".";
-            sleep (1);
-        }
-
-        $this->markForManualCheck($linkSite);
     }
 
     private function checkDomainRank($linkSite)
@@ -78,22 +65,13 @@ class CheckDR extends Command
         $this->successfulCalls++;
     }
 
-    private function markForManualCheck($linkSite)
-    {
-        echo " API Call failed, marking site for manual check\n";
-        $linkSite->is_withdrawn = 1;
-        $linkSite->withdrawn_reason = WithdrawalReasonEnum::CHECKDR;
-        $linkSite->last_checked_traffic = Carbon::today();
-        $linkSite->save();
-    }
-
     private function getSitesToCheck()
     {
         $sites = LinkSite::where('is_withdrawn', 0)
-            ->whereNull('ahrefs_domain_rank') // change this to check on date once gaps filled in
-            ->orderBy('semrush_organic_kw', 'asc')
-            ->orderBy('majestic_trust_flow', 'desc')
-            ->orderBy('semrush_AS', 'desc')
+            ->whereNull('ahrefs_domain_rank') 
+            ->orderByDesc('semrush_organic_kw')
+            ->orderByDesc('majestic_trust_flow')
+            ->orderByDesc('semrush_AS')
             ->limit(100)
             ->get();
 

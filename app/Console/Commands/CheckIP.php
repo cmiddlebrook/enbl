@@ -116,9 +116,9 @@ class CheckIP extends Command
     {
         $sites = LinkSite::where('is_withdrawn', 0)
             ->whereNull('ip_address')
-            ->orderBy('semrush_organic_kw', 'asc')
-            ->orderBy('majestic_trust_flow', 'desc')
-            ->orderBy('semrush_AS', 'desc')
+            ->orderByDesc('semrush_organic_kw')
+            ->orderByDesc('majestic_trust_flow')
+            ->orderByDesc('semrush_AS')
             ->limit(490)
             ->get();
 
