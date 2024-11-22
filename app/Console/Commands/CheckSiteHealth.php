@@ -189,7 +189,7 @@ class CheckSiteHealth extends Command
         $linkSite->save();
     }
 
-    private function getSitesToCheck($num = 500)
+    private function getSitesToCheck($num = 100)
     {
         $sites = LinkSite::where(function ($query)
         {

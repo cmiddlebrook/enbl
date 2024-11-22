@@ -20,6 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('semrush_traffic')->nullable();
             $table->unsignedTinyInteger('semrush_perc_english_traffic')->nullable();
             $table->unsignedBigInteger('semrush_organic_kw')->nullable();
+            $table->unsignedTinyInteger('semrush_traffic_api_failures')->default(0);
             $table->date('last_checked_semrush')->nullable();
             $table->date('last_checked_traffic')->nullable();
             $table->unsignedTinyInteger('moz_da')->nullable();

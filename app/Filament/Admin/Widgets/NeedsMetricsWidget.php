@@ -17,7 +17,7 @@ class NeedsMetricsWidget extends BaseWidget
                 ->where('is_withdrawn', 0)
                 ->count()),
             Stat::make('Needs DR', LinkSite::whereNull('ahrefs_domain_rank')
-                ->where('is_withdrawn', 0)->whereNotNull('semrush_AS')                
+                ->where('is_withdrawn', 0)->whereNotNull('semrush_AS')
                 ->count()),
             Stat::make('Needs Majestic', LinkSite::whereNull('majestic_trust_flow')
                 ->where('is_withdrawn', 0)->whereNotNull('semrush_AS')
@@ -26,6 +26,9 @@ class NeedsMetricsWidget extends BaseWidget
                 ->where('is_withdrawn', 0)->whereNotNull('semrush_AS')
                 ->count()),
             Stat::make('Needs IP', LinkSite::whereNull('ip_address')
+                ->where('is_withdrawn', 0)->whereNotNull('semrush_AS')
+                ->count()),
+            Stat::make('Needs Traffic', LinkSite::whereNull('semrush_traffic')
                 ->where('is_withdrawn', 0)->whereNotNull('semrush_AS')
                 ->count()),
         ];

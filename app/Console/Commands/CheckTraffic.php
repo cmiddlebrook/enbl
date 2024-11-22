@@ -19,7 +19,7 @@ class CheckTraffic extends Command
 
     protected $client;
     protected $numApiCalls = 0;
-    protected $maxApiCalls = 1500;
+    protected $maxApiCalls = 5000;
 
     public function __construct()
     {
@@ -66,22 +66,19 @@ class CheckTraffic extends Command
     {
         $this->info("Checking {$linkSite->domain}");
 
-        // the API is temperamental, try several times
-        for ($numTries = 0; $numTries < 5; $numTries++)
+        if (!$this->updateTraffic($linkSite))
         {
-            if ($this->updateTraffic($linkSite)) return;
-            echo ".";
-            sleep (1);
+            $this->recordAPICallFailure($linkSite);
         }
 
-        if ($newSite)
-        {
-            $this->markForManualCheck($linkSite);
-        }
-        else
-        {
-            echo "Could not update traffic, leaving unchanged\n";
-        }
+        // if ($newSite)
+        // {
+        //     $this->markForManualCheck($linkSite);
+        // }
+        // else
+        // {
+        //     echo "Could not update traffic, leaving unchanged\n";
+        // }
     }
 
     private function updateTraffic($linkSite)
@@ -112,23 +109,29 @@ class CheckTraffic extends Command
         }
     }
 
-    private function markForManualCheck($linkSite)
+    private function recordAPICallFailure($linkSite)
     {
-        echo " API Call failed, marking site for manual check\n";
-        $linkSite->is_withdrawn = 1;
-        $linkSite->withdrawn_reason = WithdrawalReasonEnum::CHECKTRAFFIC;
-        $linkSite->last_checked_traffic = Carbon::today();
-        $linkSite->save();
+        $this->info($linkSite->domain . ": Failed to retrieve traffic value");
+        $linkSite->increment('semrush_traffic_api_failures');
     }
+
+    // private function markForManualCheck($linkSite)
+    // {
+    //     echo " API Call failed, marking site for manual check\n";
+    //     $linkSite->is_withdrawn = 1;
+    //     $linkSite->withdrawn_reason = WithdrawalReasonEnum::CHECKTRAFFIC;
+    //     $linkSite->last_checked_traffic = Carbon::today();
+    //     $linkSite->save();
+    // }
 
     private function getNewSites()
     {
         $sites = LinkSite::whereNull('semrush_traffic')
             ->where('is_withdrawn', 0)
-            ->where('semrush_AS', '>=', 6)
-            ->orderBy('semrush_AS', 'desc')
-            ->orderBy('majestic_trust_flow', 'desc')
-            // ->limit(5)
+            ->where('semrush_AS', '>', 0)
+            ->where('semrush_traffic_api_failures', 0)
+            ->orderByDesc('majestic_trust_flow')
+            ->orderByDesc('semrush_AS')
             ->get();
 
         return $sites;
@@ -137,20 +140,16 @@ class CheckTraffic extends Command
     private function getSitesToUpdate()
     {
         $sites = LinkSite::where('is_withdrawn', 0)
-            ->where(function ($query)
-            {
-                $query->where('last_checked_traffic', '<', Carbon::now()->subMonth(1))
-                    ->orWhereNull('last_checked_traffic');
-            })
             // ->where(function ($query)
             // {
             //     $query->where('is_withdrawn', 0)
             //         ->orWhereNotIn('withdrawn_reason', ['language', 'subdomain', 'deadsite', 'checkhealth', 'checktraffic']);
             // })
-            ->where('semrush_AS', '>=', 5)
+            ->where('last_checked_traffic', '<', Carbon::now()->subMonth(1))
             ->orderBy('last_checked_traffic', 'asc')
-            ->orderBy('semrush_AS', 'desc')
-            ->orderBy('majestic_trust_flow', 'desc')
+            ->orderByDesc('semrush_organic_kw')
+            ->orderByDesc('majestic_trust_flow')
+            ->orderByDesc('semrush_AS')
             ->get();
 
         return $sites;
@@ -166,6 +165,7 @@ class CheckTraffic extends Command
             $body = $response->getBody();
             $data = json_decode($body, true);
             // \Symfony\Component\VarDumper\VarDumper::dump($data);
+            // exit;
 
             return $data;
         }

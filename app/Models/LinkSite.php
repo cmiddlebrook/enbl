@@ -32,6 +32,7 @@ class LinkSite extends Model
         'semrush_traffic',
         'semrush_perc_english_traffic',
         'semrush_organic_kw',
+        'semrush_traffic_api_failures',
         'last_checked_semrush',
         'moz_da',
         'moz_pa',
