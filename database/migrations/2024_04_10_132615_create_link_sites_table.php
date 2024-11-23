@@ -17,6 +17,7 @@ return new class extends Migration
             $table->boolean('is_withdrawn')->default(0);
             $table->string('withdrawn_reason')->nullable();
             $table->unsignedTinyInteger('semrush_AS')->nullable();
+            $table->unsignedBigInteger('semrush_referring_domains')->nullable();
             $table->unsignedBigInteger('semrush_traffic')->nullable();
             $table->unsignedTinyInteger('semrush_perc_english_traffic')->nullable();
             $table->unsignedBigInteger('semrush_organic_kw')->nullable();
@@ -29,7 +30,6 @@ return new class extends Migration
             $table->unsignedBigInteger('moz_links')->nullable();
             $table->unsignedTinyInteger('majestic_trust_flow')->nullable();
             $table->unsignedTinyInteger('majestic_citation_flow')->nullable();
-            $table->unsignedBigInteger('majestic_ref_domains')->nullable();
             $table->unsignedBigInteger('majestic_ref_edu')->nullable();
             $table->unsignedBigInteger('majestic_ref_gov')->nullable();
             $table->string('majestic_TTF0_name')->nullable();

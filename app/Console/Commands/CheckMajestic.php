@@ -79,7 +79,6 @@ class CheckMajestic extends Command
         $linkSite->moz_links = $data['mozLinks'] ?? null;
         $linkSite->majestic_trust_flow = $data['majesticTF'] ?? null;
         $linkSite->majestic_citation_flow = $data['majesticCF'] ?? null;
-        $linkSite->majestic_ref_domains = $data['majesticRefDomains'] ?? null;
         $linkSite->majestic_ref_edu = $data['majesticRefEDU'] ?? null;
         $linkSite->majestic_ref_gov = $data['majesticRefGov'] ?? null;
         $linkSite->majestic_TTF0_name = !empty($data['majesticTTF0Name']) ? $data['majesticTTF0Name'] : null;
