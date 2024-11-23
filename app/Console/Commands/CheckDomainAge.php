@@ -125,10 +125,12 @@ class CheckDomainAge extends Command
 
     private function getSitesToCheck($num = 300)
     {
-        $sites = LinkSite::where('is_withdrawn', 0)
+        $sites = LinkSite::withCount('sellers')
+            ->where('is_withdrawn', 0)
             ->whereNull('domain_creation_date')
             ->where('domain', 'not like', '%.au') // skip Australian domains, these are not publically available
             // ->where('domain', 'thekochfamilyblog.com') // test individual domain
+            ->orderByDesc('sellers_count') 
             ->orderByDesc('semrush_organic_kw')
             ->orderByDesc('majestic_trust_flow')
             ->orderByDesc('semrush_AS')

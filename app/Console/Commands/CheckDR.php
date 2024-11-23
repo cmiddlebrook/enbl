@@ -29,6 +29,9 @@ class CheckDR extends Command
     public function handle()
     {
         $sites = $this->getSitesToCheck();
+        echo $sites->count() . " sites to be checked\n";
+        // exit;
+
         foreach ($sites as $linkSite)
         {
             if ($this->numApiCalls >= $this->maxApiCalls) break;
@@ -67,8 +70,10 @@ class CheckDR extends Command
 
     private function getSitesToCheck()
     {
-        $sites = LinkSite::where('is_withdrawn', 0)
+        $sites = LinkSite::withCount('sellers')
+            ->where('is_withdrawn', 0)
             ->whereNull('ahrefs_domain_rank') 
+            ->orderByDesc('sellers_count') 
             ->orderByDesc('semrush_organic_kw')
             ->orderByDesc('majestic_trust_flow')
             ->orderByDesc('semrush_AS')

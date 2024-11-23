@@ -29,6 +29,8 @@ class CheckIP extends Command
     public function handle()
     {
         $sites = $this->getSitesToCheck();
+        echo $sites->count() . " sites to be checked\n";
+
         foreach ($sites as $linkSite)
         {
             $domain = $linkSite->domain;
@@ -114,8 +116,10 @@ class CheckIP extends Command
 
     private function getSitesToCheck()
     {
-        $sites = LinkSite::where('is_withdrawn', 0)
+        $sites = LinkSite::withCount('sellers')
+            ->where('is_withdrawn', 0)
             ->whereNull('ip_address')
+            ->orderByDesc('sellers_count') 
             ->orderByDesc('semrush_organic_kw')
             ->orderByDesc('majestic_trust_flow')
             ->orderByDesc('semrush_AS')
@@ -130,6 +134,8 @@ class CheckIP extends Command
     {
         try
         {
+            // exit;
+
             ++$this->numApiCalls;
             $response = $this->client->request('GET', "https://vibrant-dns.p.rapidapi.com/dns/get?domain={$domain}&record_type=a", [
                 'headers' => [

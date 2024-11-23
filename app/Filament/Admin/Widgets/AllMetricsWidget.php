@@ -17,6 +17,7 @@ class AllMetricsWidget extends BaseWidget
                 'All Metrics',
                 LinkSite::where('is_withdrawn', 0)
                     ->whereNotNull('semrush_AS')
+                    ->whereNotNull('semrush_traffic')
                     ->whereNotNull('ip_address')
                     ->whereNotNull('domain_creation_date')
                     ->whereNotNull('moz_da')

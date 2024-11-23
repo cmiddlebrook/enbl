@@ -45,7 +45,7 @@ class CheckMajestic extends Command
     private function checkNewSites()
     {
         $sites = $this->getNewSites();
-        echo "{$sites->count()} new sites to be checked\n";
+        echo $sites->count() . " new sites to be checked\n";
 
         foreach ($sites as $linkSite)
         {
@@ -97,7 +97,6 @@ class CheckMajestic extends Command
         $sites = LinkSite::withCount('sellers')
             ->where('is_withdrawn', 0)
             ->whereNull('last_checked_mozmaj')
-            ->whereNotNull('semrush_traffic')
             ->orderByDesc('sellers_count') 
             ->orderByDesc('semrush_organic_kw')
             ->orderByDesc('semrush_AS')
