@@ -28,7 +28,7 @@ class NeedsMetricsWidget extends BaseWidget
             Stat::make('Needs IP', LinkSite::whereNull('ip_address')
                 ->where('is_withdrawn', 0)->whereNotNull('semrush_AS')
                 ->count()),
-            Stat::make('Needs Traffic', LinkSite::whereNull('semrush_traffic')
+            Stat::make('Needs Keywords', LinkSite::whereNull('semrush_organic_kw')
                 ->where('is_withdrawn', 0)->whereNotNull('semrush_AS')
                 ->count()),
         ];

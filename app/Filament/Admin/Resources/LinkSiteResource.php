@@ -161,8 +161,8 @@ class LinkSiteResource extends Resource
             ->columns([
                 TextColumn::make('domain')->sortable()->searchable(),
                 TextColumn::make('sellers_count')->counts('sellers')->Label('Publishers')->sortable()->toggleable(isToggledHiddenByDefault: false),
-                TextColumn::make('lowest_price')->Label('Low $')->sortable(),
-                TextColumn::make('fourth_lowest_price')->Label('4th $')->sortable()
+                TextColumn::make('lowest_price')->Label('Low $')->sortable()->toggleable(isToggledHiddenByDefault: false),
+                TextColumn::make('fourth_lowest_price')->Label('4th $')->sortable()->toggleable(isToggledHiddenByDefault: false)
                     ->numeric()
                     ->formatStateUsing(function ($state)
                     {

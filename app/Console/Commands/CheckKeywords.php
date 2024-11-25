@@ -11,11 +11,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 
-class CheckTraffic extends Command
+class CheckKeywords extends Command
 {
 
-    protected $signature = 'check-traffic';
-    protected $description = 'Checks the SEMRush Traffic & Rankings of some of the link sites';
+    protected $signature = 'check-keywords';
+    protected $description = 'Checks SEMRush number of ranking keywords of some of the link sites';
 
     protected $client;
     protected $numApiCalls = 0;
@@ -29,9 +29,9 @@ class CheckTraffic extends Command
 
     public function handle()
     {
-        $this->info('Starting to check domain traffic...');
+        $this->info('Starting to check SEMRush keywords...');
         $this->checkNewSites();
-        $this->updateSites();
+        // $this->updateSites();
         echo "{$this->numApiCalls} API calls made\n";
     }
 
@@ -58,7 +58,7 @@ class CheckTraffic extends Command
         foreach ($sites as $linkSite)
         {
             if ($this->numApiCalls >= $this->maxApiCalls) break;
-            $this->updateTraffic($linkSite);
+            $this->updateKeywords($linkSite);
         }
     }
 
@@ -66,22 +66,13 @@ class CheckTraffic extends Command
     {
         $this->info("Checking {$linkSite->domain}");
 
-        if (!$this->updateTraffic($linkSite))
+        if (!$this->updateKeywords($linkSite))
         {
             $this->recordAPICallFailure($linkSite);
         }
-
-        // if ($newSite)
-        // {
-        //     $this->markForManualCheck($linkSite);
-        // }
-        // else
-        // {
-        //     echo "Could not update traffic, leaving unchanged\n";
-        // }
     }
 
-    private function updateTraffic($linkSite)
+    private function updateKeywords($linkSite)
     {
         $lsDomain = $linkSite->domain;
         $data = $this->makeAPICall($lsDomain);
@@ -89,7 +80,6 @@ class CheckTraffic extends Command
         if (!$data) return false;
 
         $srDomain = $data['sr_domain'];
-        $traffic = $data['sr_traffic'];
         $keywords = $data['sr_kwords'];
 
         if ($srDomain == 'unknown') return false;
@@ -98,12 +88,11 @@ class CheckTraffic extends Command
         if ($srDomain == $lsDomain)
         {
             // if other values are reported as unknown, they are too low to record, so set to 0
-            $linkSite->semrush_traffic = $traffic == 'unknown' ? 0 : $traffic;
             $linkSite->semrush_organic_kw = $keywords == 'unknown' ? 0 : $keywords;
             $linkSite->semrush_perc_english_traffic = 0;
             $linkSite->last_checked_traffic = Carbon::today();
 
-            echo "{$lsDomain} traffic & KW updated!\n";
+            echo "{$lsDomain} Keywords updated!\n";
             $linkSite->save();
             return true;
         }
@@ -111,25 +100,19 @@ class CheckTraffic extends Command
 
     private function recordAPICallFailure($linkSite)
     {
-        $this->info($linkSite->domain . ": Failed to retrieve traffic value");
+        $this->info($linkSite->domain . ": Failed to retrieve data");
         $linkSite->increment('semrush_traffic_api_failures');
     }
 
-    // private function markForManualCheck($linkSite)
-    // {
-    //     echo " API Call failed, marking site for manual check\n";
-    //     $linkSite->is_withdrawn = 1;
-    //     $linkSite->withdrawn_reason = WithdrawalReasonEnum::CHECKTRAFFIC;
-    //     $linkSite->last_checked_traffic = Carbon::today();
-    //     $linkSite->save();
-    // }
-
     private function getNewSites()
     {
-        $sites = LinkSite::whereNull('semrush_traffic')
+        $sites = LinkSite::withCount('sellers')
+            ->whereNull('semrush_organic_kw')
             ->where('is_withdrawn', 0)
-            ->where('semrush_AS', '>', 0)
+            ->has('sellers', '>=', 4)
+            // ->where('semrush_AS', '>=', 1)
             ->where('semrush_traffic_api_failures', 0)
+            ->orderByDesc('sellers_count') 
             ->orderByDesc('majestic_trust_flow')
             ->orderByDesc('semrush_AS')
             ->get();
@@ -137,23 +120,18 @@ class CheckTraffic extends Command
         return $sites;
     }
 
-    private function getSitesToUpdate()
-    {
-        $sites = LinkSite::where('is_withdrawn', 0)
-            // ->where(function ($query)
-            // {
-            //     $query->where('is_withdrawn', 0)
-            //         ->orWhereNotIn('withdrawn_reason', ['language', 'subdomain', 'deadsite', 'checkhealth', 'checktraffic']);
-            // })
-            ->where('last_checked_traffic', '<', Carbon::now()->subMonth(1))
-            ->orderBy('last_checked_traffic', 'asc')
-            ->orderByDesc('semrush_organic_kw')
-            ->orderByDesc('majestic_trust_flow')
-            ->orderByDesc('semrush_AS')
-            ->get();
+    // private function getSitesToUpdate()
+    // {
+    //     $sites = LinkSite::where('is_withdrawn', 0)
+    //         ->where('last_checked_traffic', '<', Carbon::now()->subMonth(1))
+    //         ->orderBy('last_checked_traffic', 'asc')
+    //         ->orderByDesc('semrush_organic_kw')
+    //         ->orderByDesc('majestic_trust_flow')
+    //         ->orderByDesc('semrush_AS')
+    //         ->get();
 
-        return $sites;
-    }
+    //     return $sites;
+    // }
 
     private function makeAPICall($domain)
     {
