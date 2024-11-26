@@ -20,6 +20,7 @@ class CheckNewDomains extends Command
 
     protected $publicSuffixList;
     protected $spamWords;
+    protected $numRemoved = 0;
 
     public function __construct()
     {
@@ -74,6 +75,8 @@ class CheckNewDomains extends Command
         $this->checkSpam();
         $this->checkSubdomains();
         $this->withdrawNonEnglishTLDs();
+
+        echo "A total of {$this->numRemoved} domains were removed\n";
     }
 
     private function checkSubdomains()
@@ -99,6 +102,7 @@ class CheckNewDomains extends Command
         }
 
         echo "{$count} subdomains withdrawn\n";
+        $this->numRemoved += $count;
     }
 
     private function withdrawNonEnglishTLDs()
@@ -366,6 +370,7 @@ class CheckNewDomains extends Command
             $this->withdrawDomain($linkSite->domain, WithdrawalReasonEnum::NOT_ENGLISH);
         }
         echo "{$foreignDomains->count()} foreign domains withdrawn\n";
+        $this->numRemoved += $foreignDomains->count();
     }
 
     private function checkSpam()
@@ -394,6 +399,7 @@ class CheckNewDomains extends Command
         }
 
         echo "{$count} SPAM domains withdrawn\n";
+        $this->numRemoved += $count;
     }
 
     private function withdrawDomain($domain, $reason)
