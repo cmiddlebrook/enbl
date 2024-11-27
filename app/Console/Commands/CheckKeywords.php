@@ -19,7 +19,7 @@ class CheckKeywords extends Command
 
     protected $client;
     protected $numApiCalls = 0;
-    protected $maxApiCalls = 5000;
+    protected $maxApiCalls = 10000;
 
     public function __construct()
     {
@@ -110,8 +110,8 @@ class CheckKeywords extends Command
             ->whereNull('semrush_organic_kw')
             ->where('is_withdrawn', 0)
             ->has('sellers', '>=', 4)
-            ->where('semrush_AS', '>=', 2)
-            ->where('semrush_traffic_api_failures', 2)
+            ->where('semrush_AS', '>', 9)
+            ->where('semrush_traffic_api_failures', '<', 6)
             ->orderByDesc('sellers_count') 
             ->orderByDesc('majestic_trust_flow')
             ->orderByDesc('semrush_AS')

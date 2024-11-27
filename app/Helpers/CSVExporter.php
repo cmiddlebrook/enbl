@@ -54,7 +54,7 @@ class CSVExporter
         $this->ukOnlyFilename = 'downloads/csv_uk_sheet_' . $timestamp . ' ' . Str::random(4) . '.csv';
         $this->ukSheet = fopen(public_path($this->ukOnlyFilename), 'w');
 
-        $header = ['Domain', 'Price $US', 'Rating', 'SEMRush AS', 'Traffic', 'Keywords', 'Ref Domains', 'Moz DA', 'Moz PA', 'Majestic TF', 'Majestic CF'];
+        $header = ['Domain', 'Price $US', 'Lowest', '4th Low', 'Gap', 'Rating', 'SEMRush AS', 'Traffic', 'Keywords', 'Ref Domains', 'Moz DA', 'Moz PA', 'Majestic TF', 'Majestic CF'];
         fputcsv($this->gsheet, $header);
         fputcsv($this->ukSheet, $header);
     }
@@ -62,17 +62,20 @@ class CSVExporter
     private function writeDomainRow($linkSite, $file)
     {
         $price = $this->calculatePrice($linkSite);
-        if ($price > 30) return; // stick to cheapie sites for now
+        // if ($price > 30) return; // stick to cheapie sites for now
 
         $row =
             [
                 $linkSite->domain,
                 $price,
+                $linkSite->lowest_price,
+                $linkSite->fourth_lowest_price,
+                $linkSite->gap_score,
                 $this->calculateRating($linkSite),
                 $linkSite->semrush_AS,
                 $linkSite->semrush_traffic,
                 $linkSite->semrush_organic_kw,
-                $linkSite->majestic_ref_domains,
+                $linkSite->semrush_referring_domains,
                 $linkSite->moz_da,
                 $linkSite->moz_pa,
                 $linkSite->majestic_trust_flow,
@@ -109,7 +112,7 @@ class CSVExporter
 
         $rating += $this->calculateUnlimitedMetrics($linkSite->semrush_traffic);
         $rating += $this->calculateUnlimitedMetrics($linkSite->semrush_organic_kw);
-        $rating += $this->calculateUnlimitedMetrics($linkSite->majestic_ref_domains);
+        $rating += $this->calculateUnlimitedMetrics($linkSite->semrush_referring_domains);
 
         return $rating;
     }
@@ -126,12 +129,12 @@ class CSVExporter
 
     private function getSitesToCheck()
     {
-            $sites = LinkSite::select('link_sites.*', 'p.fourth_lowest_price')
+            $sites = LinkSite::select('link_sites.*', 'p.*')
             ->join('link_site_with_prices as p', 'link_sites.id', '=', 'p.link_site_id')
-            ->where('link_sites.is_withdrawn', 0)
-            ->whereNotNull('link_sites.semrush_traffic')
-            ->whereNotNull('link_sites.last_checked_mozmaj')
             ->has('sellers', '>=', 4)
+            ->where('link_sites.is_withdrawn', 0)
+            ->where('link_sites.semrush_traffic', '>', 0)
+            ->where('link_sites.moz_da', '>=', 10)
             ->orderByDesc('link_sites.semrush_organic_kw')
             ->orderByDesc('link_sites.majestic_trust_flow')
             ->orderByDesc('link_sites.semrush_AS')

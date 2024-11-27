@@ -313,8 +313,7 @@ class LinkSiteResource extends Resource
                         return $query
                             ->where('is_withdrawn', 0)
                             ->has('sellers', '>=', 4)
-                            ->where('lowest_price', '>=', 20)
-                            ->where('price_difference_percentage', '>=', 2)
+                            ->where('gap_score', '>=', 1000)
                         ;
                     }
                 ),
@@ -354,10 +353,7 @@ class LinkSiteResource extends Resource
     {
         return parent::getEloquentQuery()
             ->join('link_site_with_prices', 'link_sites.id', '=', 'link_site_with_prices.link_site_id') // Join the view
-            ->select('link_sites.*', 
-                'link_site_with_prices.lowest_price', 
-                'link_site_with_prices.fourth_lowest_price',
-                'link_site_with_prices.price_difference_percentage'); 
+            ->select('link_sites.*', 'link_site_with_prices.*'); 
     }
 
 
