@@ -21,6 +21,7 @@ class CSVExporter
         $this->initialiseFiles();
 
         $sites = $this->getSitesToCheck();
+        
         foreach ($sites as $linkSite)
         {
             $this->writeDomainRow($linkSite, $this->gsheet);
@@ -62,7 +63,7 @@ class CSVExporter
     private function writeDomainRow($linkSite, $file)
     {
         $price = $this->calculatePrice($linkSite);
-        // if ($price > 30) return; // stick to cheapie sites for now
+        if ($price > 50) return; // stick to cheapie sites for now
 
         $row =
             [
@@ -131,8 +132,10 @@ class CSVExporter
     {
             $sites = LinkSite::select('link_sites.*', 'p.*')
             ->join('link_site_with_prices as p', 'link_sites.id', '=', 'p.link_site_id')
-            ->has('sellers', '>=', 4)
+            ->has('sellers', '>=', 8)
             ->where('link_sites.is_withdrawn', 0)
+            ->where('p.lowest_price', '<=', 15)
+            ->where('p.gap_score', '<=', 500)
             ->where('link_sites.semrush_traffic', '>', 0)
             ->where('link_sites.moz_da', '>=', 10)
             ->orderByDesc('link_sites.semrush_organic_kw')

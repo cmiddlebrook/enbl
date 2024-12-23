@@ -19,7 +19,7 @@ class CheckMajestic extends Command
 
     protected $client;
     protected $numApiCalls = 0;
-    protected $maxApiCalls = 120; // drop to 65 when I downgrade plan
+    protected $maxApiCalls = 65; 
 
     public function __construct()
     {
